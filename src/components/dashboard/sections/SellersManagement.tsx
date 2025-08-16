@@ -4,7 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Store, Plus, MoreHorizontal, Building2, User } from "lucide-react";
+import { Search, Store, Plus, MoreHorizontal, Building2, User, Edit, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -178,7 +195,12 @@ const mockSellers: Seller[] = [
 
 export function SellersManagement() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; seller: Seller | null }>({
+    open: false,
+    seller: null
+  });
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const filteredSellers = mockSellers.filter(seller =>
     seller.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -200,6 +222,25 @@ export function SellersManagement() {
       case "b2b": return "default";
       case "private": return "outline";
       default: return "secondary";
+    }
+  };
+
+  const handleEditSeller = (seller: Seller) => {
+    navigate(`/edit-seller/${seller.id}`);
+  };
+
+  const handleDeleteSeller = (seller: Seller) => {
+    setDeleteDialog({ open: true, seller });
+  };
+
+  const confirmDelete = () => {
+    if (deleteDialog.seller) {
+      // Here you would typically call an API to delete the seller
+      toast({
+        title: "Seller Deleted",
+        description: `${deleteDialog.seller.storeName} has been removed from your seller network.`,
+      });
+      setDeleteDialog({ open: false, seller: null });
     }
   };
 
@@ -308,9 +349,26 @@ export function SellersManagement() {
                     {seller.totalSales}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditSeller(seller)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteSeller(seller)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Seller
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
@@ -318,6 +376,27 @@ export function SellersManagement() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, seller: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Seller</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteDialog.seller?.storeName}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Seller
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
