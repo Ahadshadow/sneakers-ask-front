@@ -13,7 +13,6 @@ export function ProductsOverview() {
     status: "all",
     minPrice: "",
     maxPrice: "",
-    stockLevel: "all",
     seller: "all"
   });
 
@@ -42,17 +41,7 @@ export function ProductsOverview() {
       const maxPrice = filters.maxPrice ? parseFloat(filters.maxPrice) : Infinity;
       const matchesPrice = productPrice >= minPrice && productPrice <= maxPrice;
 
-      // Stock level filter
-      const matchesStock = (() => {
-        if (filters.stockLevel === "all") return true;
-        if (filters.stockLevel === "in_stock") return product.stock > 0;
-        if (filters.stockLevel === "low_stock") return product.stock >= 1 && product.stock <= 10;
-        if (filters.stockLevel === "out_of_stock") return product.stock === 0;
-        if (filters.stockLevel === "high_stock") return product.stock > 50;
-        return true;
-      })();
-
-      return matchesSearch && matchesStatus && matchesSeller && matchesPrice && matchesStock;
+      return matchesSearch && matchesStatus && matchesSeller && matchesPrice;
     });
   }, [searchTerm, filters]);
 

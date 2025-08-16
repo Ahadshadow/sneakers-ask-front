@@ -13,7 +13,6 @@ export interface FilterOptions {
   status: string;
   minPrice: string;
   maxPrice: string;
-  stockLevel: string;
   seller: string;
 }
 
@@ -27,14 +26,6 @@ const statusOptions = [
   { value: "open", label: "Open", color: "bg-green-500" },
   { value: "fliproom_sale", label: "Fliproom Sale", color: "bg-blue-500" },
   { value: "sneakerask", label: "SneakerAsk", color: "bg-purple-500" }
-];
-
-const stockLevelOptions = [
-  { value: "all", label: "All Stock Levels" },
-  { value: "in_stock", label: "In Stock (>0)" },
-  { value: "low_stock", label: "Low Stock (1-10)" },
-  { value: "out_of_stock", label: "Out of Stock (0)" },
-  { value: "high_stock", label: "High Stock (>50)" }
 ];
 
 export function FilterSystem({ 
@@ -53,7 +44,6 @@ export function FilterSystem({
       status: "all",
       minPrice: "",
       maxPrice: "",
-      stockLevel: "all",
       seller: "all"
     });
   };
@@ -61,7 +51,7 @@ export function FilterSystem({
   const getActiveFiltersCount = () => {
     return Object.entries(filters).filter(([key, value]) => {
       if (key === 'minPrice' || key === 'maxPrice') return value !== "";
-      return value !== "" && value !== "all";
+      return value !== "all";
     }).length;
   };
 
@@ -139,22 +129,13 @@ export function FilterSystem({
                           />
                         </Badge>
                       )}
-                      {filters.stockLevel && filters.stockLevel !== "all" && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Stock: {stockLevelOptions.find(s => s.value === filters.stockLevel)?.label}
-                          <X 
-                            className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                            onClick={() => removeFilter("stockLevel")}
-                          />
-                        </Badge>
-                      )}
                     </div>
                     <Separator />
                   </div>
                 )}
 
                 {/* Filter Controls */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Status Filter */}
                   <div className="space-y-2">
                     <Label>Status</Label>
@@ -193,9 +174,9 @@ export function FilterSystem({
                   </div>
 
                   {/* Price Range Filter */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <Label>Price Range</Label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 max-w-md">
                       <Input
                         type="number"
                         placeholder="Min"
@@ -211,23 +192,6 @@ export function FilterSystem({
                         className="flex-1"
                       />
                     </div>
-                  </div>
-
-                  {/* Stock Level Filter */}
-                  <div className="space-y-2">
-                    <Label>Stock Level</Label>
-                    <Select value={filters.stockLevel} onValueChange={(value) => updateFilter("stockLevel", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Stock Levels" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border-border z-50">
-                        {stockLevelOptions.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
               </CardContent>
