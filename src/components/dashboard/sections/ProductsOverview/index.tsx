@@ -1,21 +1,71 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
 import { SearchBar } from "./SearchBar";
 import { HeaderActions } from "./HeaderActions";
 import { ProductsTable } from "./ProductsTable";
+import { FilterSystem, FilterOptions } from "./FilterSystem";
 import { mockProducts } from "./mockData";
 
 export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<FilterOptions>({
+    category: "",
+    status: "",
+    minPrice: "",
+    maxPrice: "",
+    stockLevel: "",
+    seller: ""
+  });
 
-  const filteredProducts = mockProducts.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Get unique values for filter dropdowns
+  const availableCategories = useMemo(() => {
+    return Array.from(new Set(mockProducts.map(product => product.category))).sort();
+  }, []);
+
+  const availableSellers = useMemo(() => {
+    return Array.from(new Set(mockProducts.map(product => product.seller))).sort();
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    return mockProducts.filter(product => {
+      // Search filter
+      const matchesSearch = searchTerm === "" || 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.seller.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Category filter
+      const matchesCategory = filters.category === "" || product.category === filters.category;
+
+      // Status filter
+      const matchesStatus = filters.status === "" || product.status === filters.status;
+
+      // Seller filter
+      const matchesSeller = filters.seller === "" || product.seller === filters.seller;
+
+      // Price filter
+      const productPrice = parseFloat(product.price.replace('$', ''));
+      const minPrice = filters.minPrice ? parseFloat(filters.minPrice) : 0;
+      const maxPrice = filters.maxPrice ? parseFloat(filters.maxPrice) : Infinity;
+      const matchesPrice = productPrice >= minPrice && productPrice <= maxPrice;
+
+      // Stock level filter
+      const matchesStock = (() => {
+        if (filters.stockLevel === "" || filters.stockLevel === "all") return true;
+        if (filters.stockLevel === "in_stock") return product.stock > 0;
+        if (filters.stockLevel === "low_stock") return product.stock >= 1 && product.stock <= 10;
+        if (filters.stockLevel === "out_of_stock") return product.stock === 0;
+        if (filters.stockLevel === "high_stock") return product.stock > 50;
+        return true;
+      })();
+
+      return matchesSearch && matchesCategory && matchesStatus && matchesSeller && matchesPrice && matchesStock;
+    });
+  }, [searchTerm, filters]);
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Header Section */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <SearchBar 
@@ -24,6 +74,14 @@ export function ProductsOverview() {
         />
         <HeaderActions />
       </div>
+
+      {/* Filter System */}
+      <FilterSystem 
+        filters={filters}
+        onFiltersChange={setFilters}
+        availableCategories={availableCategories}
+        availableSellers={availableSellers}
+      />
 
       {/* Main Content */}
       <Card className="bg-gradient-card border-border shadow-soft animate-scale-in">
@@ -48,6 +106,9 @@ export function ProductsOverview() {
             <p className="text-sm text-muted-foreground">
               Showing <span className="font-medium text-foreground">{filteredProducts.length}</span> of{" "}
               <span className="font-medium text-foreground">{mockProducts.length}</span> products
+              {(searchTerm || Object.values(filters).some(f => f !== "")) && (
+                <span className="ml-2 text-primary">(filtered)</span>
+              )}
             </p>
           </div>
         </CardContent>
