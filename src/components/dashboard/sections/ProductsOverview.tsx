@@ -246,7 +246,7 @@ export function ProductsOverview() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{product.orders.length} orders</span>
+                      <span className="text-sm">{product.orders.length} Shopify orders</span>
                       {product.orders.length > 0 && (
                         <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
                           <Eye className="h-3 w-3 mr-1" />
