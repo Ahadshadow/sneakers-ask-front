@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 
+// In a real app, this would come from your roles management system
 const roles = [
-  "Employee",
-  "Team Lead",
-  "Manager", 
-  "Senior Manager",
-  "Director"
+  "Admin",
+  "Manager",
+  "Employee", 
+  "Support",
+  "Analyst"
 ];
 
 // Mock employee data - in a real app this would come from an API

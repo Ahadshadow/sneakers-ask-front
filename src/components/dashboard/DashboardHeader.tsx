@@ -16,6 +16,10 @@ const sectionInfo = {
     title: "User Management", 
     description: "Manage team members and their permissions"
   },
+  roles: {
+    title: "Roles Management",
+    description: "Define and manage user roles and permissions"
+  },
   sellers: {
     title: "Sellers",
     description: "Manage your marketplace sellers and their stores"

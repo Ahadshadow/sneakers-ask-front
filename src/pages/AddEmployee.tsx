@@ -11,12 +11,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
+// In a real app, this would come from your roles management system
 const roles = [
-  "Employee",
-  "Team Lead",
-  "Manager", 
-  "Senior Manager",
-  "Director"
+  "Admin",
+  "Manager",
+  "Employee", 
+  "Support",
+  "Analyst"
 ];
 
 export default function AddEmployee() {

@@ -5,6 +5,7 @@ import { AppSidebar } from "./AppSidebar";
 import { OptimizedDashboardHeader } from "./OptimizedDashboardHeader";
 import { DashboardOverview } from "./sections/DashboardOverview";
 import { UsersManagement } from "./sections/UsersManagement";
+import { RolesManagement } from "./sections/RolesManagement";
 import { SellersManagement } from "./sections/SellersManagement";
 import { ProductsOverview } from "./sections/ProductsOverview";
 
@@ -25,6 +26,8 @@ export function Dashboard() {
         return <DashboardOverview />;
       case "users":
         return <UsersManagement />;
+      case "roles":
+        return <RolesManagement />;
       case "sellers":
         return <SellersManagement />;
       case "products":

@@ -9,7 +9,8 @@ import {
   Plus, 
   Settings,
   HelpCircle,
-  LogOut
+  LogOut,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -53,8 +54,13 @@ const navigationItems = [
   },
   {
     id: "users",
-    label: "Users & Roles",
+    label: "Users",
     icon: Users,
+  },
+  {
+    id: "roles",
+    label: "Roles",
+    icon: Shield,
   },
   {
     id: "sellers",
