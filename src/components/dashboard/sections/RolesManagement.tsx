@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Shield, Plus, Edit, Trash2, Users } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Shield, Plus, Edit, Trash2, Users, Eye, Package, Store, Settings } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,13 +26,60 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
+interface Permission {
+  id: string;
+  name: string;
+  description: string;
+  icon: any;
+}
+
 interface Role {
   id: string;
   name: string;
   description: string;
   userCount: number;
   color: string;
+  permissions: string[];
 }
+
+const availablePermissions: Permission[] = [
+  {
+    id: "view_dashboard",
+    name: "View Dashboard",
+    description: "Access to dashboard overview and analytics",
+    icon: Eye
+  },
+  {
+    id: "manage_products",
+    name: "Manage Products",
+    description: "View and manage Shopify products",
+    icon: Package
+  },
+  {
+    id: "manage_users",
+    name: "Manage Users",
+    description: "Add, edit, and delete team members",
+    icon: Users
+  },
+  {
+    id: "manage_roles",
+    name: "Manage Roles",
+    description: "Create and modify user roles and permissions",
+    icon: Shield
+  },
+  {
+    id: "manage_sellers",
+    name: "Manage Sellers",
+    description: "Oversee seller accounts and onboarding",
+    icon: Store
+  },
+  {
+    id: "system_settings",
+    name: "System Settings",
+    description: "Access to system configuration and settings",
+    icon: Settings
+  }
+];
 
 const mockRoles: Role[] = [
   {
@@ -39,28 +87,32 @@ const mockRoles: Role[] = [
     name: "Admin",
     description: "Full system access and management privileges",
     userCount: 2,
-    color: "destructive"
+    color: "destructive",
+    permissions: ["view_dashboard", "manage_products", "manage_users", "manage_roles", "manage_sellers", "system_settings"]
   },
   {
     id: "2", 
     name: "Manager",
     description: "Manage team members and oversee operations",
     userCount: 3,
-    color: "default"
+    color: "default",
+    permissions: ["view_dashboard", "manage_products", "manage_users", "manage_sellers"]
   },
   {
     id: "3",
     name: "Employee",
     description: "Standard employee access to daily tasks",
     userCount: 8,
-    color: "secondary"
+    color: "secondary",
+    permissions: ["view_dashboard", "manage_products"]
   },
   {
     id: "4",
     name: "Support",
     description: "Customer support and assistance",
     userCount: 4,
-    color: "outline"
+    color: "outline",
+    permissions: ["view_dashboard", "manage_products", "manage_sellers"]
   }
 ];
 
@@ -74,7 +126,8 @@ export function RolesManagement() {
   });
   const [formData, setFormData] = useState({
     name: "",
-    description: ""
+    description: "",
+    permissions: [] as string[]
   });
   const { toast } = useToast();
 
@@ -82,8 +135,17 @@ export function RolesManagement() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handlePermissionChange = (permissionId: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      permissions: checked 
+        ? [...prev.permissions, permissionId]
+        : prev.permissions.filter(id => id !== permissionId)
+    }));
+  };
+
   const resetForm = () => {
-    setFormData({ name: "", description: "" });
+    setFormData({ name: "", description: "", permissions: [] });
     setEditingRole(null);
   };
 
@@ -95,7 +157,8 @@ export function RolesManagement() {
       name: formData.name,
       description: formData.description,
       userCount: 0,
-      color: "outline"
+      color: "outline",
+      permissions: formData.permissions
     };
     
     setRoles([...roles, newRole]);
@@ -112,7 +175,8 @@ export function RolesManagement() {
     setEditingRole(role);
     setFormData({
       name: role.name,
-      description: role.description
+      description: role.description,
+      permissions: role.permissions || []
     });
     setIsCreateOpen(true);
   };
@@ -122,7 +186,7 @@ export function RolesManagement() {
     
     setRoles(roles.map(role => 
       role.id === editingRole.id 
-        ? { ...role, name: formData.name, description: formData.description }
+        ? { ...role, name: formData.name, description: formData.description, permissions: formData.permissions }
         : role
     ));
     
@@ -195,6 +259,43 @@ export function RolesManagement() {
                   rows={3}
                 />
               </div>
+              
+              {/* Permissions Section */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Permissions</Label>
+                <div className="grid grid-cols-1 gap-3 p-4 border border-border rounded-lg bg-muted/20">
+                  {availablePermissions.map((permission) => {
+                    const Icon = permission.icon;
+                    return (
+                      <div key={permission.id} className="flex items-start space-x-3">
+                        <Checkbox
+                          id={permission.id}
+                          checked={formData.permissions.includes(permission.id)}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(permission.id, checked as boolean)
+                          }
+                          className="mt-1"
+                        />
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4 text-primary" />
+                            <Label 
+                              htmlFor={permission.id} 
+                              className="text-sm font-medium cursor-pointer"
+                            >
+                              {permission.name}
+                            </Label>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {permission.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline" onClick={handleCloseDialog}>
                   Cancel
@@ -243,7 +344,28 @@ export function RolesManagement() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">{role.description}</p>
-              <div className="flex items-center justify-between">
+              
+              {/* Permissions Display */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Permissions</p>
+                <div className="flex flex-wrap gap-1">
+                  {role.permissions?.slice(0, 3).map((permissionId) => {
+                    const permission = availablePermissions.find(p => p.id === permissionId);
+                    return permission ? (
+                      <Badge key={permissionId} variant="outline" className="text-xs px-2 py-1">
+                        {permission.name}
+                      </Badge>
+                    ) : null;
+                  })}
+                  {role.permissions && role.permissions.length > 3 && (
+                    <Badge variant="outline" className="text-xs px-2 py-1">
+                      +{role.permissions.length - 3} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
