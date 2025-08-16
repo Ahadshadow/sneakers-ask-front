@@ -48,7 +48,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                 <div className="space-y-1">
                   <p className="font-medium text-foreground leading-none">{product.name}</p>
                   <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
-                  <p className="text-xs text-muted-foreground/80">by {product.seller}</p>
+                  <p className="text-xs text-muted-foreground/80">{product.seller}</p>
                 </div>
               </TableCell>
               <TableCell className="py-4">
