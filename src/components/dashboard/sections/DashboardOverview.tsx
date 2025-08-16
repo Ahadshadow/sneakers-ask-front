@@ -22,13 +22,6 @@ export function DashboardOverview() {
           icon={ShoppingBag}
         />
         <StatsCard
-          title="Products Listed"
-          value="8,924"
-          change="+15.3%"
-          changeType="positive"
-          icon={Package}
-        />
-        <StatsCard
           title="Monthly Revenue"
           value="$184,291"
           change="+23.1%"
