@@ -121,54 +121,6 @@ export function ProductsOverview() {
         </div>
       </div>
 
-      {/* Products Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Products</p>
-                <p className="text-2xl font-bold text-card-foreground">8,924</p>
-              </div>
-              <Package className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Products</p>
-                <p className="text-2xl font-bold text-card-foreground">7,234</p>
-              </div>
-              <Zap className="h-8 w-8 text-success" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Out of Stock</p>
-                <p className="text-2xl font-bold text-card-foreground">342</p>
-              </div>
-              <div className="text-2xl text-destructive">⚠️</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Draft Products</p>
-                <p className="text-2xl font-bold text-card-foreground">1,348</p>
-              </div>
-              <div className="text-2xl">📝</div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Products Table */}
       <Card className="bg-gradient-card border-border shadow-soft">
         <CardHeader>
