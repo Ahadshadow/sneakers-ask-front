@@ -10,12 +10,12 @@ import { mockProducts } from "./mockData";
 export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<FilterOptions>({
-    category: "",
-    status: "",
+    category: "all",
+    status: "all",
     minPrice: "",
     maxPrice: "",
-    stockLevel: "",
-    seller: ""
+    stockLevel: "all",
+    seller: "all"
   });
 
   // Get unique values for filter dropdowns
@@ -36,13 +36,13 @@ export function ProductsOverview() {
         product.seller.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Category filter
-      const matchesCategory = filters.category === "" || product.category === filters.category;
+      const matchesCategory = filters.category === "all" || product.category === filters.category;
 
       // Status filter
-      const matchesStatus = filters.status === "" || product.status === filters.status;
+      const matchesStatus = filters.status === "all" || product.status === filters.status;
 
       // Seller filter
-      const matchesSeller = filters.seller === "" || product.seller === filters.seller;
+      const matchesSeller = filters.seller === "all" || product.seller === filters.seller;
 
       // Price filter
       const productPrice = parseFloat(product.price.replace('$', ''));
@@ -52,7 +52,7 @@ export function ProductsOverview() {
 
       // Stock level filter
       const matchesStock = (() => {
-        if (filters.stockLevel === "" || filters.stockLevel === "all") return true;
+        if (filters.stockLevel === "all") return true;
         if (filters.stockLevel === "in_stock") return product.stock > 0;
         if (filters.stockLevel === "low_stock") return product.stock >= 1 && product.stock <= 10;
         if (filters.stockLevel === "out_of_stock") return product.stock === 0;
@@ -106,7 +106,10 @@ export function ProductsOverview() {
             <p className="text-sm text-muted-foreground">
               Showing <span className="font-medium text-foreground">{filteredProducts.length}</span> of{" "}
               <span className="font-medium text-foreground">{mockProducts.length}</span> products
-              {(searchTerm || Object.values(filters).some(f => f !== "")) && (
+              {(searchTerm || Object.entries(filters).some(([key, value]) => {
+                if (key === 'minPrice' || key === 'maxPrice') return value !== "";
+                return value !== "all";
+              })) && (
                 <span className="ml-2 text-primary">(filtered)</span>
               )}
             </p>

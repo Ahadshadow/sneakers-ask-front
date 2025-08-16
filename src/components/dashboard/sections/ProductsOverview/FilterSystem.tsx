@@ -53,21 +53,28 @@ export function FilterSystem({
 
   const clearAllFilters = () => {
     onFiltersChange({
-      category: "",
-      status: "",
+      category: "all",
+      status: "all",
       minPrice: "",
       maxPrice: "",
-      stockLevel: "",
-      seller: ""
+      stockLevel: "all",
+      seller: "all"
     });
   };
 
   const getActiveFiltersCount = () => {
-    return Object.values(filters).filter(value => value !== "").length;
+    return Object.entries(filters).filter(([key, value]) => {
+      if (key === 'minPrice' || key === 'maxPrice') return value !== "";
+      return value !== "" && value !== "all";
+    }).length;
   };
 
   const removeFilter = (key: keyof FilterOptions) => {
-    updateFilter(key, "");
+    if (key === 'minPrice' || key === 'maxPrice') {
+      updateFilter(key, "");
+    } else {
+      updateFilter(key, "all");
+    }
   };
 
   return (
@@ -106,7 +113,7 @@ export function FilterSystem({
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {filters.category && (
+                      {filters.category && filters.category !== "all" && (
                         <Badge variant="secondary" className="flex items-center gap-1">
                           Category: {filters.category}
                           <X 
@@ -115,7 +122,7 @@ export function FilterSystem({
                           />
                         </Badge>
                       )}
-                      {filters.status && (
+                      {filters.status && filters.status !== "all" && (
                         <Badge variant="secondary" className="flex items-center gap-1">
                           Status: {statusOptions.find(s => s.value === filters.status)?.label}
                           <X 
@@ -124,7 +131,7 @@ export function FilterSystem({
                           />
                         </Badge>
                       )}
-                      {filters.seller && (
+                      {filters.seller && filters.seller !== "all" && (
                         <Badge variant="secondary" className="flex items-center gap-1">
                           Seller: {filters.seller}
                           <X 
@@ -145,7 +152,7 @@ export function FilterSystem({
                           />
                         </Badge>
                       )}
-                      {filters.stockLevel && (
+                      {filters.stockLevel && filters.stockLevel !== "all" && (
                         <Badge variant="secondary" className="flex items-center gap-1">
                           Stock: {stockLevelOptions.find(s => s.value === filters.stockLevel)?.label}
                           <X 
@@ -169,7 +176,7 @@ export function FilterSystem({
                         <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
                       <SelectContent className="bg-background border-border z-50">
-                        <SelectItem value="">All Categories</SelectItem>
+                        <SelectItem value="all">All Categories</SelectItem>
                         {availableCategories.map(category => (
                           <SelectItem key={category} value={category}>{category}</SelectItem>
                         ))}
@@ -185,7 +192,7 @@ export function FilterSystem({
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
                       <SelectContent className="bg-background border-border z-50">
-                        <SelectItem value="">All Statuses</SelectItem>
+                        <SelectItem value="all">All Statuses</SelectItem>
                         {statusOptions.map(status => (
                           <SelectItem key={status.value} value={status.value}>
                             <div className="flex items-center gap-2">
@@ -206,7 +213,7 @@ export function FilterSystem({
                         <SelectValue placeholder="All Sellers" />
                       </SelectTrigger>
                       <SelectContent className="bg-background border-border z-50">
-                        <SelectItem value="">All Sellers</SelectItem>
+                        <SelectItem value="all">All Sellers</SelectItem>
                         {availableSellers.map(seller => (
                           <SelectItem key={seller} value={seller}>{seller}</SelectItem>
                         ))}
