@@ -267,23 +267,37 @@ export function SellersManagement() {
               {/* Basic Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Basic Information</h3>
+                <div>
+                  <Label htmlFor="sellerType">Seller Type</Label>
+                  <Select value={formData.sellerType} onValueChange={(value) => setFormData({...formData, sellerType: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select seller type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="private">Private Seller</SelectItem>
+                      <SelectItem value="b2b">B2B Seller</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="storeName">Store Name</Label>
-                    <Input
-                      id="storeName"
-                      value={formData.storeName}
-                      onChange={(e) => setFormData({...formData, storeName: e.target.value})}
-                      placeholder="Enter store name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ownerName">Owner Name</Label>
+                  {formData.sellerType === "b2b" && (
+                    <div>
+                      <Label htmlFor="storeName">Store Name</Label>
+                      <Input
+                        id="storeName"
+                        value={formData.storeName}
+                        onChange={(e) => setFormData({...formData, storeName: e.target.value})}
+                        placeholder="Enter store name"
+                      />
+                    </div>
+                  )}
+                  <div className={formData.sellerType === "private" ? "col-span-2" : ""}>
+                    <Label htmlFor="ownerName">{formData.sellerType === "b2b" ? "Owner Name" : "Full Name"}</Label>
                     <Input
                       id="ownerName"
                       value={formData.ownerName}
                       onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
-                      placeholder="Enter owner name"
+                      placeholder={formData.sellerType === "b2b" ? "Enter owner name" : "Enter your full name"}
                     />
                   </div>
                 </div>
@@ -296,18 +310,6 @@ export function SellersManagement() {
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     placeholder="Enter email address"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="sellerType">Seller Type</Label>
-                  <Select value={formData.sellerType} onValueChange={(value) => setFormData({...formData, sellerType: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select seller type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="private">Private Seller</SelectItem>
-                      <SelectItem value="b2b">B2B Seller</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
