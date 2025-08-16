@@ -136,7 +136,6 @@ export function ProductsOverview() {
                 <TableHead>Product</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -154,11 +153,6 @@ export function ProductsOverview() {
                   </TableCell>
                   <TableCell className="font-medium text-card-foreground">
                     {product.price}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(product.status)}>
-                      {product.status.replace('_', ' ')}
-                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">
