@@ -28,9 +28,7 @@ export default function AddEmployee() {
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
-    role: "",
-    address: ""
+    role: ""
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -134,34 +132,6 @@ export default function AddEmployee() {
                       required
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
-                      placeholder="Enter phone number"
-                      className="pl-10 transition-all duration-200 focus:scale-[1.02]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Textarea
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
-                    placeholder="Enter full address"
-                    className="pl-10 transition-all duration-200 focus:scale-[1.02]"
-                    rows={3}
-                  />
                 </div>
               </div>
             </CardContent>
