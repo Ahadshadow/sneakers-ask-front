@@ -34,7 +34,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
           <TableRow className="border-border hover:bg-muted/5">
             <TableHead className="font-semibold text-foreground">Product</TableHead>
             <TableHead className="font-semibold text-foreground">Price</TableHead>
-            <TableHead className="font-semibold text-foreground">Orders</TableHead>
+            <TableHead className="font-semibold text-foreground hidden md:table-cell">Orders</TableHead>
             <TableHead className="font-semibold text-foreground">Status</TableHead>
             <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
           </TableRow>
@@ -55,7 +55,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
               <TableCell className="py-4">
                 <span className="font-semibold text-foreground text-lg">{product.price}</span>
               </TableCell>
-              <TableCell className="py-4">
+              <TableCell className="py-4 hidden md:table-cell">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-full bg-primary/10">
