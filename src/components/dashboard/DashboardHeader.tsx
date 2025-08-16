@@ -1,6 +1,5 @@
-import { Bell, Search, User } from "lucide-react";
+import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
@@ -44,17 +43,8 @@ export function DashboardHeader({ currentSection }: DashboardHeaderProps) {
             </p>
           </div>
 
-          {/* Right Section - Search, Notifications, Profile */}
+          {/* Right Section - Notifications, Profile */}
           <div className="flex items-center gap-4">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search anything..."
-                className="pl-10 w-80 bg-background/60 border-border/60 backdrop-blur-sm focus:bg-background focus:border-primary/50 transition-all duration-200"
-              />
-            </div>
-
             {/* Notifications */}
             <Button 
               variant="ghost" 
