@@ -90,8 +90,8 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const navigate = useNavigate();
 
   return (
-    <Sidebar className="border-r border-border/50 bg-sidebar">
-      <SidebarHeader className="border-b border-border/50">
+    <Sidebar className="border-r border-border bg-sidebar">
+      <SidebarHeader className="border-b border-border">
         <div className="flex items-center gap-3 px-3 py-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
             SA
@@ -176,7 +176,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border/50">
+      <SidebarFooter className="border-t border-border">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
