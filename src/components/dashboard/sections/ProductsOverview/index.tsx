@@ -11,8 +11,7 @@ export function ProductsOverview() {
 
   const filteredProducts = mockProducts.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.seller.toLowerCase().includes(searchTerm.toLowerCase())
+    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

@@ -27,6 +27,8 @@ export function ProductsTable({ products }: ProductsTableProps) {
 
   return (
     <div className="rounded-lg border border-border bg-gradient-card shadow-soft overflow-hidden">
+      <div className="overflow-x-auto">
+        <div className="max-h-[600px] overflow-y-auto">
       <Table>
         <TableHeader>
           <TableRow className="border-border hover:bg-muted/5">
@@ -48,7 +50,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
                 <div className="space-y-1">
                   <p className="font-medium text-foreground leading-none">{product.name}</p>
                   <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
-                  <p className="text-xs text-muted-foreground/80">{product.seller}</p>
                 </div>
               </TableCell>
               <TableCell className="py-4">
@@ -99,6 +100,8 @@ export function ProductsTable({ products }: ProductsTableProps) {
           ))}
         </TableBody>
       </Table>
+        </div>
+      </div>
     </div>
   );
 }
