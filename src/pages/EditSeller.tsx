@@ -11,12 +11,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 
 const businessTypes = [
-  "Retail Store",
-  "Online Store", 
-  "Wholesale",
-  "Consignment",
-  "Reseller",
-  "Brand"
+  "Private",
+  "B2B"
 ];
 
 const countries = [
@@ -37,17 +33,17 @@ const mockSellers = {
     contactName: "Alex Rodriguez",
     email: "alex@premiumsneakers.com",
     website: "https://premiumsneakers.com",
-    businessType: "Brand",
+    businessType: "B2B",
     country: "United States",
     description: "Premium sneaker retailer specializing in limited edition and exclusive releases."
   },
   "2": {
     id: "2",
-    businessName: "Street Style Store",
+    businessName: "",
     contactName: "Maria Garcia",
     email: "maria@streetstyle.com",
     website: "https://streetstyle.com",
-    businessType: "Online Store",
+    businessType: "Private",
     country: "United States",
     description: "Urban fashion and streetwear boutique."
   }
@@ -164,17 +160,19 @@ export default function EditSeller() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="businessName">Business Name *</Label>
-                  <Input
-                    id="businessName"
-                    value={formData.businessName}
-                    onChange={(e) => handleInputChange("businessName", e.target.value)}
-                    placeholder="Enter business name"
-                    required
-                    className="transition-all duration-200 focus:scale-[1.02]"
-                  />
-                </div>
+                {formData.businessType === "B2B" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="businessName">Business Name *</Label>
+                    <Input
+                      id="businessName"
+                      value={formData.businessName}
+                      onChange={(e) => handleInputChange("businessName", e.target.value)}
+                      placeholder="Enter business name"
+                      required
+                      className="transition-all duration-200 focus:scale-[1.02]"
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="contactName">Contact Person *</Label>
                   <Input
@@ -216,7 +214,17 @@ export default function EditSeller() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="businessType">Business Type *</Label>
-                  <Select value={formData.businessType} onValueChange={(value) => handleInputChange("businessType", value)} required>
+                  <Select 
+                    value={formData.businessType} 
+                    onValueChange={(value) => {
+                      handleInputChange("businessType", value);
+                      // Clear business name if switching to Private
+                      if (value === "Private") {
+                        handleInputChange("businessName", "");
+                      }
+                    }} 
+                    required
+                  >
                     <SelectTrigger className="transition-all duration-200 focus:scale-[1.02]">
                       <SelectValue placeholder="Select business type" />
                     </SelectTrigger>
