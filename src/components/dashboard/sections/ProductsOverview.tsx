@@ -20,7 +20,7 @@ interface Product {
   category: string;
   price: string;
   stock: number;
-  status: "active" | "draft" | "out_of_stock";
+  status: "open" | "fliproom_sale" | "sneakerask";
   seller: string;
   shopifyId: string;
   orders: OrderReference[];
@@ -43,7 +43,7 @@ const mockProducts: Product[] = [
     category: "Basketball",
     price: "$170.00",
     stock: 45,
-    status: "active",
+    status: "open",
     seller: "Premium Sneakers Co",
     shopifyId: "gid://shopify/Product/6789123456",
     orders: [
@@ -72,7 +72,7 @@ const mockProducts: Product[] = [
     category: "Lifestyle",
     price: "$100.00",
     stock: 0,
-    status: "out_of_stock",
+    status: "fliproom_sale",
     seller: "Street Style Store",
     shopifyId: "gid://shopify/Product/6789123457",
     orders: [
@@ -93,7 +93,7 @@ const mockProducts: Product[] = [
     category: "Running",
     price: "$220.00",
     stock: 12,
-    status: "active",
+    status: "sneakerask",
     seller: "Rare Kicks Boutique",
     shopifyId: "gid://shopify/Product/6789123458",
     orders: [
@@ -130,7 +130,7 @@ const mockProducts: Product[] = [
     category: "Lifestyle",
     price: "$110.00",
     stock: 28,
-    status: "draft",
+    status: "open",
     seller: "Urban Footwear",
     shopifyId: "gid://shopify/Product/6789123459",
     orders: []
@@ -142,7 +142,7 @@ const mockProducts: Product[] = [
     category: "Lifestyle",
     price: "$85.00",
     stock: 67,
-    status: "active",
+    status: "sneakerask",
     seller: "Street Style Store",
     shopifyId: "gid://shopify/Product/6789123460",
     orders: [
@@ -169,9 +169,9 @@ export function ProductsOverview() {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "active": return "default";
-      case "draft": return "secondary";
-      case "out_of_stock": return "destructive";
+      case "open": return "secondary";
+      case "fliproom_sale": return "outline";
+      case "sneakerask": return "default";
       default: return "outline";
     }
   };
@@ -257,7 +257,9 @@ export function ProductsOverview() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(product.status)}>
-                      {product.status.replace('_', ' ')}
+                      {product.status === "fliproom_sale" ? "Fliproom Sale" : 
+                       product.status === "sneakerask" ? "SneakerAsk" : 
+                       product.status === "open" ? "Open" : product.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
