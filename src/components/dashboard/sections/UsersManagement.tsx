@@ -17,7 +17,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "seller" | "user";
+  role: "admin" | "manager" | "support" | "analyst";
   status: "active" | "inactive" | "pending";
   joinDate: string;
 }
@@ -34,26 +34,26 @@ const mockUsers: User[] = [
   {
     id: "2",
     name: "Sarah Johnson",
-    email: "sarah@example.com",
-    role: "seller",
+    email: "sarah@sneakerask.com",
+    role: "manager",
     status: "active",
     joinDate: "2024-02-20"
   },
   {
     id: "3",
     name: "Mike Wilson",
-    email: "mike@example.com",
-    role: "user",
-    status: "pending",
+    email: "mike@sneakerask.com",
+    role: "support",
+    status: "active",
     joinDate: "2024-03-10"
   },
   {
     id: "4",
     name: "Emily Davis",
-    email: "emily@example.com",
-    role: "seller",
-    status: "inactive",
-    joinDate: "2024-01-30"
+    email: "emily@sneakerask.com",
+    role: "analyst",
+    status: "pending",
+    joinDate: "2024-03-25"
   },
 ];
 
@@ -68,8 +68,9 @@ export function UsersManagement() {
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case "admin": return "default";
-      case "seller": return "secondary";
-      case "user": return "outline";
+      case "manager": return "secondary";
+      case "support": return "outline";
+      case "analyst": return "outline";
       default: return "outline";
     }
   };
@@ -90,7 +91,7 @@ export function UsersManagement() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search users..."
+            placeholder="Search employees..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 w-64"
@@ -98,7 +99,7 @@ export function UsersManagement() {
         </div>
         <Button className="bg-gradient-primary hover:opacity-90 transition-opacity">
           <UserPlus className="h-4 w-4 mr-2" />
-          Add User
+          Add Employee
         </Button>
       </div>
 
@@ -107,14 +108,14 @@ export function UsersManagement() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            Users & Roles
+            SneakerAsk Team Members
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
+                <TableHead>Employee</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Join Date</TableHead>
