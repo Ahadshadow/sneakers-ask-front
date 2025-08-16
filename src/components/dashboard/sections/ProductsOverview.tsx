@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, ExternalLink, MoreHorizontal, Zap } from "lucide-react";
+import { Search, Package, ExternalLink, MoreHorizontal, Zap, ShoppingCart, Eye } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -23,6 +23,16 @@ interface Product {
   status: "active" | "draft" | "out_of_stock";
   seller: string;
   shopifyId: string;
+  orders: OrderReference[];
+}
+
+interface OrderReference {
+  orderId: string;
+  orderNumber: string;
+  quantity: number;
+  orderDate: string;
+  customerName: string;
+  orderTotal: string;
 }
 
 const mockProducts: Product[] = [
@@ -35,7 +45,25 @@ const mockProducts: Product[] = [
     stock: 45,
     status: "active",
     seller: "Premium Sneakers Co",
-    shopifyId: "6789123456"
+    shopifyId: "gid://shopify/Product/6789123456",
+    orders: [
+      {
+        orderId: "1",
+        orderNumber: "#SP001",
+        quantity: 2,
+        orderDate: "2024-08-15",
+        customerName: "John Smith",
+        orderTotal: "$510.00"
+      },
+      {
+        orderId: "3",
+        orderNumber: "#SP003",
+        quantity: 1,
+        orderDate: "2024-08-14",
+        customerName: "Emily Davis",
+        orderTotal: "$390.00"
+      }
+    ]
   },
   {
     id: "2",
@@ -46,7 +74,17 @@ const mockProducts: Product[] = [
     stock: 0,
     status: "out_of_stock",
     seller: "Street Style Store",
-    shopifyId: "6789123457"
+    shopifyId: "gid://shopify/Product/6789123457",
+    orders: [
+      {
+        orderId: "2",
+        orderNumber: "#SP002",
+        quantity: 1,
+        orderDate: "2024-08-15",
+        customerName: "Sarah Johnson",
+        orderTotal: "$330.00"
+      }
+    ]
   },
   {
     id: "3",
@@ -57,7 +95,33 @@ const mockProducts: Product[] = [
     stock: 12,
     status: "active",
     seller: "Rare Kicks Boutique",
-    shopifyId: "6789123458"
+    shopifyId: "gid://shopify/Product/6789123458",
+    orders: [
+      {
+        orderId: "2",
+        orderNumber: "#SP002",
+        quantity: 1,
+        orderDate: "2024-08-15",
+        customerName: "Sarah Johnson",
+        orderTotal: "$330.00"
+      },
+      {
+        orderId: "3",
+        orderNumber: "#SP003",
+        quantity: 1,
+        orderDate: "2024-08-14",
+        customerName: "Emily Davis",
+        orderTotal: "$390.00"
+      },
+      {
+        orderId: "4",
+        orderNumber: "#SP004",
+        quantity: 2,
+        orderDate: "2024-08-13",
+        customerName: "Michael Brown",
+        orderTotal: "$440.00"
+      }
+    ]
   },
   {
     id: "4",
@@ -68,8 +132,30 @@ const mockProducts: Product[] = [
     stock: 28,
     status: "draft",
     seller: "Urban Footwear",
-    shopifyId: "6789123459"
+    shopifyId: "gid://shopify/Product/6789123459",
+    orders: []
   },
+  {
+    id: "5",
+    name: "Converse Chuck 70 High Top",
+    sku: "C70-HT-005",
+    category: "Lifestyle",
+    price: "$85.00",
+    stock: 67,
+    status: "active",
+    seller: "Street Style Store",
+    shopifyId: "gid://shopify/Product/6789123460",
+    orders: [
+      {
+        orderId: "4",
+        orderNumber: "#SP004",
+        quantity: 1,
+        orderDate: "2024-08-13",
+        customerName: "Michael Brown",
+        orderTotal: "$440.00"
+      }
+    ]
+  }
 ];
 
 export function ProductsOverview() {
@@ -136,6 +222,9 @@ export function ProductsOverview() {
                 <TableHead>Product</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Orders</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -146,6 +235,7 @@ export function ProductsOverview() {
                     <div>
                       <p className="font-medium text-card-foreground">{product.name}</p>
                       <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                      <p className="text-xs text-muted-foreground">Seller: {product.seller}</p>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -153,6 +243,28 @@ export function ProductsOverview() {
                   </TableCell>
                   <TableCell className="font-medium text-card-foreground">
                     {product.price}
+                  </TableCell>
+                  <TableCell>
+                    <span className={getStockColor(product.stock)}>
+                      {product.stock} units
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{product.orders.length} orders</span>
+                      {product.orders.length > 0 && (
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                          <Eye className="h-3 w-3 mr-1" />
+                          View
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(product.status)}>
+                      {product.status.replace('_', ' ')}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">
