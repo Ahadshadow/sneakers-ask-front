@@ -138,7 +138,6 @@ export function ProductsOverview() {
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Seller</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -166,9 +165,6 @@ export function ProductsOverview() {
                     <Badge variant={getStatusBadgeVariant(product.status)}>
                       {product.status.replace('_', ' ')}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {product.seller}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">
