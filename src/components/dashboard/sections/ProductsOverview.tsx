@@ -220,7 +220,6 @@ export function ProductsOverview() {
             <TableHeader>
               <TableRow>
                 <TableHead>Product</TableHead>
-                <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Orders</TableHead>
                 <TableHead>Status</TableHead>
@@ -236,9 +235,6 @@ export function ProductsOverview() {
                       <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
                       <p className="text-xs text-muted-foreground">Seller: {product.seller}</p>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{product.category}</Badge>
                   </TableCell>
                   <TableCell className="font-medium text-card-foreground">
                     {product.price}
