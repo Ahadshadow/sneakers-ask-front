@@ -45,25 +45,21 @@ const navigationItems = [
     id: "dashboard",
     label: "Dashboard",
     icon: BarChart3,
-    description: "Overview & Analytics"
   },
   {
-    id: "products",
+    id: "products", 
     label: "Products",
     icon: Package,
-    description: "Shopify Integration"
   },
   {
     id: "users",
     label: "Users & Roles",
     icon: Users,
-    description: "User Management"
   },
   {
     id: "sellers",
     label: "Sellers",
     icon: Store,
-    description: "Seller Management"
   },
 ];
 
@@ -120,20 +116,17 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       asChild
                       tooltip={isCollapsed ? item.label : undefined}
                       className={cn(
-                        "group transition-all duration-200 hover-scale",
+                        "group transition-all duration-200 hover-scale h-11",
                         isActive && "bg-gradient-primary text-primary-foreground shadow-soft"
                       )}
                     >
                       <button
                         onClick={() => onSectionChange(item.id)}
-                        className="flex items-center gap-3 w-full"
+                        className="flex items-center gap-3 w-full px-3"
                       >
-                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        <Icon className="h-5 w-5 flex-shrink-0" />
                         {!isCollapsed && (
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">{item.label}</span>
-                            <span className="text-xs opacity-60">{item.description}</span>
-                          </div>
+                          <span className="font-medium text-sm">{item.label}</span>
                         )}
                       </button>
                     </SidebarMenuButton>
@@ -158,14 +151,14 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                     <SidebarMenuItem key={action.id}>
                       <SidebarMenuButton
                         asChild
-                        className="hover-scale transition-all duration-200"
+                        className="hover-scale transition-all duration-200 h-10"
                       >
                         <button 
-                          className="flex items-center gap-3 w-full"
+                          className="flex items-center gap-3 w-full px-3"
                           onClick={() => navigate(action.path)}
                         >
                           <Icon className="h-4 w-4 flex-shrink-0" />
-                          <span className="font-medium">{action.label}</span>
+                          <span className="font-medium text-sm">{action.label}</span>
                         </button>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
