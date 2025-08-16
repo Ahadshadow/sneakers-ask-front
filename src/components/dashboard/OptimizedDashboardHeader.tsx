@@ -1,6 +1,5 @@
-import { Bell, Search, User, Menu } from "lucide-react";
+import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -16,21 +15,32 @@ interface DashboardHeaderProps {
   currentSection: string;
 }
 
-const sectionTitles = {
-  dashboard: "Dashboard Overview",
-  users: "User & Roles Management", 
-  sellers: "Sellers Management",
-  products: "Shopify Products Overview",
-};
-
-const sectionDescriptions = {
-  dashboard: "Monitor your business performance and key metrics",
-  users: "Manage user accounts, permissions and roles",
-  sellers: "Oversee seller accounts and onboarding",
-  products: "View and manage your Shopify product catalog",
+const sectionInfo = {
+  dashboard: {
+    title: "Overview",
+    description: "Monitor your business performance and key metrics"
+  },
+  users: {
+    title: "User Management", 
+    description: "Manage team members and their permissions"
+  },
+  roles: {
+    title: "Roles Management",
+    description: "Define and manage user roles and permissions"
+  },
+  sellers: {
+    title: "Sellers",
+    description: "Manage your marketplace sellers and their stores"
+  },
+  products: {
+    title: "Products",
+    description: "View and manage your Shopify product catalog"
+  },
 };
 
 export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProps) {
+  const currentInfo = sectionInfo[currentSection as keyof typeof sectionInfo] || sectionInfo.dashboard;
+  
   return (
     <header className="sticky top-0 z-40 h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
       <div className="flex h-16 items-center justify-between px-6">
@@ -38,28 +48,15 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
           <SidebarTrigger className="hover-scale transition-all duration-200" />
           <div className="flex flex-col">
             <h1 className="text-xl font-semibold text-foreground">
-              {sectionTitles[currentSection as keyof typeof sectionTitles] || "Dashboard"}
+              {currentInfo.title}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {sectionDescriptions[currentSection as keyof typeof sectionDescriptions]}
+              {currentInfo.description}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Global Search */}
-          <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search anything..."
-              className="pl-10 w-80 bg-background/50 border-border focus:border-primary transition-all duration-200"
-            />
-          </div>
-
-          {/* Mobile Search */}
-          <Button variant="ghost" size="sm" className="md:hidden hover-scale transition-all duration-200">
-            <Search className="h-5 w-5" />
-          </Button>
 
           {/* Notifications */}
           <DropdownMenu>
