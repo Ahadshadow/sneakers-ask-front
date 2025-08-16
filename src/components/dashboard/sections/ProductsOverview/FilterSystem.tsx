@@ -10,7 +10,6 @@ import { Filter, X, RotateCcw } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export interface FilterOptions {
-  category: string;
   status: string;
   minPrice: string;
   maxPrice: string;
@@ -21,7 +20,6 @@ export interface FilterOptions {
 interface FilterSystemProps {
   filters: FilterOptions;
   onFiltersChange: (filters: FilterOptions) => void;
-  availableCategories: string[];
   availableSellers: string[];
 }
 
@@ -42,7 +40,6 @@ const stockLevelOptions = [
 export function FilterSystem({ 
   filters, 
   onFiltersChange, 
-  availableCategories, 
   availableSellers 
 }: FilterSystemProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,7 +50,6 @@ export function FilterSystem({
 
   const clearAllFilters = () => {
     onFiltersChange({
-      category: "all",
       status: "all",
       minPrice: "",
       maxPrice: "",
@@ -113,15 +109,6 @@ export function FilterSystem({
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {filters.category && filters.category !== "all" && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Category: {filters.category}
-                          <X 
-                            className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                            onClick={() => removeFilter("category")}
-                          />
-                        </Badge>
-                      )}
                       {filters.status && filters.status !== "all" && (
                         <Badge variant="secondary" className="flex items-center gap-1">
                           Status: {statusOptions.find(s => s.value === filters.status)?.label}
@@ -168,22 +155,6 @@ export function FilterSystem({
 
                 {/* Filter Controls */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Category Filter */}
-                  <div className="space-y-2">
-                    <Label>Category</Label>
-                    <Select value={filters.category} onValueChange={(value) => updateFilter("category", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border-border z-50">
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {availableCategories.map(category => (
-                          <SelectItem key={category} value={category}>{category}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   {/* Status Filter */}
                   <div className="space-y-2">
                     <Label>Status</Label>

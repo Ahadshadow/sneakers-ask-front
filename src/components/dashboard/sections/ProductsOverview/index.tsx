@@ -10,7 +10,6 @@ import { mockProducts } from "./mockData";
 export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<FilterOptions>({
-    category: "all",
     status: "all",
     minPrice: "",
     maxPrice: "",
@@ -19,10 +18,6 @@ export function ProductsOverview() {
   });
 
   // Get unique values for filter dropdowns
-  const availableCategories = useMemo(() => {
-    return Array.from(new Set(mockProducts.map(product => product.category))).sort();
-  }, []);
-
   const availableSellers = useMemo(() => {
     return Array.from(new Set(mockProducts.map(product => product.seller))).sort();
   }, []);
@@ -34,9 +29,6 @@ export function ProductsOverview() {
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.seller.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // Category filter
-      const matchesCategory = filters.category === "all" || product.category === filters.category;
 
       // Status filter
       const matchesStatus = filters.status === "all" || product.status === filters.status;
@@ -60,7 +52,7 @@ export function ProductsOverview() {
         return true;
       })();
 
-      return matchesSearch && matchesCategory && matchesStatus && matchesSeller && matchesPrice && matchesStock;
+      return matchesSearch && matchesStatus && matchesSeller && matchesPrice && matchesStock;
     });
   }, [searchTerm, filters]);
 
@@ -79,7 +71,6 @@ export function ProductsOverview() {
       <FilterSystem 
         filters={filters}
         onFiltersChange={setFilters}
-        availableCategories={availableCategories}
         availableSellers={availableSellers}
       />
 
