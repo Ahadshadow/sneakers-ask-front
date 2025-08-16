@@ -1,12 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Search, Store, Plus, MoreHorizontal, Building2, User } from "lucide-react";
 import {
   Table,
@@ -181,21 +178,7 @@ const mockSellers: Seller[] = [
 
 export function SellersManagement() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    storeName: "",
-    ownerName: "",
-    email: "",
-    sellerType: "private",
-    vatRegistered: false,
-    vatNumber: "",
-    tinNumber: "",
-    vatRate: 0,
-    accountHolder: "",
-    iban: "",
-    swift: "",
-    bankName: ""
-  });
+  const navigate = useNavigate();
 
   const filteredSellers = mockSellers.filter(seller =>
     seller.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -220,27 +203,6 @@ export function SellersManagement() {
     }
   };
 
-  const handleCreateSeller = () => {
-    // Here you would typically send the data to your backend
-    console.log("Creating seller with data:", formData);
-    setIsCreateDialogOpen(false);
-    // Reset form
-    setFormData({
-      storeName: "",
-      ownerName: "",
-      email: "",
-      sellerType: "private",
-      vatRegistered: false,
-      vatNumber: "",
-      tinNumber: "",
-      vatRate: 0,
-      accountHolder: "",
-      iban: "",
-      swift: "",
-      bankName: ""
-    });
-  };
-
   return (
     <div className="space-y-6">
       {/* Header Actions */}
@@ -254,161 +216,13 @@ export function SellersManagement() {
             className="pl-10 w-64"
           />
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-primary hover:opacity-90 transition-opacity">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Seller
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Seller</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6 py-4">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Basic Information</h3>
-                <div>
-                  <Label htmlFor="sellerType">Seller Type</Label>
-                  <Select value={formData.sellerType} onValueChange={(value) => setFormData({...formData, sellerType: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select seller type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="private">Private Seller</SelectItem>
-                      <SelectItem value="b2b">B2B Seller</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {formData.sellerType === "b2b" && (
-                    <div>
-                      <Label htmlFor="storeName">Store Name</Label>
-                      <Input
-                        id="storeName"
-                        value={formData.storeName}
-                        onChange={(e) => setFormData({...formData, storeName: e.target.value})}
-                        placeholder="Enter store name"
-                      />
-                    </div>
-                  )}
-                  <div className={formData.sellerType === "private" ? "col-span-2" : ""}>
-                    <Label htmlFor="ownerName">{formData.sellerType === "b2b" ? "Owner Name" : "Full Name"}</Label>
-                    <Input
-                      id="ownerName"
-                      value={formData.ownerName}
-                      onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
-                      placeholder={formData.sellerType === "b2b" ? "Enter owner name" : "Enter your full name"}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    placeholder="Enter email address"
-                  />
-              </div>
-
-              {/* Tax Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Tax Information</h3>
-                
-                {formData.sellerType === "private" ? (
-                  <div>
-                    <Label htmlFor="tinNumber">TIN Number</Label>
-                    <Input
-                      id="tinNumber"
-                      value={formData.tinNumber}
-                      onChange={(e) => setFormData({...formData, tinNumber: e.target.value})}
-                      placeholder="Enter Tax Identification Number"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="vatRegistered"
-                        checked={formData.vatRegistered}
-                        onCheckedChange={(checked) => setFormData({...formData, vatRegistered: checked})}
-                      />
-                      <Label htmlFor="vatRegistered">VAT Registered</Label>
-                    </div>
-                    {formData.vatRegistered && (
-                      <div>
-                        <Label htmlFor="vatNumber">VAT Number</Label>
-                        <Input
-                          id="vatNumber"
-                          value={formData.vatNumber}
-                          onChange={(e) => setFormData({...formData, vatNumber: e.target.value})}
-                          placeholder="Enter VAT number"
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-              </div>
-
-
-              {/* Bank Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Bank Details</h3>
-                <div>
-                  <Label htmlFor="accountHolder">Account Holder</Label>
-                  <Input
-                    id="accountHolder"
-                    value={formData.accountHolder}
-                    onChange={(e) => setFormData({...formData, accountHolder: e.target.value})}
-                    placeholder="Enter account holder name"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="iban">IBAN</Label>
-                    <Input
-                      id="iban"
-                      value={formData.iban}
-                      onChange={(e) => setFormData({...formData, iban: e.target.value})}
-                      placeholder="Enter IBAN"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="swift">SWIFT Code</Label>
-                    <Input
-                      id="swift"
-                      value={formData.swift || ""}
-                      onChange={(e) => setFormData({...formData, swift: e.target.value})}
-                      placeholder="Enter SWIFT code"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="bankName">Bank Name</Label>
-                  <Input
-                    id="bankName"
-                    value={formData.bankName}
-                    onChange={(e) => setFormData({...formData, bankName: e.target.value})}
-                    placeholder="Enter bank name"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateSeller} className="bg-gradient-primary hover:opacity-90">
-                  Create Seller
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          className="bg-gradient-primary hover:opacity-90 transition-all duration-200 hover-scale"
+          onClick={() => navigate("/add-seller")}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Create Seller
+        </Button>
       </div>
 
       {/* Sellers Stats */}

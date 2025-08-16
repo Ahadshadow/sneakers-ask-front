@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ const mockUsers: User[] = [
 
 export function UsersManagement() {
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   const filteredUsers = mockUsers.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -97,7 +99,10 @@ export function UsersManagement() {
             className="pl-10 w-64"
           />
         </div>
-        <Button className="bg-gradient-primary hover:opacity-90 transition-opacity">
+        <Button 
+          className="bg-gradient-primary hover:opacity-90 transition-all duration-200 hover-scale"
+          onClick={() => navigate("/add-employee")}
+        >
           <UserPlus className="h-4 w-4 mr-2" />
           Add Employee
         </Button>
