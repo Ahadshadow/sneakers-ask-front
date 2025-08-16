@@ -35,7 +35,9 @@ const mockSellers = {
     website: "https://premiumsneakers.com",
     businessType: "B2B",
     country: "United States",
-    description: "Premium sneaker retailer specializing in limited edition and exclusive releases."
+    description: "Premium sneaker retailer specializing in limited edition and exclusive releases.",
+    vatNumber: "DE123456789",
+    tinNumber: ""
   },
   "2": {
     id: "2",
@@ -45,7 +47,9 @@ const mockSellers = {
     website: "https://streetstyle.com",
     businessType: "Private",
     country: "United States",
-    description: "Urban fashion and streetwear boutique."
+    description: "Urban fashion and streetwear boutique.",
+    vatNumber: "",
+    tinNumber: "123-45-6789"
   }
 };
 
@@ -62,7 +66,9 @@ export default function EditSeller() {
     website: "",
     businessType: "",
     country: "",
-    description: ""
+    description: "",
+    vatNumber: "",
+    tinNumber: ""
   });
 
   useEffect(() => {
@@ -76,7 +82,9 @@ export default function EditSeller() {
         website: seller.website,
         businessType: seller.businessType,
         country: seller.country,
-        description: seller.description
+        description: seller.description,
+        vatNumber: seller.vatNumber || "",
+        tinNumber: seller.tinNumber || ""
       });
     }
   }, [id]);
@@ -197,8 +205,35 @@ export default function EditSeller() {
                       className="pl-10 transition-all duration-200 focus:scale-[1.02]"
                       required
                     />
-                  </div>
                 </div>
+                
+                {/* Conditional Tax Fields */}
+                {formData.businessType === "B2B" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="vatNumber">VAT Number</Label>
+                    <Input
+                      id="vatNumber"
+                      value={formData.vatNumber}
+                      onChange={(e) => handleInputChange("vatNumber", e.target.value)}
+                      placeholder="Enter VAT number"
+                      className="transition-all duration-200 focus:scale-[1.02]"
+                    />
+                  </div>
+                )}
+                
+                {formData.businessType === "Private" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="tinNumber">TIN Number</Label>
+                    <Input
+                      id="tinNumber"
+                      value={formData.tinNumber}
+                      onChange={(e) => handleInputChange("tinNumber", e.target.value)}
+                      placeholder="Enter TIN number"
+                      className="transition-all duration-200 focus:scale-[1.02]"
+                    />
+                  </div>
+                )}
+              </div>
                 <div className="space-y-2">
                   <Label htmlFor="website">Website</Label>
                   <div className="relative">
@@ -218,11 +253,16 @@ export default function EditSeller() {
                     value={formData.businessType} 
                     onValueChange={(value) => {
                       handleInputChange("businessType", value);
-                      // Clear business name if switching to Private
+                      // Clear business name and VAT if switching to Private
                       if (value === "Private") {
                         handleInputChange("businessName", "");
+                        handleInputChange("vatNumber", "");
                       }
-                    }} 
+                      // Clear TIN if switching to B2B
+                      if (value === "B2B") {
+                        handleInputChange("tinNumber", "");
+                      }
+                    }}
                     required
                   >
                     <SelectTrigger className="transition-all duration-200 focus:scale-[1.02]">

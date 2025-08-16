@@ -37,7 +37,9 @@ export default function AddSeller() {
     website: "",
     businessType: "",
     country: "",
-    description: ""
+    description: "",
+    vatNumber: "",
+    tinNumber: ""
   });
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -163,11 +165,16 @@ export default function AddSeller() {
                     value={formData.businessType} 
                     onValueChange={(value) => {
                       handleInputChange("businessType", value);
-                      // Clear business name if switching to Private
+                      // Clear business name and tax numbers if switching to Private
                       if (value === "Private") {
                         handleInputChange("businessName", "");
+                        handleInputChange("vatNumber", "");
                       }
-                    }} 
+                      // Clear TIN if switching to B2B
+                      if (value === "B2B") {
+                        handleInputChange("tinNumber", "");
+                      }
+                    }}
                     required
                   >
                     <SelectTrigger className="transition-all duration-200 focus:scale-[1.02]">
@@ -180,6 +187,33 @@ export default function AddSeller() {
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {/* Conditional Tax Fields */}
+                {formData.businessType === "B2B" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="vatNumber">VAT Number</Label>
+                    <Input
+                      id="vatNumber"
+                      value={formData.vatNumber}
+                      onChange={(e) => handleInputChange("vatNumber", e.target.value)}
+                      placeholder="Enter VAT number"
+                      className="transition-all duration-200 focus:scale-[1.02]"
+                    />
+                  </div>
+                )}
+                
+                {formData.businessType === "Private" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="tinNumber">TIN Number</Label>
+                    <Input
+                      id="tinNumber"
+                      value={formData.tinNumber}
+                      onChange={(e) => handleInputChange("tinNumber", e.target.value)}
+                      placeholder="Enter TIN number"
+                      className="transition-all duration-200 focus:scale-[1.02]"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
