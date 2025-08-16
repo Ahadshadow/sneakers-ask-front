@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { OptimizedDashboardHeader } from "./OptimizedDashboardHeader";
@@ -9,6 +10,14 @@ import { ProductsOverview } from "./sections/ProductsOverview";
 
 export function Dashboard() {
   const [currentSection, setCurrentSection] = useState("dashboard");
+  const location = useLocation();
+
+  // Handle navigation from other pages
+  useEffect(() => {
+    if (location.state?.section) {
+      setCurrentSection(location.state.section);
+    }
+  }, [location.state]);
 
   const renderSection = () => {
     switch (currentSection) {

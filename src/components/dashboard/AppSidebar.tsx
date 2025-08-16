@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   Users, 
@@ -68,20 +69,23 @@ const navigationItems = [
 
 const quickActions = [
   {
-    id: "add-product",
-    label: "Add Product",
-    icon: Package,
+    id: "add-employee",
+    label: "Add Employee",
+    icon: Users,
+    path: "/add-employee"
   },
   {
-    id: "add-user",
-    label: "Add User",
-    icon: Users,
+    id: "add-seller", 
+    label: "Add Seller",
+    icon: Store,
+    path: "/add-seller"
   }
 ];
 
 export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const navigate = useNavigate();
 
   return (
     <Sidebar className="border-sidebar-border bg-sidebar">
@@ -156,7 +160,10 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                         asChild
                         className="hover-scale transition-all duration-200"
                       >
-                        <button className="flex items-center gap-3 w-full">
+                        <button 
+                          className="flex items-center gap-3 w-full"
+                          onClick={() => navigate(action.path)}
+                        >
                           <Icon className="h-4 w-4 flex-shrink-0" />
                           <span className="font-medium">{action.label}</span>
                         </button>
