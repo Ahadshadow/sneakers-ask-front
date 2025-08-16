@@ -136,7 +136,6 @@ export function ProductsOverview() {
                 <TableHead>Product</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -155,11 +154,6 @@ export function ProductsOverview() {
                   </TableCell>
                   <TableCell className="font-medium text-card-foreground">
                     {product.price}
-                  </TableCell>
-                  <TableCell>
-                    <span className={getStockColor(product.stock)}>
-                      {product.stock} units
-                    </span>
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(product.status)}>
