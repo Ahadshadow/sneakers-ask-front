@@ -95,10 +95,6 @@ export default function AddEmployee() {
                     {formData.firstName.charAt(0)}{formData.lastName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <Button variant="outline" className="hover-scale transition-all duration-200">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Photo
-                </Button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
