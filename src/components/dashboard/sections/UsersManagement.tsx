@@ -4,7 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, UserPlus, MoreHorizontal, Shield } from "lucide-react";
+import { Search, UserPlus, MoreHorizontal, Shield, Edit, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -21,6 +38,8 @@ interface User {
   role: "admin" | "manager" | "support" | "analyst";
   status: "active" | "inactive" | "pending";
   joinDate: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 const mockUsers: User[] = [
@@ -60,7 +79,12 @@ const mockUsers: User[] = [
 
 export function UsersManagement() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: User | null }>({
+    open: false,
+    user: null
+  });
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const filteredUsers = mockUsers.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -83,6 +107,25 @@ export function UsersManagement() {
       case "inactive": return "secondary";
       case "pending": return "outline";
       default: return "outline";
+    }
+  };
+
+  const handleEditUser = (user: User) => {
+    navigate(`/edit-employee/${user.id}`);
+  };
+
+  const handleDeleteUser = (user: User) => {
+    setDeleteDialog({ open: true, user });
+  };
+
+  const confirmDelete = () => {
+    if (deleteDialog.user) {
+      // Here you would typically call an API to delete the user
+      toast({
+        title: "Employee Deleted",
+        description: `${deleteDialog.user.name} has been removed from the team.`,
+      });
+      setDeleteDialog({ open: false, user: null });
     }
   };
 
@@ -150,9 +193,26 @@ export function UsersManagement() {
                     {new Date(user.joinDate).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteUser(user)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Employee
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
@@ -160,6 +220,27 @@ export function UsersManagement() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, user: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Employee</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteDialog.user?.name}"? This action cannot be undone and will remove their access to the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Employee
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
