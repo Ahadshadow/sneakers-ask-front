@@ -35,7 +35,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
             <TableHead className="font-semibold text-foreground">Product</TableHead>
             <TableHead className="font-semibold text-foreground">Price</TableHead>
             <TableHead className="font-semibold text-foreground hidden md:table-cell">Orders</TableHead>
-            <TableHead className="font-semibold text-foreground">Status</TableHead>
             <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -76,16 +75,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
                     </Button>
                   )}
                 </div>
-              </TableCell>
-              <TableCell className="py-4">
-                <Badge 
-                  variant={getStatusBadgeVariant(product.status)}
-                  className="font-medium transition-all duration-200 hover-scale"
-                >
-                  {product.status === "fliproom_sale" ? "Fliproom Sale" : 
-                   product.status === "sneakerask" ? "SneakerAsk" : 
-                   product.status === "open" ? "Open" : product.status}
-                </Badge>
               </TableCell>
               <TableCell className="text-right py-4">
                 <Button 

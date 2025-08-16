@@ -279,7 +279,6 @@ export function SellersManagement() {
                 <TableHead>Store</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Products</TableHead>
                 <TableHead>Sales</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -300,11 +299,6 @@ export function SellersManagement() {
                   <TableCell>
                     <Badge variant={getSellerTypeBadgeVariant(seller.sellerType)}>
                       {seller.sellerType === 'b2b' ? 'B2B' : 'Private'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(seller.status)}>
-                      {seller.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
