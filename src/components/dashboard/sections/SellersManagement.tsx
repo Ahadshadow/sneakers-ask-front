@@ -323,26 +323,14 @@ export function SellersManagement() {
                   <Label htmlFor="vatRegistered">VAT Registered</Label>
                 </div>
                 {formData.vatRegistered && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="vatNumber">VAT Number</Label>
-                      <Input
-                        id="vatNumber"
-                        value={formData.vatNumber}
-                        onChange={(e) => setFormData({...formData, vatNumber: e.target.value})}
-                        placeholder="Enter VAT number"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="vatRate">VAT Rate (%)</Label>
-                      <Input
-                        id="vatRate"
-                        type="number"
-                        value={formData.vatRate}
-                        onChange={(e) => setFormData({...formData, vatRate: Number(e.target.value)})}
-                        placeholder="Enter VAT rate"
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="vatNumber">VAT Number</Label>
+                    <Input
+                      id="vatNumber"
+                      value={formData.vatNumber}
+                      onChange={(e) => setFormData({...formData, vatNumber: e.target.value})}
+                      placeholder="Enter VAT number"
+                    />
                   </div>
                 )}
               </div>
