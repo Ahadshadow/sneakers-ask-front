@@ -189,6 +189,7 @@ export function SellersManagement() {
     sellerType: "private",
     vatRegistered: false,
     vatNumber: "",
+    tinNumber: "",
     vatRate: 0,
     accountHolder: "",
     iban: "",
@@ -231,6 +232,7 @@ export function SellersManagement() {
       sellerType: "private",
       vatRegistered: false,
       vatNumber: "",
+      tinNumber: "",
       vatRate: 0,
       accountHolder: "",
       iban: "",
@@ -310,32 +312,48 @@ export function SellersManagement() {
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     placeholder="Enter email address"
                   />
-                </div>
               </div>
 
-              {/* VAT Settings */}
+              {/* Tax Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">VAT Settings</h3>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="vatRegistered"
-                    checked={formData.vatRegistered}
-                    onCheckedChange={(checked) => setFormData({...formData, vatRegistered: checked})}
-                  />
-                  <Label htmlFor="vatRegistered">VAT Registered</Label>
-                </div>
-                {formData.vatRegistered && (
+                <h3 className="text-lg font-semibold">Tax Information</h3>
+                
+                {formData.sellerType === "private" ? (
                   <div>
-                    <Label htmlFor="vatNumber">VAT Number</Label>
+                    <Label htmlFor="tinNumber">TIN Number</Label>
                     <Input
-                      id="vatNumber"
-                      value={formData.vatNumber}
-                      onChange={(e) => setFormData({...formData, vatNumber: e.target.value})}
-                      placeholder="Enter VAT number"
+                      id="tinNumber"
+                      value={formData.tinNumber}
+                      onChange={(e) => setFormData({...formData, tinNumber: e.target.value})}
+                      placeholder="Enter Tax Identification Number"
                     />
                   </div>
+                ) : (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="vatRegistered"
+                        checked={formData.vatRegistered}
+                        onCheckedChange={(checked) => setFormData({...formData, vatRegistered: checked})}
+                      />
+                      <Label htmlFor="vatRegistered">VAT Registered</Label>
+                    </div>
+                    {formData.vatRegistered && (
+                      <div>
+                        <Label htmlFor="vatNumber">VAT Number</Label>
+                        <Input
+                          id="vatNumber"
+                          value={formData.vatNumber}
+                          onChange={(e) => setFormData({...formData, vatNumber: e.target.value})}
+                          placeholder="Enter VAT number"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
+              </div>
+
 
               {/* Bank Details */}
               <div className="space-y-4">
