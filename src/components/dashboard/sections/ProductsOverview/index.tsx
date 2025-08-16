@@ -1,12 +1,10 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart } from "lucide-react";
+import { Package } from "lucide-react";
 import { SearchBar } from "./SearchBar";
 import { HeaderActions } from "./HeaderActions";
 import { ProductsTable } from "./ProductsTable";
 import { FilterSystem, FilterOptions } from "./FilterSystem";
-import { BuyingInterface } from "./BuyingInterface";
 import { mockProducts } from "./mockData";
 
 export function ProductsOverview() {
@@ -65,58 +63,39 @@ export function ProductsOverview() {
         availableSellers={availableSellers}
       />
 
-      {/* Main Content - Tabbed Interface */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 bg-muted/20">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            Product Overview
-          </TabsTrigger>
-          <TabsTrigger value="buying" className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            Source Products
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-0">
-          <Card className="bg-gradient-card border-border shadow-soft animate-scale-in">
-            <CardHeader className="pb-6">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Package className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <span className="text-foreground">Shopify Products Overview</span>
-                  <p className="text-sm font-normal text-muted-foreground mt-1">
-                    Manage and monitor your product inventory
-                  </p>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ProductsTable products={filteredProducts} />
-              
-              {/* Results Summary */}
-              <div className="mt-6 pt-4 border-t border-border">
-                <p className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium text-foreground">{filteredProducts.length}</span> of{" "}
-                  <span className="font-medium text-foreground">{mockProducts.length}</span> products
-                  {(searchTerm || Object.entries(filters).some(([key, value]) => {
-                    if (key === 'minPrice' || key === 'maxPrice') return value !== "";
-                    return value !== "all";
-                  })) && (
-                    <span className="ml-2 text-primary">(filtered)</span>
-                  )}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="buying" className="space-y-0">
-          <BuyingInterface products={filteredProducts} />
-        </TabsContent>
-      </Tabs>
+      {/* Main Content */}
+      <Card className="bg-gradient-card border-border shadow-soft animate-scale-in">
+        <CardHeader className="pb-6">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Package className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <span className="text-foreground">Shopify Products Overview</span>
+              <p className="text-sm font-normal text-muted-foreground mt-1">
+                Manage and monitor your product inventory
+              </p>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ProductsTable products={filteredProducts} />
+          
+          {/* Results Summary */}
+          <div className="mt-6 pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground">
+              Showing <span className="font-medium text-foreground">{filteredProducts.length}</span> of{" "}
+              <span className="font-medium text-foreground">{mockProducts.length}</span> products
+              {(searchTerm || Object.entries(filters).some(([key, value]) => {
+                if (key === 'minPrice' || key === 'maxPrice') return value !== "";
+                return value !== "all";
+              })) && (
+                <span className="ml-2 text-primary">(filtered)</span>
+              )}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
