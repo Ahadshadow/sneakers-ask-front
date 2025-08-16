@@ -145,15 +145,6 @@ export default function EditEmployee() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Profile Picture */}
-              <div className="flex items-center gap-6">
-                <Avatar className="h-20 w-20">
-                  <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                    {formData.firstName.charAt(0)}{formData.lastName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name *</Label>
