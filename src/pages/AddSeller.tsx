@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Store, Mail, Phone, MapPin, Globe, Upload, Building, CreditCard } from "lucide-react";
+import { ArrowLeft, Store, Mail, Phone, MapPin, Globe, Upload, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
 const businessTypes = [
@@ -44,11 +43,7 @@ export default function AddSeller() {
     businessType: "",
     country: "",
     address: "",
-    description: "",
-    commissionRate: "15",
-    isVerified: false,
-    allowsReturns: true,
-    paymentTerms: "30"
+    description: ""
   });
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -245,70 +240,6 @@ export default function AddSeller() {
             </CardContent>
           </Card>
 
-          {/* Business Terms */}
-          <Card className="animate-fade-in" style={{ animationDelay: '100ms' }}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-primary" />
-                Business Terms & Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="commissionRate">Commission Rate (%)</Label>
-                  <Input
-                    id="commissionRate"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.commissionRate}
-                    onChange={(e) => handleInputChange("commissionRate", e.target.value)}
-                    placeholder="15"
-                    className="transition-all duration-200 focus:scale-[1.02]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="paymentTerms">Payment Terms (Days)</Label>
-                  <Select value={formData.paymentTerms} onValueChange={(value) => handleInputChange("paymentTerms", value)}>
-                    <SelectTrigger className="transition-all duration-200 focus:scale-[1.02]">
-                      <SelectValue placeholder="Select payment terms" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 Days</SelectItem>
-                      <SelectItem value="30">30 Days</SelectItem>
-                      <SelectItem value="45">45 Days</SelectItem>
-                      <SelectItem value="60">60 Days</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-foreground">Verified Seller</h4>
-                    <p className="text-sm text-muted-foreground">Mark this seller as verified and trusted</p>
-                  </div>
-                  <Switch
-                    checked={formData.isVerified}
-                    onCheckedChange={(checked) => handleInputChange("isVerified", checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-foreground">Accept Returns</h4>
-                    <p className="text-sm text-muted-foreground">Allow customers to return products from this seller</p>
-                  </div>
-                  <Switch
-                    checked={formData.allowsReturns}
-                    onCheckedChange={(checked) => handleInputChange("allowsReturns", checked)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Actions */}
           <div className="flex items-center justify-between pt-6">
