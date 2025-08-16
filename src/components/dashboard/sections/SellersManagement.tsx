@@ -192,8 +192,8 @@ export function SellersManagement() {
     vatRate: 0,
     accountHolder: "",
     iban: "",
-    bankName: "",
-    paymentSchedule: "monthly"
+    swift: "",
+    bankName: ""
   });
 
   const filteredSellers = mockSellers.filter(seller =>
@@ -234,8 +234,8 @@ export function SellersManagement() {
       vatRate: 0,
       accountHolder: "",
       iban: "",
-      bankName: "",
-      paymentSchedule: "monthly"
+      swift: "",
+      bankName: ""
     });
   };
 
@@ -358,27 +358,23 @@ export function SellersManagement() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="bankName">Bank Name</Label>
+                    <Label htmlFor="swift">SWIFT Code</Label>
                     <Input
-                      id="bankName"
-                      value={formData.bankName}
-                      onChange={(e) => setFormData({...formData, bankName: e.target.value})}
-                      placeholder="Enter bank name"
+                      id="swift"
+                      value={formData.swift || ""}
+                      onChange={(e) => setFormData({...formData, swift: e.target.value})}
+                      placeholder="Enter SWIFT code"
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="paymentSchedule">Payment Schedule</Label>
-                  <Select value={formData.paymentSchedule} onValueChange={(value) => setFormData({...formData, paymentSchedule: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select payment schedule" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="bankName">Bank Name</Label>
+                  <Input
+                    id="bankName"
+                    value={formData.bankName}
+                    onChange={(e) => setFormData({...formData, bankName: e.target.value})}
+                    placeholder="Enter bank name"
+                  />
                 </div>
               </div>
 
