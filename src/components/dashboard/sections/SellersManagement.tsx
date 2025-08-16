@@ -317,7 +317,6 @@ export function SellersManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Store</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Products</TableHead>
@@ -328,9 +327,6 @@ export function SellersManagement() {
             <TableBody>
               {filteredSellers.map((seller) => (
                 <TableRow key={seller.id}>
-                  <TableCell>
-                    <p className="font-medium text-card-foreground">{seller.storeName}</p>
-                  </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-medium text-card-foreground">{seller.ownerName}</p>
