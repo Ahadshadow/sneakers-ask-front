@@ -289,10 +289,7 @@ export function SellersManagement() {
               {filteredSellers.map((seller) => (
                 <TableRow key={seller.id}>
                   <TableCell>
-                    <div>
-                      <p className="font-medium text-card-foreground">{seller.storeName}</p>
-                      <p className="text-sm text-muted-foreground">Since {new Date(seller.joinDate).toLocaleDateString()}</p>
-                    </div>
+                    <p className="font-medium text-card-foreground">{seller.storeName}</p>
                   </TableCell>
                   <TableCell>
                     <div>
