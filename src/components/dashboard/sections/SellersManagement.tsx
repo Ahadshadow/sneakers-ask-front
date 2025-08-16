@@ -163,7 +163,6 @@ export function SellersManagement() {
                 <TableHead>Status</TableHead>
                 <TableHead>Products</TableHead>
                 <TableHead>Sales</TableHead>
-                <TableHead>Rating</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -192,12 +191,6 @@ export function SellersManagement() {
                   </TableCell>
                   <TableCell className="font-medium text-success">
                     {seller.totalSales}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <span className="text-card-foreground">{seller.rating}</span>
-                      <span className="text-yellow-500">⭐</span>
-                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">
