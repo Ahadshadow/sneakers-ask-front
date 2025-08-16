@@ -168,7 +168,7 @@ export function FilterSystem({
                       <SelectTrigger>
                         <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border-border z-50">
                         <SelectItem value="">All Categories</SelectItem>
                         {availableCategories.map(category => (
                           <SelectItem key={category} value={category}>{category}</SelectItem>
@@ -184,7 +184,7 @@ export function FilterSystem({
                       <SelectTrigger>
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border-border z-50">
                         <SelectItem value="">All Statuses</SelectItem>
                         {statusOptions.map(status => (
                           <SelectItem key={status.value} value={status.value}>
@@ -205,7 +205,7 @@ export function FilterSystem({
                       <SelectTrigger>
                         <SelectValue placeholder="All Sellers" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border-border z-50">
                         <SelectItem value="">All Sellers</SelectItem>
                         {availableSellers.map(seller => (
                           <SelectItem key={seller} value={seller}>{seller}</SelectItem>
@@ -242,7 +242,7 @@ export function FilterSystem({
                       <SelectTrigger>
                         <SelectValue placeholder="All Stock Levels" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border-border z-50">
                         {stockLevelOptions.map(option => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
