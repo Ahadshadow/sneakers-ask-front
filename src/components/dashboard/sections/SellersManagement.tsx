@@ -110,7 +110,7 @@ export function SellersManagement() {
       </div>
 
       {/* Sellers Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
         <Card className="bg-gradient-card border-border shadow-soft">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -119,28 +119,6 @@ export function SellersManagement() {
                 <p className="text-2xl font-bold text-card-foreground">1,243</p>
               </div>
               <Store className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Pending Approval</p>
-                <p className="text-2xl font-bold text-card-foreground">28</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-warning" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Average Rating</p>
-                <p className="text-2xl font-bold text-card-foreground">4.7</p>
-              </div>
-              <div className="text-2xl">⭐</div>
             </div>
           </CardContent>
         </Card>
