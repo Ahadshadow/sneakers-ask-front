@@ -222,7 +222,6 @@ export function ProductsOverview() {
                 <TableHead>Product</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
                 <TableHead>Orders</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -243,11 +242,6 @@ export function ProductsOverview() {
                   </TableCell>
                   <TableCell className="font-medium text-card-foreground">
                     {product.price}
-                  </TableCell>
-                  <TableCell>
-                    <span className={getStockColor(product.stock)}>
-                      {product.stock} units
-                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
