@@ -196,10 +196,6 @@ export function ProductsOverview() {
           />
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-border">
-            <ExternalLink className="h-4 w-4 mr-2" />
-            View in Shopify
-          </Button>
           <Button className="bg-gradient-primary hover:opacity-90 transition-opacity">
             <Package className="h-4 w-4 mr-2" />
             Sync Products
