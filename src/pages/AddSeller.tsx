@@ -217,22 +217,13 @@ export default function AddSeller() {
             >
               Cancel
             </Button>
-            <div className="flex gap-3">
-              <Button 
-                type="button" 
-                variant="secondary"
-                className="hover-scale transition-all duration-200"
-              >
-                Save as Draft
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="bg-gradient-primary hover:opacity-90 transition-all duration-200 hover-scale min-w-32"
-              >
-                {isSubmitting ? "Adding Seller..." : "Add Seller"}
-              </Button>
-            </div>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="bg-gradient-primary hover:opacity-90 transition-all duration-200 hover-scale min-w-32"
+            >
+              {isSubmitting ? "Adding Seller..." : "Add Seller"}
+            </Button>
           </div>
         </form>
       </div>
