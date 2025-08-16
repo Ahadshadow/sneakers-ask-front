@@ -11,16 +11,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
-const departments = [
-  "Sales",
-  "Marketing", 
-  "Operations",
-  "Customer Service",
-  "Finance",
-  "IT",
-  "HR"
-];
-
 const roles = [
   "Employee",
   "Team Lead",
@@ -39,12 +29,8 @@ export default function AddEmployee() {
     lastName: "",
     email: "",
     phone: "",
-    department: "",
     role: "",
-    startDate: "",
-    salary: "",
-    address: "",
-    notes: ""
+    address: ""
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -194,69 +180,18 @@ export default function AddEmployee() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department *</Label>
-                  <Select value={formData.department} onValueChange={(value) => handleInputChange("department", value)} required>
-                    <SelectTrigger className="transition-all duration-200 focus:scale-[1.02]">
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map(dept => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role *</Label>
-                  <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)} required>
-                    <SelectTrigger className="transition-all duration-200 focus:scale-[1.02]">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map(role => (
-                        <SelectItem key={role} value={role}>{role}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date *</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="startDate"
-                      type="date"
-                      value={formData.startDate}
-                      onChange={(e) => handleInputChange("startDate", e.target.value)}
-                      className="pl-10 transition-all duration-200 focus:scale-[1.02]"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="salary">Annual Salary</Label>
-                  <Input
-                    id="salary"
-                    value={formData.salary}
-                    onChange={(e) => handleInputChange("salary", e.target.value)}
-                    placeholder="Enter annual salary"
-                    className="transition-all duration-200 focus:scale-[1.02]"
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
-                <Label htmlFor="notes">Additional Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange("notes", e.target.value)}
-                  placeholder="Any additional information about the employee..."
-                  className="transition-all duration-200 focus:scale-[1.02]"
-                  rows={4}
-                />
+                <Label htmlFor="role">Role *</Label>
+                <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)} required>
+                  <SelectTrigger className="transition-all duration-200 focus:scale-[1.02]">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map(role => (
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
