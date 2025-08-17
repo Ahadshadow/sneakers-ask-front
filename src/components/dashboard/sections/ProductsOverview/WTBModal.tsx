@@ -26,20 +26,21 @@ const availableSellers = [
 ];
 
 const shippingOptions = [
-  { id: "standard", name: "Standard Shipping (5-7 days)", price: 9.99 },
-  { id: "express", name: "Express Shipping (2-3 days)", price: 19.99 },
-  { id: "overnight", name: "Overnight Shipping (1 day)", price: 39.99 }
+  { id: "discord", name: "Shipper Discord", requiresUpload: false },
+  { id: "upload", name: "Upload shipment label", requiresUpload: true }
 ];
 
 export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps) {
   const [selectedSeller, setSelectedSeller] = useState("");
   const [payoutPrice, setPayoutPrice] = useState("");
   const [selectedShipping, setSelectedShipping] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const handleClose = () => {
     setSelectedSeller("");
     setPayoutPrice("");
     setSelectedShipping("");
+    setUploadedFile(null);
     onClose();
   };
 
@@ -48,6 +49,9 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
 
     const shippingOption = shippingOptions.find(option => option.id === selectedShipping);
     if (!shippingOption) return;
+
+    // If upload is required, check if file is uploaded
+    if (shippingOption.requiresUpload && !uploadedFile) return;
     
     const purchase: Omit<WTBPurchase, "id"> = {
       productId: product.id,
@@ -55,7 +59,7 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
       seller: selectedSeller,
       payoutPrice: parseFloat(payoutPrice),
       shippingMethod: shippingOption.name,
-      shippingCost: shippingOption.price,
+      shippingCost: 0, // No cost for these shipping methods
       purchaseDate: new Date().toISOString(),
       status: "processing"
     };
@@ -64,9 +68,21 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
     handleClose();
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === "application/pdf") {
+      setUploadedFile(file);
+    } else {
+      // Show error message or reset
+      setUploadedFile(null);
+    }
+  };
+
   if (!product) return null;
 
-  const canSubmit = selectedSeller && payoutPrice && parseFloat(payoutPrice) > 0 && selectedShipping;
+  const selectedShippingOption = shippingOptions.find(option => option.id === selectedShipping);
+  const canSubmit = selectedSeller && payoutPrice && parseFloat(payoutPrice) > 0 && selectedShipping && 
+    (!selectedShippingOption?.requiresUpload || uploadedFile);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -149,10 +165,35 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
                       {option.name}
                     </Label>
                   </div>
-                  <span className="text-primary font-semibold">${option.price}</span>
                 </div>
               ))}
             </RadioGroup>
+
+            {/* File Upload for Shipment Label */}
+            {selectedShipping === "upload" && (
+              <div className="mt-4 space-y-2">
+                <Label htmlFor="shipment-file" className="text-sm font-medium">
+                  Upload Shipment Label (PDF)
+                </Label>
+                <Input
+                  id="shipment-file"
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileUpload}
+                  className="cursor-pointer"
+                />
+                {uploadedFile && (
+                  <p className="text-xs text-green-600">
+                    ✓ File uploaded: {uploadedFile.name}
+                  </p>
+                )}
+                {selectedShipping === "upload" && !uploadedFile && (
+                  <p className="text-xs text-red-600">
+                    Please upload a PDF shipment label to continue
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}

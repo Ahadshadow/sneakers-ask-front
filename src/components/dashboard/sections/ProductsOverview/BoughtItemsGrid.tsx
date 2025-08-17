@@ -85,10 +85,6 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
                   <span className="font-medium text-xs">{purchase.shippingMethod}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Shipping Cost:</span>
-                  <span className="font-medium">${purchase.shippingCost}</span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-muted-foreground">Purchase Date:</span>
                   <span className="font-medium">{new Date(purchase.purchaseDate).toLocaleDateString()}</span>
                 </div>
