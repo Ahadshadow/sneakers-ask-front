@@ -30,22 +30,29 @@ const shippingOptions = [
   { id: "upload", name: "Upload shipment label", requiresUpload: true }
 ];
 
+const vatOptions = [
+  { id: "regular", name: "Regular VAT", description: "Standard VAT treatment" },
+  { id: "margin", name: "Margin Scheme", description: "For second-hand goods" }
+];
+
 export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps) {
   const [selectedSeller, setSelectedSeller] = useState("");
   const [payoutPrice, setPayoutPrice] = useState("");
+  const [vatTreatment, setVatTreatment] = useState("");
   const [selectedShipping, setSelectedShipping] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const handleClose = () => {
     setSelectedSeller("");
     setPayoutPrice("");
+    setVatTreatment("");
     setSelectedShipping("");
     setUploadedFile(null);
     onClose();
   };
 
   const handlePurchase = () => {
-    if (!product || !selectedSeller || !payoutPrice || !selectedShipping) return;
+    if (!product || !selectedSeller || !payoutPrice || !vatTreatment || !selectedShipping) return;
 
     const shippingOption = shippingOptions.find(option => option.id === selectedShipping);
     if (!shippingOption) return;
@@ -58,6 +65,7 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
       product: { ...product, status: "bought" },
       seller: selectedSeller,
       payoutPrice: parseFloat(payoutPrice),
+      vatTreatment: vatTreatment,
       shippingMethod: shippingOption.name,
       shippingCost: 0, // No cost for these shipping methods
       purchaseDate: new Date().toISOString(),
@@ -81,7 +89,7 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
   if (!product) return null;
 
   const selectedShippingOption = shippingOptions.find(option => option.id === selectedShipping);
-  const canSubmit = selectedSeller && payoutPrice && parseFloat(payoutPrice) > 0 && selectedShipping && 
+  const canSubmit = selectedSeller && payoutPrice && parseFloat(payoutPrice) > 0 && vatTreatment && selectedShipping && 
     (!selectedShippingOption?.requiresUpload || uploadedFile);
 
   return (
@@ -119,6 +127,26 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
               <SelectContent className="bg-background border border-border">
                 {availableSellers.map(seller => (
                   <SelectItem key={seller} value={seller}>{seller}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* VAT Treatment */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">VAT Treatment</Label>
+            <Select value={vatTreatment} onValueChange={setVatTreatment}>
+              <SelectTrigger className="w-full border-border">
+                <SelectValue placeholder="Select VAT treatment" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border">
+                {vatOptions.map(option => (
+                  <SelectItem key={option.id} value={option.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{option.name}</span>
+                      <span className="text-xs text-muted-foreground">{option.description}</span>
+                    </div>
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

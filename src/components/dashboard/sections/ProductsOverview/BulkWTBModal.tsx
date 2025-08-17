@@ -32,15 +32,22 @@ const shippingOptions = [
   { id: "upload", name: "Upload shipment label", requiresUpload: true }
 ];
 
+const vatOptions = [
+  { id: "regular", name: "Regular VAT", description: "Standard VAT treatment" },
+  { id: "margin", name: "Margin Scheme", description: "For second-hand goods" }
+];
+
 export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPurchase }: BulkWTBModalProps) {
   const [selectedSeller, setSelectedSeller] = useState("");
   const [payoutPrices, setPayoutPrices] = useState<{[key: string]: string}>({});
+  const [vatTreatments, setVatTreatments] = useState<{[key: string]: string}>({});
   const [selectedShipping, setSelectedShipping] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const handleClose = () => {
     setSelectedSeller("");
     setPayoutPrices({});
+    setVatTreatments({});
     setSelectedShipping("");
     setUploadedFile(null);
     onClose();
@@ -48,6 +55,13 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
 
   const handlePayoutChange = (productId: string, value: string) => {
     setPayoutPrices(prev => ({
+      ...prev,
+      [productId]: value
+    }));
+  };
+
+  const handleVatChange = (productId: string, value: string) => {
+    setVatTreatments(prev => ({
       ...prev,
       [productId]: value
     }));
@@ -68,11 +82,12 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
     const shippingOption = shippingOptions.find(option => option.id === selectedShipping);
     if (!shippingOption) return;
 
-    // Check if all products have payout prices
+    // Check if all products have payout prices and VAT treatments
     const allProductsHavePayout = products.every(product => 
       payoutPrices[product.id] && parseFloat(payoutPrices[product.id]) > 0
     );
-    if (!allProductsHavePayout) return;
+    const allProductsHaveVat = products.every(product => vatTreatments[product.id]);
+    if (!allProductsHavePayout || !allProductsHaveVat) return;
 
     // If upload is required, check if file is uploaded
     if (shippingOption.requiresUpload && !uploadedFile) return;
@@ -82,6 +97,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
       product: { ...product, status: "bought" },
       seller: selectedSeller,
       payoutPrice: parseFloat(payoutPrices[product.id]),
+      vatTreatment: vatTreatments[product.id],
       shippingMethod: shippingOption.name,
       shippingCost: 0,
       purchaseDate: new Date().toISOString(),
@@ -96,7 +112,8 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
   const allProductsHavePayout = products.every(product => 
     payoutPrices[product.id] && parseFloat(payoutPrices[product.id]) > 0
   );
-  const canSubmit = selectedSeller && selectedShipping && allProductsHavePayout && 
+  const allProductsHaveVat = products.every(product => vatTreatments[product.id]);
+  const canSubmit = selectedSeller && selectedShipping && allProductsHavePayout && allProductsHaveVat &&
     (!selectedShippingOption?.requiresUpload || uploadedFile);
 
   const totalPayout = Object.values(payoutPrices).reduce((sum, price) => 
@@ -130,6 +147,27 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                         <p className="text-sm font-semibold text-primary">Listed: {product.price}</p>
                       </div>
                       <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-1">
+                          <Label className="text-xs">VAT Treatment</Label>
+                          <Select 
+                            value={vatTreatments[product.id] || ""} 
+                            onValueChange={(value) => handleVatChange(product.id, value)}
+                          >
+                            <SelectTrigger className="w-32 h-8 text-xs">
+                              <SelectValue placeholder="Select VAT" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {vatOptions.map(option => (
+                                <SelectItem key={option.id} value={option.id}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{option.name}</span>
+                                    <span className="text-xs text-muted-foreground">{option.description}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <div className="flex flex-col items-end gap-1">
                           <Label className="text-xs">Payout</Label>
                           <Input

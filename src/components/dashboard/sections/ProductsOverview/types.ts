@@ -26,6 +26,7 @@ export interface WTBPurchase {
   product: Product;
   seller: string;
   payoutPrice: number;
+  vatTreatment?: string;
   shippingMethod: string;
   shippingCost: number;
   purchaseDate: string;
