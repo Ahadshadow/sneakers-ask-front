@@ -8,6 +8,7 @@ import { UsersManagement } from "./sections/UsersManagement";
 import { RolesManagement } from "./sections/RolesManagement";
 import { SellersManagement } from "./sections/SellersManagement";
 import { ProductsOverview } from "./sections/ProductsOverview";
+import { PayoutManagement } from "./sections/PayoutManagement";
 
 export function Dashboard() {
   const [currentSection, setCurrentSection] = useState("dashboard");
@@ -32,6 +33,8 @@ export function Dashboard() {
         return <SellersManagement />;
       case "products":
         return <ProductsOverview />;
+      case "payouts":
+        return <PayoutManagement />;
       default:
         return <DashboardOverview />;
     }

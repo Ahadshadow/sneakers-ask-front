@@ -10,7 +10,8 @@ import {
   Settings,
   HelpCircle,
   LogOut,
-  Shield
+  Shield,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -51,6 +52,11 @@ const navigationItems = [
     id: "products", 
     label: "Products",
     icon: Package,
+  },
+  {
+    id: "payouts",
+    label: "Payouts", 
+    icon: CreditCard,
   },
   {
     id: "users",

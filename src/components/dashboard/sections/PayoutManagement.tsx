@@ -1,0 +1,310 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { CreditCard, ExternalLink, CheckCircle, Clock, Euro } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface SellerPayout {
+  id: string;
+  sellerName: string;
+  email: string;
+  totalAmount: number;
+  itemCount: number;
+  status: "pending" | "processing" | "completed";
+  lastPayoutDate?: string;
+  items: {
+    productName: string;
+    sku: string;
+    amount: number;
+    purchaseDate: string;
+  }[];
+}
+
+export function PayoutManagement() {
+  const { toast } = useToast();
+  const [payouts, setPayouts] = useState<SellerPayout[]>([
+    {
+      id: "1",
+      sellerName: "Premium Kicks Store",
+      email: "payments@premiumkicks.com",
+      totalAmount: 145,
+      itemCount: 1,
+      status: "pending",
+      items: [
+        {
+          productName: "Nike Air Jordan 1 Retro High OG",
+          sku: "555088-134",
+          amount: 145,
+          purchaseDate: "2024-01-15"
+        }
+      ]
+    },
+    {
+      id: "2",
+      sellerName: "Sneaker World",
+      email: "finance@sneakerworld.com",
+      totalAmount: 195,
+      itemCount: 1,
+      status: "pending",
+      items: [
+        {
+          productName: "Adidas Yeezy Boost 350 V2",
+          sku: "GZ5541",
+          amount: 195,
+          purchaseDate: "2024-01-14"
+        }
+      ]
+    },
+    {
+      id: "3",
+      sellerName: "Urban Footwear",
+      email: "payouts@urbanfootwear.com",
+      totalAmount: 85,
+      itemCount: 1,
+      status: "pending",
+      items: [
+        {
+          productName: "Nike Dunk Low Retro",
+          sku: "DD1391-100",
+          amount: 85,
+          purchaseDate: "2024-01-13"
+        }
+      ]
+    },
+    {
+      id: "4",
+      sellerName: "Classic Runners",
+      email: "admin@classicrunners.com",
+      totalAmount: 95,
+      itemCount: 1,
+      status: "completed",
+      lastPayoutDate: "2024-01-10",
+      items: [
+        {
+          productName: "New Balance 550 White Green",
+          sku: "BB550WTG",
+          amount: 95,
+          purchaseDate: "2024-01-12"
+        }
+      ]
+    }
+  ]);
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending": return <Clock className="h-4 w-4" />;
+      case "processing": return <CreditCard className="h-4 w-4" />;
+      case "completed": return <CheckCircle className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "pending": return "destructive";
+      case "processing": return "secondary";
+      case "completed": return "default";
+      default: return "outline";
+    }
+  };
+
+  const handlePayWithRevolut = (seller: SellerPayout) => {
+    // Create Revolut payment link
+    const amount = seller.totalAmount.toFixed(2);
+    const recipient = encodeURIComponent(seller.email);
+    const reference = encodeURIComponent(`Payout for ${seller.itemCount} items`);
+    
+    // Revolut Pay link format
+    const revolutUrl = `https://revolut.me/pay?amount=${amount}&currency=EUR&recipient=${recipient}&reference=${reference}`;
+    
+    // Update status to processing
+    setPayouts(prev => prev.map(p => 
+      p.id === seller.id ? { ...p, status: "processing" as const } : p
+    ));
+    
+    // Open Revolut in new tab
+    window.open(revolutUrl, '_blank');
+    
+    toast({
+      title: "Revolut Payment Initiated",
+      description: `Payment of €${amount} to ${seller.sellerName} has been initiated via Revolut.`,
+    });
+  };
+
+  const markAsCompleted = (sellerId: string) => {
+    setPayouts(prev => prev.map(p => 
+      p.id === sellerId ? { 
+        ...p, 
+        status: "completed" as const,
+        lastPayoutDate: new Date().toISOString().split('T')[0]
+      } : p
+    ));
+    
+    toast({
+      title: "Payment Completed",
+      description: "Payout has been marked as completed.",
+    });
+  };
+
+  const pendingPayouts = payouts.filter(p => p.status === "pending");
+  const totalPendingAmount = pendingPayouts.reduce((sum, p) => sum + p.totalAmount, 0);
+
+  return (
+    <div className="space-y-6">
+      {/* Header Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-gradient-card border-border shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Pending</p>
+                <p className="text-2xl font-bold text-primary">€{totalPendingAmount.toFixed(2)}</p>
+              </div>
+              <Euro className="h-8 w-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-card border-border shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pending Sellers</p>
+                <p className="text-2xl font-bold text-primary">{pendingPayouts.length}</p>
+              </div>
+              <Clock className="h-8 w-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-card border-border shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Items</p>
+                <p className="text-2xl font-bold text-primary">{payouts.reduce((sum, p) => sum + p.itemCount, 0)}</p>
+              </div>
+              <CreditCard className="h-8 w-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Payouts Table */}
+      <Card className="bg-gradient-card border-border shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-primary" />
+            Seller Payouts
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-muted/5">
+                  <TableHead className="font-semibold text-foreground">Seller</TableHead>
+                  <TableHead className="font-semibold text-foreground">Items</TableHead>
+                  <TableHead className="font-semibold text-foreground">Amount</TableHead>
+                  <TableHead className="font-semibold text-foreground">Status</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {payouts.map((payout, index) => (
+                  <TableRow 
+                    key={payout.id} 
+                    className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <TableCell className="py-4">
+                      <div className="space-y-1">
+                        <h3 className="font-medium text-foreground">{payout.sellerName}</h3>
+                        <p className="text-xs text-muted-foreground">{payout.email}</p>
+                        {payout.lastPayoutDate && (
+                          <p className="text-xs text-muted-foreground">
+                            Last: {new Date(payout.lastPayoutDate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="py-4">
+                      <div>
+                        <span className="font-medium text-foreground">{payout.itemCount} items</span>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {payout.items.map((item, i) => (
+                            <div key={i} className="truncate max-w-[200px]">
+                              {item.productName}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="py-4">
+                      <div className="font-bold text-primary text-lg">
+                        €{payout.totalAmount.toFixed(2)}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="py-4">
+                      <Badge 
+                        variant={getStatusVariant(payout.status)}
+                        className="flex items-center gap-1 w-fit"
+                      >
+                        {getStatusIcon(payout.status)}
+                        {payout.status}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell className="text-right py-4">
+                      <div className="flex gap-2 justify-end">
+                        {payout.status === "pending" && (
+                          <Button 
+                            onClick={() => handlePayWithRevolut(payout)}
+                            size="sm"
+                            className="flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Pay via Revolut
+                          </Button>
+                        )}
+                        {payout.status === "processing" && (
+                          <Button 
+                            onClick={() => markAsCompleted(payout.id)}
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Mark Complete
+                          </Button>
+                        )}
+                        {payout.status === "completed" && (
+                          <Badge variant="default" className="flex items-center gap-1">
+                            <CheckCircle className="h-4 w-4" />
+                            Completed
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
