@@ -1,6 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package2, Truck, CheckCircle, Clock, AlertCircle, PackageCheck } from "lucide-react";
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { WTBPurchase } from "./types";
 
 interface BoughtItemsGridProps {
@@ -30,23 +38,12 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "processing": return "text-yellow-600 bg-yellow-50 border-yellow-200";
-      case "shipped": return "text-blue-600 bg-blue-50 border-blue-200";
-      case "delivered": return "text-green-600 bg-green-50 border-green-200";
-      case "confirmed": return "text-green-600 bg-green-50 border-green-200";
-      case "pending": return "text-orange-600 bg-orange-50 border-orange-200";
-      default: return "text-gray-600 bg-gray-50 border-gray-200";
-    }
-  };
-
   if (purchases.length === 0) {
     return (
       <Card className="bg-gradient-card border-border shadow-soft">
         <CardContent className="p-8 text-center">
           <Package2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">No Purchases Yet</h3>
+          <h3 className="text-lg font-medium text-foreground mb-2">No WTB Purchases Yet</h3>
           <p className="text-muted-foreground">
             Start browsing products and make your first WTB purchase.
           </p>
@@ -56,96 +53,128 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Package2 className="h-5 w-5 text-primary" />
-        <h2 className="text-xl font-semibold">WTB Sourced Products ({purchases.length})</h2>
+        <h2 className="text-xl font-semibold">WTB Purchases Overview</h2>
+        <span className="text-muted-foreground">Browse and track your sourced products</span>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {purchases.map((purchase, index) => (
-          <Card 
-            key={purchase.id} 
-            className="bg-card border border-border hover:shadow-lg transition-all duration-300 animate-fade-in relative overflow-hidden"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            {/* Status Badge - Top Right */}
-            <div className="absolute top-4 right-4 z-10">
-              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusColor(purchase.status)}`}>
-                {getStatusIcon(purchase.status)}
-                {purchase.status}
-              </div>
+      <div className="rounded-lg border border-border bg-gradient-card shadow-soft overflow-hidden">
+        <div className="overflow-x-auto">
+          <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-muted/5">
+                  <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
+                  <TableHead className="font-semibold text-foreground text-sm">Payout</TableHead>
+                  <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Seller</TableHead>
+                  <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
+                  <TableHead className="font-semibold text-foreground text-sm hidden xl:table-cell">VAT</TableHead>
+                  <TableHead className="font-semibold text-foreground text-sm text-right">Purchase Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {purchases.map((purchase, index) => (
+                  <TableRow 
+                    key={purchase.id} 
+                    className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    {/* Product Column */}
+                    <TableCell className="py-3 sm:py-4">
+                      <div className="space-y-1">
+                        <h3 className="font-medium text-foreground text-sm leading-tight">
+                          {purchase.product.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          SKU: {purchase.product.sku}
+                        </p>
+                      </div>
+                    </TableCell>
+
+                    {/* Payout Column */}
+                    <TableCell className="py-3 sm:py-4">
+                      <div className="font-bold text-primary text-base">
+                        €{purchase.payoutPrice}
+                      </div>
+                    </TableCell>
+
+                    {/* Seller Column */}
+                    <TableCell className="py-3 sm:py-4 hidden md:table-cell">
+                      <div className="space-y-1">
+                        <p className="font-medium text-foreground text-sm truncate max-w-[120px]">
+                          {purchase.seller}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {purchase.shippingMethod}
+                        </p>
+                      </div>
+                    </TableCell>
+
+                    {/* Status Column */}
+                    <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
+                      <Badge 
+                        variant={getStatusVariant(purchase.status)}
+                        className="flex items-center gap-1 w-fit text-xs"
+                      >
+                        {getStatusIcon(purchase.status)}
+                        {purchase.status}
+                      </Badge>
+                    </TableCell>
+
+                    {/* VAT Column */}
+                    <TableCell className="py-3 sm:py-4 hidden xl:table-cell">
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {purchase.vatTreatment === 'regular' ? 'Regular VAT' : 'Margin Scheme'}
+                      </Badge>
+                    </TableCell>
+
+                    {/* Purchase Date Column */}
+                    <TableCell className="text-right py-3 sm:py-4">
+                      <div className="space-y-1">
+                        <p className="font-medium text-foreground text-sm">
+                          {new Date(purchase.purchaseDate).toLocaleDateString('en-GB')}
+                        </p>
+                        <p className="text-xs text-muted-foreground lg:hidden">
+                          {purchase.status}
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary Footer */}
+      <div className="bg-muted/20 rounded-lg p-4 border border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div>
+              <span className="text-sm text-muted-foreground">Total Items:</span>
+              <span className="font-semibold text-foreground ml-2">{purchases.length}</span>
             </div>
-
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg pr-24 leading-tight">
-                {purchase.product.name}
-              </CardTitle>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              {/* Product Details Grid */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">SKU</p>
-                  <p className="font-semibold text-foreground">{purchase.product.sku}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">VAT Treatment</p>
-                  <p className="font-semibold text-foreground capitalize">{purchase.vatTreatment}</p>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Seller:</span>
-                    <span className="font-semibold text-foreground text-right max-w-[140px] truncate">{purchase.seller}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Your Payout:</span>
-                    <span className="font-bold text-primary text-lg">€{purchase.payoutPrice}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Shipping:</span>
-                    <span className="font-medium text-foreground text-sm">{purchase.shippingMethod}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Purchase Date:</span>
-                    <span className="font-medium text-foreground text-sm">
-                      {new Date(purchase.purchaseDate).toLocaleDateString('en-GB')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Indicator */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground">Status Progress</span>
-                  <span className="text-xs text-muted-foreground">
-                    {purchase.status === 'processing' ? '1/3' : 
-                     purchase.status === 'shipped' ? '2/3' : 
-                     purchase.status === 'delivered' ? '3/3' : '1/3'}
-                  </span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full transition-all duration-500 ${
-                      purchase.status === 'processing' ? 'w-1/3 bg-yellow-500' :
-                      purchase.status === 'shipped' ? 'w-2/3 bg-blue-500' :
-                      purchase.status === 'delivered' ? 'w-full bg-green-500' :
-                      'w-1/4 bg-orange-500'
-                    }`}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+            <div>
+              <span className="text-sm text-muted-foreground">Total Payout:</span>
+              <span className="font-bold text-primary ml-2 text-lg">
+                €{purchases.reduce((sum, p) => sum + parseFloat(p.payoutPrice.toString()), 0).toFixed(2)}
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {['processing', 'shipped', 'delivered'].map(status => {
+              const count = purchases.filter(p => p.status === status).length;
+              return count > 0 ? (
+                <Badge key={status} variant="outline" className="text-xs">
+                  {count} {status}
+                </Badge>
+              ) : null;
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
