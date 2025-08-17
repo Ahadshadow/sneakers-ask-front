@@ -252,12 +252,15 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-foreground">Seller Payout</Label>
                       <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                          $
+                        </div>
                         <Input
                           type="number"
                           placeholder="0.00"
                           value={payoutPrices[product.id] || ""}
                           onChange={(e) => handlePayoutChange(product.id, e.target.value)}
-                          className={`text-right font-mono text-lg ${
+                          className={`pl-8 pr-16 text-right font-mono text-lg ${
                             vatTreatments[product.id] === 'regular' 
                               ? 'bg-muted/30 border-primary/30' 
                               : 'bg-background'
@@ -266,11 +269,8 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                           step="0.01"
                           readOnly={vatTreatments[product.id] === 'regular'}
                         />
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                          $
-                        </div>
                         {vatTreatments[product.id] === 'regular' && (
-                          <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
                             <Badge variant="secondary" className="text-xs">
                               Auto
                             </Badge>
