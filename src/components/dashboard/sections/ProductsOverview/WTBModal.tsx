@@ -88,15 +88,10 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-background border border-border">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Package className="h-5 w-5 text-primary" />
-              Want to Buy - {product.name}
-            </DialogTitle>
-            <Button variant="ghost" size="sm" onClick={handleClose} className="h-8 w-8 p-0">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Package className="h-5 w-5 text-primary" />
+            Want to Buy - {product.name}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
