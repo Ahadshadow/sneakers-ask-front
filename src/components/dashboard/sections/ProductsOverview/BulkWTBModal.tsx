@@ -257,11 +257,6 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                           step="0.01"
                           readOnly={vatTreatments[product.id] === 'regular'}
                         />
-                        {vatTreatments[product.id] === 'regular' && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-primary">
-                            Auto
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
