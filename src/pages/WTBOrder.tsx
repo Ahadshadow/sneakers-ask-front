@@ -37,14 +37,14 @@ const mockProducts = {
     id: "1",
     name: "Air Jordan 1 Retro High OG",
     sku: "AJ1-RH-001",
-    price: "$170.00",
+    price: "€170.00",
     status: "open" as const
   },
   "2": {
     id: "2", 
     name: "Nike Dunk Low Panda",
     sku: "NDL-P-002",
-    price: "$110.00",
+    price: "€110.00",
     status: "open" as const
   }
 };
@@ -75,7 +75,7 @@ export default function WTBOrder() {
     const seller = availableSellers.find(s => s.name === sellerName);
     
     if (seller && product) {
-      const listedPrice = parseFloat(product.price.replace('$', ''));
+      const listedPrice = parseFloat(product.price.replace('€', ''));
       const payoutPriceCalc = listedPrice / (1 + seller.vatRate);
       setPayoutPrice(payoutPriceCalc.toFixed(2));
     }

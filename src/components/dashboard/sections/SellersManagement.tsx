@@ -64,7 +64,7 @@ const mockSellers: Seller[] = [
     sellerType: "b2b",
     status: "active",
     productsCount: 156,
-    totalSales: "$89,420",
+    totalSales: "€89,420",
     rating: 4.8,
     joinDate: "2024-01-10",
     vatSettings: {
@@ -87,7 +87,7 @@ const mockSellers: Seller[] = [
     sellerType: "private",
     status: "active",
     productsCount: 89,
-    totalSales: "$45,680",
+    totalSales: "€45,680",
     rating: 4.6,
     joinDate: "2024-02-15",
     vatSettings: {
@@ -109,7 +109,7 @@ const mockSellers: Seller[] = [
     sellerType: "b2b",
     status: "pending",
     productsCount: 23,
-    totalSales: "$12,300",
+    totalSales: "€12,300",
     rating: 4.9,
     joinDate: "2024-03-20",
     vatSettings: {
@@ -132,7 +132,7 @@ const mockSellers: Seller[] = [
     sellerType: "private",
     status: "suspended",
     productsCount: 45,
-    totalSales: "$28,750",
+    totalSales: "€28,750",
     rating: 3.2,
     joinDate: "2024-01-25",
     vatSettings: {
@@ -154,7 +154,7 @@ const mockSellers: Seller[] = [
     sellerType: "b2b",
     status: "active",
     productsCount: 234,
-    totalSales: "$156,890",
+    totalSales: "€156,890",
     rating: 4.7,
     joinDate: "2023-11-08",
     vatSettings: {
@@ -177,7 +177,7 @@ const mockSellers: Seller[] = [
     sellerType: "private",
     status: "active",
     productsCount: 12,
-    totalSales: "$8,450",
+    totalSales: "€8,450",
     rating: 4.9,
     joinDate: "2024-04-02",
     vatSettings: {

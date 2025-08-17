@@ -6,7 +6,7 @@ export const mockProducts: Product[] = [
     name: "Air Jordan 1 Retro High OG",
     sku: "AJ1-RH-001",
     category: "Basketball",
-    price: "$170.00",
+    price: "€170.00",
     stock: 45,
     status: "open",
     seller: "Premium Sneakers Co",
@@ -18,7 +18,7 @@ export const mockProducts: Product[] = [
         quantity: 2,
         orderDate: "2024-08-15",
         customerName: "John Smith",
-        orderTotal: "$510.00"
+        orderTotal: "€510.00"
       },
       {
         orderId: "3",
@@ -26,7 +26,7 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-14",
         customerName: "Emily Davis",
-        orderTotal: "$390.00"
+        orderTotal: "€390.00"
       }
     ]
   },
@@ -35,7 +35,7 @@ export const mockProducts: Product[] = [
     name: "Nike Dunk Low Retro White",
     sku: "NDL-RW-002",
     category: "Lifestyle",
-    price: "$100.00",
+    price: "€100.00",
     stock: 0,
     status: "fliproom_sale",
     seller: "Street Style Store",
@@ -47,7 +47,7 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-15",
         customerName: "Sarah Johnson",
-        orderTotal: "$330.00"
+        orderTotal: "€330.00"
       }
     ]
   },
@@ -56,7 +56,7 @@ export const mockProducts: Product[] = [
     name: "Adidas Yeezy Boost 350 V2",
     sku: "YB3-V2-003",
     category: "Running",
-    price: "$220.00",
+    price: "€220.00",
     stock: 12,
     status: "sneakerask",
     seller: "Rare Kicks Boutique",
@@ -68,7 +68,7 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-15",
         customerName: "Sarah Johnson",
-        orderTotal: "$330.00"
+        orderTotal: "€330.00"
       },
       {
         orderId: "3",
@@ -76,7 +76,7 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-14",
         customerName: "Emily Davis",
-        orderTotal: "$390.00"
+        orderTotal: "€390.00"
       },
       {
         orderId: "4",
@@ -84,7 +84,7 @@ export const mockProducts: Product[] = [
         quantity: 2,
         orderDate: "2024-08-13",
         customerName: "Michael Brown",
-        orderTotal: "$440.00"
+        orderTotal: "€440.00"
       }
     ]
   },
@@ -93,7 +93,7 @@ export const mockProducts: Product[] = [
     name: "New Balance 550 Vintage",
     sku: "NB5-VT-004",
     category: "Lifestyle",
-    price: "$110.00",
+    price: "€110.00",
     stock: 28,
     status: "open",
     seller: "Urban Footwear",
@@ -105,7 +105,7 @@ export const mockProducts: Product[] = [
     name: "Converse Chuck 70 High Top",
     sku: "C70-HT-005",
     category: "Lifestyle",
-    price: "$85.00",
+    price: "€85.00",
     stock: 67,
     status: "sneakerask",
     seller: "Street Style Store",
@@ -117,7 +117,7 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-13",
         customerName: "Michael Brown",
-        orderTotal: "$440.00"
+        orderTotal: "€440.00"
       }
     ]
   }

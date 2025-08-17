@@ -89,7 +89,7 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
                 <DropdownMenuItem className="p-4 hover:bg-muted cursor-pointer">
                   <div className="flex flex-col gap-1">
                     <p className="font-medium text-sm">New order received</p>
-                    <p className="text-xs text-muted-foreground">Order #SP005 - $245.00</p>
+                    <p className="text-xs text-muted-foreground">Order #SP005 - €245.00</p>
                     <span className="text-xs text-muted-foreground">2 minutes ago</span>
                   </div>
                 </DropdownMenuItem>

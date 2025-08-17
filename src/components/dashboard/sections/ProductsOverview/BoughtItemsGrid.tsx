@@ -78,7 +78,7 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Your Payout:</span>
-                  <span className="font-semibold text-primary">${purchase.payoutPrice}</span>
+                  <span className="font-semibold text-primary">€{purchase.payoutPrice}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping:</span>

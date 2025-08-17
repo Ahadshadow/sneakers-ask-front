@@ -53,7 +53,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
     
     if (seller && product) {
       // Remove VAT from listed price to get payout
-      const listedPrice = parseFloat(product.price.replace('$', ''));
+      const listedPrice = parseFloat(product.price.replace('€', ''));
       const payoutPrice = listedPrice / (1 + seller.vatRate);
       
       setPayoutPrices(prev => ({
@@ -321,7 +321,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                         <Label className="text-sm font-medium">Payout</Label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                            $
+                            €
                           </span>
                           <Input
                             type="number"
@@ -355,7 +355,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                     )}
                   </div>
                   <span className="text-lg font-semibold">
-                    ${selectedSeller ? totalWithVat.toFixed(2) : totalPayout.toFixed(2)}
+                    €{selectedSeller ? totalWithVat.toFixed(2) : totalPayout.toFixed(2)}
                   </span>
                 </div>
               </div>
