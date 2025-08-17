@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Filter, X, RotateCcw } from "lucide-react";
@@ -11,8 +11,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 export interface FilterOptions {
   status: string;
-  minPrice: string;
-  maxPrice: string;
   seller: string;
 }
 
@@ -42,25 +40,18 @@ export function FilterSystem({
   const clearAllFilters = () => {
     onFiltersChange({
       status: "all",
-      minPrice: "",
-      maxPrice: "",
       seller: "all"
     });
   };
 
   const getActiveFiltersCount = () => {
     return Object.entries(filters).filter(([key, value]) => {
-      if (key === 'minPrice' || key === 'maxPrice') return value !== "";
       return value !== "all";
     }).length;
   };
 
   const removeFilter = (key: keyof FilterOptions) => {
-    if (key === 'minPrice' || key === 'maxPrice') {
-      updateFilter(key, "");
-    } else {
-      updateFilter(key, "all");
-    }
+    updateFilter(key, "all");
   };
 
   return (
@@ -118,25 +109,13 @@ export function FilterSystem({
                           />
                         </Badge>
                       )}
-                      {(filters.minPrice || filters.maxPrice) && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Price: ${filters.minPrice || "0"} - ${filters.maxPrice || "∞"}
-                          <X 
-                            className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                            onClick={() => {
-                              removeFilter("minPrice");
-                              removeFilter("maxPrice");
-                            }}
-                          />
-                        </Badge>
-                      )}
                     </div>
                     <Separator />
                   </div>
                 )}
 
                 {/* Filter Controls */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   {/* Status Filter */}
                   <div className="space-y-2">
                     <Label className="text-sm">Status</Label>
@@ -172,27 +151,6 @@ export function FilterSystem({
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-
-                  {/* Price Range Filter */}
-                  <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-                    <Label className="text-sm">Price Range</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        placeholder="Min"
-                        value={filters.minPrice}
-                        onChange={(e) => updateFilter("minPrice", e.target.value)}
-                        className="flex-1 h-9 text-sm"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Max"
-                        value={filters.maxPrice}
-                        onChange={(e) => updateFilter("maxPrice", e.target.value)}
-                        className="flex-1 h-9 text-sm"
-                      />
-                    </div>
                   </div>
                 </div>
               </CardContent>

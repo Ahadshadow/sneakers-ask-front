@@ -16,8 +16,6 @@ export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<FilterOptions>({
     status: "all",
-    minPrice: "",
-    maxPrice: "",
     seller: "all"
   });
   const [wtbModalOpen, setWtbModalOpen] = useState(false);
@@ -45,13 +43,7 @@ export function ProductsOverview() {
       // Seller filter
       const matchesSeller = filters.seller === "all" || product.seller === filters.seller;
 
-      // Price filter
-      const productPrice = parseFloat(product.price.replace('$', ''));
-      const minPrice = filters.minPrice ? parseFloat(filters.minPrice) : 0;
-      const maxPrice = filters.maxPrice ? parseFloat(filters.maxPrice) : Infinity;
-      const matchesPrice = productPrice >= minPrice && productPrice <= maxPrice;
-
-      return matchesSearch && matchesStatus && matchesSeller && matchesPrice;
+      return matchesSearch && matchesStatus && matchesSeller;
     });
   }, [searchTerm, filters]);
 
@@ -132,10 +124,7 @@ export function ProductsOverview() {
                 <p className="text-sm text-muted-foreground">
                   Showing <span className="font-medium text-foreground">{filteredProducts.length}</span> of{" "}
                   <span className="font-medium text-foreground">{mockProducts.length}</span> products
-                  {(searchTerm || Object.entries(filters).some(([key, value]) => {
-                    if (key === 'minPrice' || key === 'maxPrice') return value !== "";
-                    return value !== "all";
-                  })) && (
+                  {(searchTerm || Object.entries(filters).some(([key, value]) => value !== "all")) && (
                     <span className="ml-2 text-primary">(filtered)</span>
                   )}
                 </p>
