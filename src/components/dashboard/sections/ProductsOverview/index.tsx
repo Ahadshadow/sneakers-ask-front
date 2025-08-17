@@ -46,9 +46,9 @@ export function ProductsOverview() {
   }, [searchTerm, filters]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
       {/* Header Section */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
         <SearchBar 
           searchTerm={searchTerm} 
           onSearchChange={setSearchTerm} 
@@ -65,14 +65,14 @@ export function ProductsOverview() {
 
       {/* Main Content */}
       <Card className="bg-gradient-card border-border shadow-soft animate-scale-in">
-        <CardHeader className="pb-6">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Package className="h-6 w-6 text-primary" />
+        <CardHeader className="pb-4 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+              <Package className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
             <div>
               <span className="text-foreground">Shopify Products Overview</span>
-              <p className="text-sm font-normal text-muted-foreground mt-1">
+              <p className="text-xs sm:text-sm font-normal text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
                 Manage and monitor your product inventory
               </p>
             </div>

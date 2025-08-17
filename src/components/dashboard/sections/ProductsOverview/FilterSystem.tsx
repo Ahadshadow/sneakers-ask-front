@@ -69,11 +69,12 @@ export function FilterSystem({
       <div className="flex items-center gap-2">
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Filters
+            <Button variant="outline" className="flex items-center gap-2 h-9 sm:h-10 text-sm sm:text-base">
+              <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Filters</span>
+              <span className="sm:hidden">Filter</span>
               {getActiveFiltersCount() > 0 && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs h-5 px-1.5">
                   {getActiveFiltersCount()}
                 </Badge>
               )}
@@ -82,7 +83,7 @@ export function FilterSystem({
           
           <CollapsibleContent className="mt-4">
             <Card>
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                 {/* Active Filters Display */}
                 {getActiveFiltersCount() > 0 && (
                   <div className="space-y-2">
@@ -135,12 +136,12 @@ export function FilterSystem({
                 )}
 
                 {/* Filter Controls */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {/* Status Filter */}
                   <div className="space-y-2">
-                    <Label>Status</Label>
+                    <Label className="text-sm">Status</Label>
                     <Select value={filters.status} onValueChange={(value) => updateFilter("status", value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9">
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
                       <SelectContent className="bg-background border-border z-50">
@@ -159,9 +160,9 @@ export function FilterSystem({
 
                   {/* Seller Filter */}
                   <div className="space-y-2">
-                    <Label>Seller</Label>
+                    <Label className="text-sm">Seller</Label>
                     <Select value={filters.seller} onValueChange={(value) => updateFilter("seller", value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9">
                         <SelectValue placeholder="All Sellers" />
                       </SelectTrigger>
                       <SelectContent className="bg-background border-border z-50">
@@ -174,22 +175,22 @@ export function FilterSystem({
                   </div>
 
                   {/* Price Range Filter */}
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>Price Range</Label>
-                    <div className="flex gap-2 max-w-md">
+                  <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+                    <Label className="text-sm">Price Range</Label>
+                    <div className="flex gap-2">
                       <Input
                         type="number"
                         placeholder="Min"
                         value={filters.minPrice}
                         onChange={(e) => updateFilter("minPrice", e.target.value)}
-                        className="flex-1"
+                        className="flex-1 h-9 text-sm"
                       />
                       <Input
                         type="number"
                         placeholder="Max"
                         value={filters.maxPrice}
                         onChange={(e) => updateFilter("maxPrice", e.target.value)}
-                        className="flex-1"
+                        className="flex-1 h-9 text-sm"
                       />
                     </div>
                   </div>

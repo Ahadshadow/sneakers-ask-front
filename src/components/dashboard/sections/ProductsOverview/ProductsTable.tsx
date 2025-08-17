@@ -36,14 +36,14 @@ export function ProductsTable({ products }: ProductsTableProps) {
   return (
     <div className="rounded-lg border border-border bg-gradient-card shadow-soft overflow-hidden">
       <div className="overflow-x-auto">
-        <div className="max-h-[600px] overflow-y-auto">
+        <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto">
       <Table>
         <TableHeader>
           <TableRow className="border-border hover:bg-muted/5">
-            <TableHead className="font-semibold text-foreground">Product</TableHead>
-            <TableHead className="font-semibold text-foreground">Price</TableHead>
-            <TableHead className="font-semibold text-foreground hidden md:table-cell">Orders</TableHead>
-            <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
+            <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
+            <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
+            <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Orders</TableHead>
+            <TableHead className="text-right font-semibold text-foreground text-sm w-16 sm:w-auto">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -53,40 +53,40 @@ export function ProductsTable({ products }: ProductsTableProps) {
               className="border-border hover:bg-muted/10 transition-colors duration-200 animate-fade-in"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <TableCell className="py-4">
+              <TableCell className="py-3 sm:py-4">
                 <div className="space-y-1">
-                  <p className="font-medium text-foreground leading-none">{product.name}</p>
-                  <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                  <p className="font-medium text-foreground leading-none text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{product.name}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">SKU: {product.sku}</p>
                 </div>
               </TableCell>
-              <TableCell className="py-4">
-                <span className="font-semibold text-foreground text-lg">{product.price}</span>
+              <TableCell className="py-3 sm:py-4">
+                <span className="font-semibold text-foreground text-base sm:text-lg">{product.price}</span>
               </TableCell>
-              <TableCell className="py-4 hidden md:table-cell">
+              <TableCell className="py-3 sm:py-4 hidden md:table-cell">
                 {product.orders.length > 0 ? (
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleShopifyOrdersClick(product)}
-                    className="h-8 px-3 gap-2 hover-scale transition-all duration-200 border-primary/20 hover:border-primary/40"
+                    className="h-7 sm:h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/20 hover:border-primary/40"
                   >
-                    <Package className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-sm font-medium">
+                    <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+                    <span className="text-xs sm:text-sm font-medium">
                       {product.orders.length} order{product.orders.length > 1 ? 's' : ''}
                     </span>
-                    <ExternalLink className="h-3 w-3 opacity-60" />
+                    <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-60" />
                   </Button>
                 ) : (
-                  <span className="text-sm text-muted-foreground">No orders</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">No orders</span>
                 )}
               </TableCell>
-              <TableCell className="text-right py-4">
+              <TableCell className="text-right py-3 sm:py-4">
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="h-8 w-8 p-0 hover-scale transition-all duration-200"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover-scale transition-all duration-200"
                 >
-                  <MoreHorizontal className="h-4 w-4" />
+                  <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </TableCell>
             </TableRow>

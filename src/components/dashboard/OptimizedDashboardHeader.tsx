@@ -42,37 +42,37 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
   const currentInfo = sectionInfo[currentSection as keyof typeof sectionInfo] || sectionInfo.dashboard;
   
   return (
-    <header className="sticky top-0 z-40 h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-      <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger className="hover-scale transition-all duration-200" />
-          <div className="flex flex-col">
-            <h1 className="text-xl font-semibold text-foreground">
+    <header className="sticky top-0 z-40 h-14 sm:h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+      <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-6">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+          <SidebarTrigger className="hover-scale transition-all duration-200 flex-shrink-0" />
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">
               {currentInfo.title}
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate hidden sm:block">
               {currentInfo.description}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
 
           {/* Notifications */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="relative hover-scale transition-all duration-200">
-                <Bell className="h-5 w-5" />
+              <Button variant="ghost" size="sm" className="relative hover-scale transition-all duration-200 h-8 w-8 sm:h-10 sm:w-10 p-0">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
                 <Badge 
                   variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center"
+                  className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 text-xs flex items-center justify-center"
                 >
                   3
                 </Badge>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              className="w-80 rounded-lg bg-background border-border shadow-elegant"
+              className="w-72 sm:w-80 rounded-lg bg-background border-border shadow-elegant"
               align="end"
               sideOffset={8}
             >
@@ -114,9 +114,9 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover-scale transition-all duration-200">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+              <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full hover-scale transition-all duration-200 p-0">
+                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs sm:text-sm">
                     AD
                   </AvatarFallback>
                 </Avatar>
