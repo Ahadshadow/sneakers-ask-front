@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MoreHorizontal, Package, ShoppingCart } from "lucide-react";
+import { ExternalLink, MoreHorizontal, Package, ShoppingCart, Plus } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -14,9 +14,11 @@ import { Product } from "./types";
 interface ProductsTableProps {
   products: Product[];
   onWTBClick?: (product: Product) => void;
+  onAddToCart?: (product: Product) => void;
+  cart?: Product[];
 }
 
-export function ProductsTable({ products, onWTBClick }: ProductsTableProps) {
+export function ProductsTable({ products, onWTBClick, onAddToCart, cart = [] }: ProductsTableProps) {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case "open": return "secondary";
@@ -104,6 +106,20 @@ export function ProductsTable({ products, onWTBClick }: ProductsTableProps) {
                     >
                       <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       <span className="hidden sm:inline text-xs">WTB</span>
+                    </Button>
+                  )}
+                  {product.status === "open" && onAddToCart && (
+                    <Button 
+                      variant={cart.find(item => item.id === product.id) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => onAddToCart(product)}
+                      disabled={!!cart.find(item => item.id === product.id)}
+                      className="h-7 sm:h-8 px-2 sm:px-3 gap-1 hover-scale transition-all duration-200"
+                    >
+                      <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span className="hidden sm:inline text-xs">
+                        {cart.find(item => item.id === product.id) ? "Added" : "Cart"}
+                      </span>
                     </Button>
                   )}
                   <Button 
