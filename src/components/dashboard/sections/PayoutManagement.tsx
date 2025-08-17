@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { 
   Table,
@@ -10,8 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CreditCard, ExternalLink, CheckCircle, Clock, Euro } from "lucide-react";
+import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, CalendarIcon, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface SellerPayout {
   id: string;
@@ -31,6 +37,10 @@ interface SellerPayout {
 
 export function PayoutManagement() {
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<Date>();
+  const [dateTo, setDateTo] = useState<Date>();
   const [payouts, setPayouts] = useState<SellerPayout[]>([
     {
       id: "1",
@@ -155,6 +165,28 @@ export function PayoutManagement() {
     });
   };
 
+  const filteredPayouts = useMemo(() => {
+    return payouts.filter(payout => {
+      // Search filter
+      const matchesSearch = payout.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          payout.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          payout.items.some(item => 
+                            item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+                          );
+      
+      // Status filter
+      const matchesStatus = statusFilter === "all" || payout.status === statusFilter;
+      
+      // Date filter
+      const latestItemDate = new Date(Math.max(...payout.items.map(item => new Date(item.purchaseDate).getTime())));
+      const matchesDateFrom = !dateFrom || latestItemDate >= dateFrom;
+      const matchesDateTo = !dateTo || latestItemDate <= dateTo;
+      
+      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+    });
+  }, [payouts, searchTerm, statusFilter, dateFrom, dateTo]);
+
   const pendingPayouts = payouts.filter(p => p.status === "pending");
   const totalPendingAmount = pendingPayouts.reduce((sum, p) => sum + p.totalAmount, 0);
 
@@ -199,6 +231,134 @@ export function PayoutManagement() {
         </Card>
       </div>
 
+      {/* Filters */}
+      <Card className="bg-gradient-card border-border shadow-soft">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <Label htmlFor="search" className="text-sm font-medium mb-2 block">
+                Search Sellers & Products
+              </Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search by seller name, email, or product..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <Label htmlFor="status" className="text-sm font-medium mb-2 block">
+                Status
+              </Label>
+              <select
+                id="status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+
+            {/* Date From */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">From Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !dateFrom && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateFrom ? format(dateFrom, "MMM dd") : "From"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Date To */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">To Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !dateTo && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateTo ? format(dateTo, "MMM dd") : "To"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Clear Filters */}
+            <div className="flex items-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("all");
+                  setDateFrom(undefined);
+                  setDateTo(undefined);
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Results Summary */}
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          Showing {filteredPayouts.length} of {payouts.length} sellers
+        </span>
+        {(searchTerm || statusFilter !== "all" || dateFrom || dateTo) && (
+          <div className="flex items-center gap-1">
+            <Filter className="h-4 w-4" />
+            <span>Filters active</span>
+          </div>
+        )}
+      </div>
+
       {/* Payouts Table */}
       <Card className="bg-gradient-card border-border shadow-soft">
         <CardHeader>
@@ -220,7 +380,7 @@ export function PayoutManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payouts.map((payout, index) => (
+                {filteredPayouts.map((payout, index) => (
                   <TableRow 
                     key={payout.id} 
                     className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
