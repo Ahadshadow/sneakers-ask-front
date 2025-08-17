@@ -122,13 +122,6 @@ export function ProductsTable({ products, onWTBClick, onAddToCart, cart = [] }: 
                       </span>
                     </Button>
                   )}
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover-scale transition-all duration-200"
-                  >
-                    <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </Button>
                 </div>
               </TableCell>
             </TableRow>
