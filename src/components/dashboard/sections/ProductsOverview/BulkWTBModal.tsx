@@ -153,9 +153,30 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
   const canSubmit = selectedSeller && selectedShipping && allProductsHavePayout && allProductsHaveVat &&
     (!selectedShippingOption?.requiresUpload || uploadedFile);
 
+  // Calculate total including VAT for the seller's country
+  const calculateTotalWithVat = () => {
+    const seller = availableSellers.find(s => s.name === selectedSeller);
+    if (!seller) return 0;
+
+    return products.reduce((total, product) => {
+      const payoutAmount = parseFloat(payoutPrices[product.id]) || 0;
+      const vatTreatment = vatTreatments[product.id];
+      
+      if (vatTreatment === 'regular') {
+        // For regular VAT, add VAT to the payout amount
+        return total + (payoutAmount * (1 + seller.vatRate));
+      } else {
+        // For margin scheme, just add the payout amount (no additional VAT)
+        return total + payoutAmount;
+      }
+    }, 0);
+  };
+
   const totalPayout = Object.values(payoutPrices).reduce((sum, price) => 
     sum + (parseFloat(price) || 0), 0
   );
+  
+  const totalWithVat = calculateTotalWithVat();
 
   if (products.length === 0) return null;
 
@@ -266,8 +287,17 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
             {/* Total Summary */}
             <div className="bg-muted/30 rounded-lg p-3">
               <div className="flex justify-between items-center">
-                <span className="font-medium">Total Payout</span>
-                <span className="text-lg font-semibold">${totalPayout.toFixed(2)}</span>
+                <div>
+                  <span className="font-medium">Total Payout</span>
+                  {selectedSeller && (
+                    <p className="text-xs text-muted-foreground">
+                      Including {availableSellers.find(s => s.name === selectedSeller)?.country} VAT
+                    </p>
+                  )}
+                </div>
+                <span className="text-lg font-semibold">
+                  ${selectedSeller ? totalWithVat.toFixed(2) : totalPayout.toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
