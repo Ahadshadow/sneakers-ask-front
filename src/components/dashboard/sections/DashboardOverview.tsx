@@ -1,8 +1,107 @@
 import { StatsCard } from "../StatsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BoughtItemsGrid } from "./ProductsOverview/BoughtItemsGrid";
 import { Users, Package, DollarSign, TrendingUp, ShoppingBag, Star } from "lucide-react";
+import { WTBPurchase } from "./ProductsOverview/types";
 
 export function DashboardOverview() {
+  // Dummy data for bought items
+  const dummyPurchases: WTBPurchase[] = [
+    {
+      id: "1",
+      productId: "1",
+      product: {
+        id: "1",
+        name: "Nike Air Jordan 1 Retro High OG",
+        sku: "555088-134",
+        category: "Sneakers",
+        price: "€170",
+        stock: 0,
+        status: "bought",
+        seller: "Premium Kicks Store",
+        shopifyId: "shop_001",
+        orders: []
+      },
+      seller: "Premium Kicks Store",
+      payoutPrice: 145,
+      vatTreatment: "regular",
+      shippingMethod: "Express",
+      shippingCost: 15,
+      purchaseDate: "2024-01-15",
+      status: "delivered"
+    },
+    {
+      id: "2",
+      productId: "2",
+      product: {
+        id: "2",
+        name: "Adidas Yeezy Boost 350 V2",
+        sku: "GZ5541",
+        category: "Sneakers",
+        price: "€230",
+        stock: 0,
+        status: "bought",
+        seller: "Sneaker World",
+        shopifyId: "shop_002",
+        orders: []
+      },
+      seller: "Sneaker World",
+      payoutPrice: 195,
+      vatTreatment: "margin",
+      shippingMethod: "Standard",
+      shippingCost: 10,
+      purchaseDate: "2024-01-14",
+      status: "shipped"
+    },
+    {
+      id: "3",
+      productId: "3",
+      product: {
+        id: "3",
+        name: "Nike Dunk Low Retro",
+        sku: "DD1391-100",
+        category: "Sneakers",
+        price: "€110",
+        stock: 0,
+        status: "bought",
+        seller: "Urban Footwear",
+        shopifyId: "shop_003",
+        orders: []
+      },
+      seller: "Urban Footwear",
+      payoutPrice: 85,
+      vatTreatment: "regular",
+      shippingMethod: "Express",
+      shippingCost: 12,
+      purchaseDate: "2024-01-13",
+      status: "processing"
+    },
+    {
+      id: "4",
+      productId: "4",
+      product: {
+        id: "4",
+        name: "New Balance 550 White Green",
+        sku: "BB550WTG",
+        category: "Sneakers",
+        price: "€120",
+        stock: 0,
+        status: "bought",
+        seller: "Classic Runners",
+        shopifyId: "shop_004",
+        orders: []
+      },
+      seller: "Classic Runners",
+      payoutPrice: 95,
+      vatTreatment: "margin",
+      shippingMethod: "Standard",
+      shippingCost: 8,
+      purchaseDate: "2024-01-12",
+      status: "delivered"
+    }
+  ];
+
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
@@ -30,66 +129,80 @@ export function DashboardOverview() {
         />
       </div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { action: "New seller registered", user: "Jordan Store", time: "2 minutes ago" },
-                { action: "Product listed", user: "Nike Air Max 90", time: "5 minutes ago" },
-                { action: "Order completed", user: "#ORD-12847", time: "8 minutes ago" },
-                { action: "User verification", user: "Mike Johnson", time: "12 minutes ago" },
-                { action: "Seller payout", user: "€2,450", time: "15 minutes ago" },
-              ].map((activity, index) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-card-foreground">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.user}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{activity.time}</span>
+      {/* Tabs Section */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="bought-items">Bought Items</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-6">
+          {/* Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Activity */}
+            <Card className="bg-gradient-card border-border shadow-soft">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { action: "New seller registered", user: "Jordan Store", time: "2 minutes ago" },
+                    { action: "Product listed", user: "Nike Air Max 90", time: "5 minutes ago" },
+                    { action: "Order completed", user: "#ORD-12847", time: "8 minutes ago" },
+                    { action: "User verification", user: "Mike Johnson", time: "12 minutes ago" },
+                    { action: "Seller payout", user: "€2,450", time: "15 minutes ago" },
+                  ].map((activity, index) => (
+                    <div key={index} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-card-foreground">{activity.action}</p>
+                        <p className="text-xs text-muted-foreground">{activity.user}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{activity.time}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Top Products */}
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-primary" />
-              Top Performing Products
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: "Air Jordan 1 Retro High", sales: 342, revenue: "€45,680" },
-                { name: "Nike Dunk Low", sales: 298, revenue: "€38,740" },
-                { name: "Adidas Yeezy 350", sales: 256, revenue: "€76,800" },
-                { name: "Nike Air Force 1", sales: 213, revenue: "€21,300" },
-                { name: "New Balance 550", sales: 187, revenue: "€28,050" },
-              ].map((product, index) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-card-foreground">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.sales} sales</p>
-                  </div>
-                  <span className="text-sm font-bold text-success">{product.revenue}</span>
+            {/* Top Products */}
+            <Card className="bg-gradient-card border-border shadow-soft">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  Top Performing Products
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { name: "Air Jordan 1 Retro High", sales: 342, revenue: "€45,680" },
+                    { name: "Nike Dunk Low", sales: 298, revenue: "€38,740" },
+                    { name: "Adidas Yeezy 350", sales: 256, revenue: "€76,800" },
+                    { name: "Nike Air Force 1", sales: 213, revenue: "€21,300" },
+                    { name: "New Balance 550", sales: 187, revenue: "€28,050" },
+                  ].map((product, index) => (
+                    <div key={index} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-card-foreground">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.sales} sales</p>
+                      </div>
+                      <span className="text-sm font-bold text-success">{product.revenue}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="bought-items">
+          <BoughtItemsGrid purchases={dummyPurchases} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
