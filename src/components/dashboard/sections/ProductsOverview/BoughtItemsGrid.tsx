@@ -149,33 +149,6 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
         </div>
       </div>
 
-      {/* Summary Footer */}
-      <div className="bg-muted/20 rounded-lg p-4 border border-border">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <span className="text-sm text-muted-foreground">Total Items:</span>
-              <span className="font-semibold text-foreground ml-2">{purchases.length}</span>
-            </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Total Payout:</span>
-              <span className="font-bold text-primary ml-2 text-lg">
-                €{purchases.reduce((sum, p) => sum + parseFloat(p.payoutPrice.toString()), 0).toFixed(2)}
-              </span>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {['processing', 'shipped', 'delivered'].map(status => {
-              const count = purchases.filter(p => p.status === status).length;
-              return count > 0 ? (
-                <Badge key={status} variant="outline" className="text-xs">
-                  {count} {status}
-                </Badge>
-              ) : null;
-            })}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
