@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Product, WTBPurchase } from "./types";
-import { Truck, CreditCard, Package, CheckCircle } from "lucide-react";
+import { Truck, CreditCard, Package, X, Users } from "lucide-react";
 
 interface WTBModalProps {
   isOpen: boolean;
@@ -15,155 +16,154 @@ interface WTBModalProps {
   onPurchase: (purchase: Omit<WTBPurchase, "id">) => void;
 }
 
+// Mock sellers - in real app this would come from API
+const availableSellers = [
+  "Premium Sneakers Co",
+  "SoleSupreme", 
+  "KicksCentral",
+  "UrbanSole",
+  "EliteFootwear"
+];
+
+const shippingOptions = [
+  { id: "standard", name: "Standard Shipping (5-7 days)", price: 9.99 },
+  { id: "express", name: "Express Shipping (2-3 days)", price: 19.99 },
+  { id: "overnight", name: "Overnight Shipping (1 day)", price: 39.99 }
+];
+
 export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps) {
-  const [selectedPayout, setSelectedPayout] = useState("");
-  const [customPayout, setCustomPayout] = useState("");
-  const [shippingMethod, setShippingMethod] = useState("");
+  const [selectedSeller, setSelectedSeller] = useState("");
+  const [payoutPrice, setPayoutPrice] = useState("");
+  const [selectedShipping, setSelectedShipping] = useState("");
 
-  if (!product) return null;
-
-  const payoutOptions = [
-    { value: "100", label: "$100.00" },
-    { value: "120", label: "$120.00" },
-    { value: "150", label: "$150.00" },
-    { value: "custom", label: "Custom Amount" }
-  ];
-
-  const shippingOptions = [
-    { value: "standard", label: "Standard Shipping (5-7 days)", price: "$9.99" },
-    { value: "express", label: "Express Shipping (2-3 days)", price: "$19.99" },
-    { value: "overnight", label: "Overnight Shipping (1 day)", price: "$39.99" }
-  ];
+  const handleClose = () => {
+    setSelectedSeller("");
+    setPayoutPrice("");
+    setSelectedShipping("");
+    onClose();
+  };
 
   const handlePurchase = () => {
-    if (!selectedPayout || !shippingMethod) return;
+    if (!product || !selectedSeller || !payoutPrice || !selectedShipping) return;
 
-    const payoutAmount = selectedPayout === "custom" ? customPayout : selectedPayout;
+    const shippingOption = shippingOptions.find(option => option.id === selectedShipping);
+    if (!shippingOption) return;
     
     const purchase: Omit<WTBPurchase, "id"> = {
       productId: product.id,
       product: { ...product, status: "bought" },
-      payout: `$${payoutAmount}.00`,
-      shippingMethod,
-      purchaseDate: new Date().toISOString().split('T')[0],
+      seller: selectedSeller,
+      payoutPrice: parseFloat(payoutPrice),
+      shippingMethod: shippingOption.name,
+      shippingCost: shippingOption.price,
+      purchaseDate: new Date().toISOString(),
       status: "processing"
     };
 
     onPurchase(purchase);
-    onClose();
-    
-    // Reset form
-    setSelectedPayout("");
-    setCustomPayout("");
-    setShippingMethod("");
+    handleClose();
   };
 
+  if (!product) return null;
+
+  const canSubmit = selectedSeller && payoutPrice && parseFloat(payoutPrice) > 0 && selectedShipping;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-background border border-border">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Package className="h-5 w-5 text-primary" />
-            Want to Buy - {product.name}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Package className="h-5 w-5 text-primary" />
+              Want to Buy - {product.name}
+            </DialogTitle>
+            <Button variant="ghost" size="sm" onClick={handleClose} className="h-8 w-8 p-0">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Product Info */}
-          <Card className="bg-muted/20">
+          <Card className="bg-muted/20 border border-border">
             <CardContent className="p-4">
               <div className="space-y-2">
-                <h3 className="font-medium">{product.name}</h3>
+                <h3 className="font-medium text-foreground">{product.name}</h3>
                 <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
-                <p className="text-sm text-muted-foreground">Seller: {product.seller}</p>
+                <p className="text-sm text-muted-foreground">Original Seller: {product.seller}</p>
                 <p className="text-lg font-semibold text-primary">Listed at: {product.price}</p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Payout Selection */}
+          {/* Select Seller */}
           <div className="space-y-3">
             <Label className="flex items-center gap-2 text-base font-medium">
-              <CreditCard className="h-4 w-4" />
-              Select Your Payout Offer
+              <Users className="h-4 w-4 text-primary" />
+              Select Seller
             </Label>
-            <Select value={selectedPayout} onValueChange={setSelectedPayout}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose payout amount" />
+            <Select value={selectedSeller} onValueChange={setSelectedSeller}>
+              <SelectTrigger className="w-full border-border">
+                <SelectValue placeholder="Choose seller" />
               </SelectTrigger>
-              <SelectContent>
-                {payoutOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
+              <SelectContent className="bg-background border border-border">
+                {availableSellers.map(seller => (
+                  <SelectItem key={seller} value={seller}>{seller}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
-            {selectedPayout === "custom" && (
-              <div className="space-y-2">
-                <Label htmlFor="custom-amount">Custom Amount</Label>
-                <Input
-                  id="custom-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={customPayout}
-                  onChange={(e) => setCustomPayout(e.target.value)}
-                />
-              </div>
-            )}
+          </div>
+
+          {/* Payout Price */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-base font-medium">
+              <CreditCard className="h-4 w-4 text-primary" />
+              Seller Payout Price
+            </Label>
+            <Input
+              type="number"
+              placeholder="Enter payout amount"
+              value={payoutPrice}
+              onChange={(e) => setPayoutPrice(e.target.value)}
+              className="w-full border-border"
+              min="0"
+              step="0.01"
+            />
+            <p className="text-xs text-muted-foreground">
+              This is the amount the seller will receive
+            </p>
           </div>
 
           {/* Shipping Method */}
           <div className="space-y-3">
             <Label className="flex items-center gap-2 text-base font-medium">
-              <Truck className="h-4 w-4" />
+              <Truck className="h-4 w-4 text-primary" />
               Shipping Method
             </Label>
-            <div className="space-y-2">
+            <RadioGroup value={selectedShipping} onValueChange={setSelectedShipping}>
               {shippingOptions.map((option) => (
-                <Card 
-                  key={option.value}
-                  className={`cursor-pointer transition-colors ${
-                    shippingMethod === option.value 
-                      ? "border-primary bg-primary/5" 
-                      : "hover:bg-muted/20"
-                  }`}
-                  onClick={() => setShippingMethod(option.value)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          shippingMethod === option.value 
-                            ? "border-primary bg-primary" 
-                            : "border-muted-foreground"
-                        }`}>
-                          {shippingMethod === option.value && (
-                            <CheckCircle className="h-2.5 w-2.5 text-primary-foreground" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{option.label}</p>
-                        </div>
-                      </div>
-                      <span className="font-semibold text-primary">{option.price}</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div key={option.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:border-primary/50 transition-colors">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value={option.id} id={option.id} />
+                    <Label htmlFor={option.id} className="font-medium cursor-pointer">
+                      {option.name}
+                    </Label>
+                  </div>
+                  <span className="text-primary font-semibold">${option.price}</span>
+                </div>
               ))}
-            </div>
+            </RadioGroup>
           </div>
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+            <Button variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
             <Button 
               onClick={handlePurchase}
-              disabled={!selectedPayout || !shippingMethod || (selectedPayout === "custom" && !customPayout)}
-              className="flex-1"
+              disabled={!canSubmit}
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Confirm Purchase
             </Button>

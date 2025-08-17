@@ -24,8 +24,10 @@ export interface WTBPurchase {
   id: string;
   productId: string;
   product: Product;
-  payout: string;
+  seller: string;
+  payoutPrice: number;
   shippingMethod: string;
+  shippingCost: number;
   purchaseDate: string;
   status: "processing" | "shipped" | "delivered";
 }

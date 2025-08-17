@@ -74,19 +74,23 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Seller:</span>
-                  <span className="font-medium truncate max-w-[120px]">{purchase.product.seller}</span>
+                  <span className="font-medium truncate max-w-[120px]">{purchase.seller}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Your Payout:</span>
-                  <span className="font-semibold text-primary">{purchase.payout}</span>
+                  <span className="font-semibold text-primary">${purchase.payoutPrice}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping:</span>
-                  <span className="font-medium capitalize">{purchase.shippingMethod}</span>
+                  <span className="font-medium text-xs">{purchase.shippingMethod}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Shipping Cost:</span>
+                  <span className="font-medium">${purchase.shippingCost}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Purchase Date:</span>
-                  <span className="font-medium">{purchase.purchaseDate}</span>
+                  <span className="font-medium">{new Date(purchase.purchaseDate).toLocaleDateString()}</span>
                 </div>
               </div>
             </CardContent>
