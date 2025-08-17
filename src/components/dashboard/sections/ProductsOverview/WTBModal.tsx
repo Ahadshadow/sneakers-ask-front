@@ -135,21 +135,48 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
           {/* VAT Treatment */}
           <div className="space-y-3">
             <Label className="text-base font-medium">VAT Treatment</Label>
-            <Select value={vatTreatment} onValueChange={setVatTreatment}>
-              <SelectTrigger className="w-full border-border">
-                <SelectValue placeholder="Select VAT treatment" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-border">
-                {vatOptions.map(option => (
-                  <SelectItem key={option.id} value={option.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{option.name}</span>
-                      <span className="text-xs text-muted-foreground">{option.description}</span>
+            <div className="grid gap-3">
+              {vatOptions.map(option => (
+                <div
+                  key={option.id}
+                  className={`relative cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                    vatTreatment === option.id
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                      : 'border-border bg-background hover:border-primary/50 hover:bg-muted/20'
+                  }`}
+                  onClick={() => setVatTreatment(option.id)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`h-4 w-4 rounded-full border-2 transition-colors ${
+                            vatTreatment === option.id
+                              ? 'border-primary bg-primary'
+                              : 'border-muted-foreground'
+                          }`}
+                        >
+                          {vatTreatment === option.id && (
+                            <div className="h-full w-full rounded-full bg-primary-foreground scale-50" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-foreground">{option.name}</h4>
+                          <p className="text-sm text-muted-foreground mt-1">{option.description}</p>
+                        </div>
+                      </div>
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                    {vatTreatment === option.id && (
+                      <div className="ml-2">
+                        <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                          <div className="h-2 w-2 rounded-full bg-primary-foreground" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Payout Price */}

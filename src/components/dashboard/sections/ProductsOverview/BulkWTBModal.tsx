@@ -147,26 +147,27 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                         <p className="text-sm font-semibold text-primary">Listed: {product.price}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="flex flex-col gap-1">
-                          <Label className="text-xs">VAT Treatment</Label>
-                          <Select 
-                            value={vatTreatments[product.id] || ""} 
-                            onValueChange={(value) => handleVatChange(product.id, value)}
-                          >
-                            <SelectTrigger className="w-32 h-8 text-xs">
-                              <SelectValue placeholder="Select VAT" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {vatOptions.map(option => (
-                                <SelectItem key={option.id} value={option.id}>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{option.name}</span>
-                                    <span className="text-xs text-muted-foreground">{option.description}</span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        <div className="flex flex-col gap-2">
+                          <Label className="text-xs font-medium">VAT Treatment</Label>
+                          <div className="grid gap-1">
+                            {vatOptions.map(option => (
+                              <button
+                                key={option.id}
+                                type="button"
+                                onClick={() => handleVatChange(product.id, option.id)}
+                                className={`text-left p-2 rounded-md border transition-all text-xs ${
+                                  vatTreatments[product.id] === option.id
+                                    ? 'border-primary bg-primary/10 text-primary font-medium'
+                                    : 'border-border bg-background hover:border-primary/50 hover:bg-muted/30'
+                                }`}
+                              >
+                                <div className="font-medium">{option.name}</div>
+                                <div className="text-xs text-muted-foreground opacity-75">
+                                  {option.id === 'regular' ? 'Standard' : 'Second-hand'}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           <Label className="text-xs">Payout</Label>
