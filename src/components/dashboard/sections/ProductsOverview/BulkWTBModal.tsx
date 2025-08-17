@@ -243,7 +243,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                           placeholder="0.00"
                           value={payoutPrices[product.id] || ""}
                           onChange={(e) => handlePayoutChange(product.id, e.target.value)}
-                          className={`pl-7 text-right ${
+                          className={`pl-7 text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
                             vatTreatments[product.id] === 'regular' 
                               ? 'bg-muted/30' 
                               : ''
