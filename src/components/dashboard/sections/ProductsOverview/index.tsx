@@ -1,11 +1,16 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart } from "lucide-react";
-import { SearchBar } from "./SearchBar";
+import { Package, ShoppingCart, Search, CalendarIcon, Filter } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { HeaderActions } from "./HeaderActions";
 import { ProductsTable } from "./ProductsTable";
-import { FilterSystem, FilterOptions } from "./FilterSystem";
 import { BoughtItemsGrid } from "./BoughtItemsGrid";
 import { mockProducts } from "./mockData";
 import { Product, WTBPurchase } from "./types";
@@ -13,10 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 
 export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<FilterOptions>({
-    status: "all",
-    seller: "all"
-  });
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sellerFilter, setSellerFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<Date>();
+  const [dateTo, setDateTo] = useState<Date>();
   const [purchases, setPurchases] = useState<WTBPurchase[]>([]);
   const [activeTab, setActiveTab] = useState("products");
   const [cart, setCart] = useState<Product[]>([]);
@@ -36,14 +41,19 @@ export function ProductsOverview() {
         product.seller.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Status filter
-      const matchesStatus = filters.status === "all" || product.status === filters.status;
+      const matchesStatus = statusFilter === "all" || product.status === statusFilter;
 
       // Seller filter
-      const matchesSeller = filters.seller === "all" || product.seller === filters.seller;
+      const matchesSeller = sellerFilter === "all" || product.seller === sellerFilter;
 
-      return matchesSearch && matchesStatus && matchesSeller;
+      // Date filter (if product has a date field)
+      const productDate = new Date(); // Assuming current date for products
+      const matchesDateFrom = !dateFrom || productDate >= dateFrom;
+      const matchesDateTo = !dateTo || productDate <= dateTo;
+
+      return matchesSearch && matchesStatus && matchesSeller && matchesDateFrom && matchesDateTo;
     });
-  }, [searchTerm, filters]);
+  }, [searchTerm, statusFilter, sellerFilter, dateFrom, dateTo]);
 
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
@@ -74,23 +84,156 @@ export function ProductsOverview() {
         </TabsList>
 
         <TabsContent value="products" className="space-y-4 sm:space-y-6">
-          {/* Header Section */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
-            <SearchBar 
-              searchTerm={searchTerm} 
-              onSearchChange={setSearchTerm} 
-            />
-            <HeaderActions 
-              cartCount={cart.length}
-              cart={cart}
-            />
+          {/* Filters */}
+          <Card className="bg-gradient-card border-border shadow-soft">
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Search */}
+                <div className="flex-1">
+                  <Label htmlFor="search" className="text-sm font-medium mb-2 block">
+                    Search Products
+                  </Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by product name, SKU, or seller..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <Label htmlFor="status" className="text-sm font-medium mb-2 block">
+                    Status
+                  </Label>
+                  <select
+                    id="status"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="available">Available</option>
+                    <option value="sold">Sold</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                </div>
+
+                {/* Seller Filter */}
+                <div>
+                  <Label htmlFor="seller" className="text-sm font-medium mb-2 block">
+                    Seller
+                  </Label>
+                  <select
+                    id="seller"
+                    value={sellerFilter}
+                    onChange={(e) => setSellerFilter(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="all">All Sellers</option>
+                    {availableSellers.map(seller => (
+                      <option key={seller} value={seller}>{seller}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Date From */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">From Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[140px] justify-start text-left font-normal",
+                          !dateFrom && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateFrom ? format(dateFrom, "MMM dd") : "From"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateFrom}
+                        onSelect={setDateFrom}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Date To */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">To Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[140px] justify-start text-left font-normal",
+                          !dateTo && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateTo ? format(dateTo, "MMM dd") : "To"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateTo}
+                        onSelect={setDateTo}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Clear Filters */}
+                <div className="flex items-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setStatusFilter("all");
+                      setSellerFilter("all");
+                      setDateFrom(undefined);
+                      setDateTo(undefined);
+                    }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Results Summary */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Showing {filteredProducts.length} of {mockProducts.length} products
+            </span>
+            {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
+              <div className="flex items-center gap-1">
+                <Filter className="h-4 w-4" />
+                <span>Filters active</span>
+              </div>
+            )}
           </div>
 
-          {/* Filter System */}
-          <FilterSystem 
-            filters={filters}
-            onFiltersChange={setFilters}
-            availableSellers={availableSellers}
+          <HeaderActions 
+            cartCount={cart.length}
+            cart={cart}
           />
 
           {/* Main Content */}
@@ -115,13 +258,12 @@ export function ProductsOverview() {
                 cart={cart}
               />
               
-              {/* Results Summary */}
+              {/* Products Summary */}
               <div className="mt-6 pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium text-foreground">{filteredProducts.length}</span> of{" "}
-                  <span className="font-medium text-foreground">{mockProducts.length}</span> products
-                  {(searchTerm || Object.entries(filters).some(([key, value]) => value !== "all")) && (
-                    <span className="ml-2 text-primary">(filtered)</span>
+                  Total products displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
+                  {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
+                    <span className="ml-2 text-primary">(filtered from {mockProducts.length})</span>
                   )}
                 </p>
               </div>
