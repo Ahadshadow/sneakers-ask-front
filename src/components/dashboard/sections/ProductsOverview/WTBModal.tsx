@@ -106,7 +106,6 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
               <div className="space-y-2">
                 <h3 className="font-medium text-foreground">{product.name}</h3>
                 <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
-                <p className="text-sm text-muted-foreground">Original Seller: {product.seller}</p>
                 <p className="text-lg font-semibold text-primary">Listed at: {product.price}</p>
               </div>
             </CardContent>
