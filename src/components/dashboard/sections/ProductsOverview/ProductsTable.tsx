@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, MoreHorizontal, Package, ShoppingCart, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -13,12 +14,12 @@ import { Product } from "./types";
 
 interface ProductsTableProps {
   products: Product[];
-  onWTBClick?: (product: Product) => void;
   onAddToCart?: (product: Product) => void;
   cart?: Product[];
 }
 
-export function ProductsTable({ products, onWTBClick, onAddToCart, cart = [] }: ProductsTableProps) {
+export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTableProps) {
+  const navigate = useNavigate();
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case "open": return "secondary";
@@ -34,6 +35,10 @@ export function ProductsTable({ products, onWTBClick, onAddToCart, cart = [] }: 
     const shopifyDomain = "your-store.myshopify.com"; // This would come from your config
     const url = `https://${shopifyDomain}/admin/orders?query=product_id:${product.shopifyId}`;
     window.open(url, '_blank');
+  };
+
+  const handleWTBClick = (product: Product) => {
+    navigate(`/wtb-order?productId=${product.id}`);
   };
 
   return (
@@ -97,11 +102,11 @@ export function ProductsTable({ products, onWTBClick, onAddToCart, cart = [] }: 
               </TableCell>
               <TableCell className="text-right py-3 sm:py-4">
                 <div className="flex items-center justify-end gap-1 sm:gap-2">
-                  {product.status === "open" && onWTBClick && (
+                  {product.status === "open" && (
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => onWTBClick(product)}
+                      onClick={() => handleWTBClick(product)}
                       className="h-7 sm:h-8 px-2 sm:px-3 gap-1 hover-scale transition-all duration-200 text-primary border-primary/20 hover:border-primary/40"
                     >
                       <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5" />

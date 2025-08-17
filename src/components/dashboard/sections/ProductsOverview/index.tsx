@@ -6,7 +6,6 @@ import { SearchBar } from "./SearchBar";
 import { HeaderActions } from "./HeaderActions";
 import { ProductsTable } from "./ProductsTable";
 import { FilterSystem, FilterOptions } from "./FilterSystem";
-import { WTBModal } from "./WTBModal";
 import { BoughtItemsGrid } from "./BoughtItemsGrid";
 import { BulkWTBModal } from "./BulkWTBModal";
 import { mockProducts } from "./mockData";
@@ -19,8 +18,6 @@ export function ProductsOverview() {
     status: "all",
     seller: "all"
   });
-  const [wtbModalOpen, setWtbModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [purchases, setPurchases] = useState<WTBPurchase[]>([]);
   const [activeTab, setActiveTab] = useState("products");
   const [cart, setCart] = useState<Product[]>([]);
@@ -50,11 +47,6 @@ export function ProductsOverview() {
     });
   }, [searchTerm, filters]);
 
-  const handleWTBClick = (product: Product) => {
-    setSelectedProduct(product);
-    setWtbModalOpen(true);
-  };
-
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
       setCart(prev => [...prev, product]);
@@ -67,21 +59,6 @@ export function ProductsOverview() {
 
   const handleRemoveFromCart = (productId: string) => {
     setCart(prev => prev.filter(item => item.id !== productId));
-  };
-
-  const handlePurchase = (purchase: Omit<WTBPurchase, "id">) => {
-    const newPurchase: WTBPurchase = {
-      ...purchase,
-      id: `purchase-${Date.now()}`
-    };
-    
-    setPurchases(prev => [newPurchase, ...prev]);
-    setActiveTab("bought");
-    
-    toast({
-      title: "Purchase Successful!",
-      description: `WTB order placed for ${purchase.product.name}`,
-    });
   };
 
   const handleBulkPurchase = (purchases: Omit<WTBPurchase, "id">[]) => {
@@ -151,9 +128,8 @@ export function ProductsOverview() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <ProductsTable 
-                products={filteredProducts} 
-                onWTBClick={handleWTBClick}
+              <ProductsTable
+                products={filteredProducts}
                 onAddToCart={handleAddToCart}
                 cart={cart}
               />
@@ -177,14 +153,7 @@ export function ProductsOverview() {
         </TabsContent>
       </Tabs>
 
-      {/* Modals */}
-      <WTBModal
-        isOpen={wtbModalOpen}
-        onClose={() => setWtbModalOpen(false)}
-        product={selectedProduct}
-        onPurchase={handlePurchase}
-      />
-      
+      {/* Bulk WTB Modal */}
       <BulkWTBModal
         isOpen={cartModalOpen}
         onClose={() => setCartModalOpen(false)}
