@@ -44,6 +44,33 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
   const [selectedShipping, setSelectedShipping] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
+  const calculateRegularVatPayout = (productId: string, sellerName: string) => {
+    const seller = availableSellers.find(s => s.name === sellerName);
+    const product = products.find(p => p.id === productId);
+    
+    if (seller && product) {
+      // Remove VAT from listed price to get payout
+      const listedPrice = parseFloat(product.price.replace('$', ''));
+      const payoutPrice = listedPrice / (1 + seller.vatRate);
+      
+      setPayoutPrices(prev => ({
+        ...prev,
+        [productId]: payoutPrice.toFixed(2)
+      }));
+    }
+  };
+
+  const handleSellerChange = (sellerName: string) => {
+    setSelectedSeller(sellerName);
+    
+    // Auto-calculate payout for all products with Regular VAT
+    products.forEach(product => {
+      if (vatTreatments[product.id] === "regular") {
+        calculateRegularVatPayout(product.id, sellerName);
+      }
+    });
+  };
+
   const handleClose = () => {
     setSelectedSeller("");
     setPayoutPrices({});
@@ -68,19 +95,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
 
     // Auto-calculate payout for Regular VAT
     if (value === "regular" && selectedSeller) {
-      const seller = availableSellers.find(s => s.name === selectedSeller);
-      const product = products.find(p => p.id === productId);
-      
-      if (seller && product) {
-        // Remove VAT from listed price to get payout
-        const listedPrice = parseFloat(product.price.replace('$', ''));
-        const payoutPrice = listedPrice / (1 + seller.vatRate);
-        
-        setPayoutPrices(prev => ({
-          ...prev,
-          [productId]: payoutPrice.toFixed(2)
-        }));
-      }
+      calculateRegularVatPayout(productId, selectedSeller);
     }
   };
 
@@ -297,7 +312,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
               <Users className="h-4 w-4 text-primary" />
               Select Seller
             </Label>
-            <Select value={selectedSeller} onValueChange={setSelectedSeller}>
+            <Select value={selectedSeller} onValueChange={handleSellerChange}>
               <SelectTrigger className="w-full border-border">
                 <SelectValue placeholder="Choose seller for all items" />
               </SelectTrigger>
