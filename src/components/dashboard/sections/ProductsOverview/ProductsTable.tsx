@@ -95,7 +95,7 @@ export function ProductsTable({ products, onWTBClick }: ProductsTableProps) {
               </TableCell>
               <TableCell className="text-right py-3 sm:py-4">
                 <div className="flex items-center justify-end gap-1 sm:gap-2">
-                  {product.status !== "bought" && onWTBClick && (
+                  {product.status === "open" && onWTBClick && (
                     <Button 
                       variant="outline" 
                       size="sm"
