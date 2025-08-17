@@ -191,118 +191,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Cart Items */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-base font-medium">Cart Items</Label>
-              <Badge variant="outline" className="text-sm">
-                {products.length} {products.length === 1 ? 'item' : 'items'}
-              </Badge>
-            </div>
-            
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {products.map((product) => (
-                <div key={product.id} className="group bg-card border border-border rounded-lg p-4">
-                  {/* Product Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-foreground">{product.name}</h4>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
-                          {product.sku}
-                        </span>
-                        <span className="text-sm font-semibold text-primary">
-                          {product.price}
-                        </span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onRemoveFromCart(product.id)}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* VAT & Payout in a simple row */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* VAT Treatment - Simple Buttons */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">VAT</Label>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleVatChange(product.id, 'regular')}
-                          className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
-                            vatTreatments[product.id] === 'regular'
-                              ? 'border-primary bg-primary text-primary-foreground'
-                              : 'border-border bg-background hover:bg-muted'
-                          }`}
-                        >
-                          Regular
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleVatChange(product.id, 'margin')}
-                          className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
-                            vatTreatments[product.id] === 'margin'
-                              ? 'border-primary bg-primary text-primary-foreground'
-                              : 'border-border bg-background hover:bg-muted'
-                          }`}
-                        >
-                          Margin
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Payout - Simple Input */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Payout</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                          $
-                        </span>
-                        <Input
-                          type="number"
-                          placeholder="0.00"
-                          value={payoutPrices[product.id] || ""}
-                          onChange={(e) => handlePayoutChange(product.id, e.target.value)}
-                          className={`pl-7 text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
-                            vatTreatments[product.id] === 'regular' 
-                              ? 'bg-muted/30' 
-                              : ''
-                          }`}
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Total Summary */}
-            <div className="bg-muted/30 rounded-lg p-3">
-              <div className="flex justify-between items-center">
-                <div>
-                  <span className="font-medium">Total Payout</span>
-                  {selectedSeller && (
-                    <p className="text-xs text-muted-foreground">
-                      Including {availableSellers.find(s => s.name === selectedSeller)?.country} VAT
-                    </p>
-                  )}
-                </div>
-                <span className="text-lg font-semibold">
-                  ${selectedSeller ? totalWithVat.toFixed(2) : totalPayout.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Select Seller */}
+          {/* Select Seller - First Step */}
           <div className="space-y-3">
             <Label className="flex items-center gap-2 text-base font-medium">
               <Users className="h-4 w-4 text-primary" />
@@ -353,7 +242,125 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                 </Command>
               </PopoverContent>
             </Popover>
+            {selectedSeller && (
+              <div className="text-sm text-muted-foreground bg-muted/20 p-3 rounded-lg">
+                <strong>{availableSellers.find(s => s.name === selectedSeller)?.country}</strong> VAT rate: <strong>{(availableSellers.find(s => s.name === selectedSeller)?.vatRate! * 100).toFixed(0)}%</strong>
+              </div>
+            )}
           </div>
+
+          {/* Cart Items - Second Step */}
+          {selectedSeller && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-medium">Cart Items</Label>
+                <Badge variant="outline" className="text-sm">
+                  {products.length} {products.length === 1 ? 'item' : 'items'}
+                </Badge>
+              </div>
+              
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {products.map((product) => (
+                  <div key={product.id} className="group bg-card border border-border rounded-lg p-4">
+                    {/* Product Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-foreground">{product.name}</h4>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                            {product.sku}
+                          </span>
+                          <span className="text-sm font-semibold text-primary">
+                            {product.price}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemoveFromCart(product.id)}
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* VAT & Payout in a simple row */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* VAT Treatment - Simple Buttons */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">VAT</Label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleVatChange(product.id, 'regular')}
+                            className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
+                              vatTreatments[product.id] === 'regular'
+                                ? 'border-primary bg-primary text-primary-foreground'
+                                : 'border-border bg-background hover:bg-muted'
+                            }`}
+                          >
+                            Regular
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleVatChange(product.id, 'margin')}
+                            className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
+                              vatTreatments[product.id] === 'margin'
+                                ? 'border-primary bg-primary text-primary-foreground'
+                                : 'border-border bg-background hover:bg-muted'
+                            }`}
+                          >
+                            Margin
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Payout - Simple Input */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Payout</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                            $
+                          </span>
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            value={payoutPrices[product.id] || ""}
+                            onChange={(e) => handlePayoutChange(product.id, e.target.value)}
+                            className={`pl-7 text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
+                              vatTreatments[product.id] === 'regular' 
+                                ? 'bg-muted/30' 
+                                : ''
+                            }`}
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Total Summary */}
+              <div className="bg-muted/30 rounded-lg p-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="font-medium">Total Payout</span>
+                    {selectedSeller && (
+                      <p className="text-xs text-muted-foreground">
+                        Including {availableSellers.find(s => s.name === selectedSeller)?.country} VAT
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-lg font-semibold">
+                    ${selectedSeller ? totalWithVat.toFixed(2) : totalPayout.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Shipping Method */}
           <div className="space-y-3">
