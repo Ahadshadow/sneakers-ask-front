@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Product, WTBPurchase } from "./types";
-import { Truck, CreditCard, Package, Users, Trash2, ShoppingCart } from "lucide-react";
+import { Truck, CreditCard, Package, Users, Trash2, ShoppingCart, Check, ChevronsUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface BulkWTBModalProps {
   isOpen: boolean;
@@ -43,6 +45,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
   const [vatTreatments, setVatTreatments] = useState<{[key: string]: string}>({});
   const [selectedShipping, setSelectedShipping] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [open, setOpen] = useState(false);
 
   const calculateRegularVatPayout = (productId: string, sellerName: string) => {
     const seller = availableSellers.find(s => s.name === sellerName);
@@ -62,6 +65,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
 
   const handleSellerChange = (sellerName: string) => {
     setSelectedSeller(sellerName);
+    setOpen(false);
     
     // Auto-calculate payout for all products with Regular VAT
     products.forEach(product => {
@@ -77,6 +81,7 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
     setVatTreatments({});
     setSelectedShipping("");
     setUploadedFile(null);
+    setOpen(false);
     onClose();
   };
 
@@ -279,21 +284,51 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
               <Users className="h-4 w-4 text-primary" />
               Select Seller
             </Label>
-            <Select value={selectedSeller} onValueChange={handleSellerChange}>
-              <SelectTrigger className="w-full border-border">
-                <SelectValue placeholder="Choose seller for all items" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-border">
-                {availableSellers.map(seller => (
-                  <SelectItem key={seller.name} value={seller.name}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{seller.name}</span>
-                      <span className="text-xs text-muted-foreground">{seller.country} • VAT: {(seller.vatRate * 100).toFixed(0)}%</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="w-full justify-between"
+                >
+                  {selectedSeller
+                    ? availableSellers.find(seller => seller.name === selectedSeller)?.name
+                    : "Choose seller for all items"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Search sellers..." />
+                  <CommandList>
+                    <CommandEmpty>No seller found.</CommandEmpty>
+                    <CommandGroup>
+                      {availableSellers.map((seller) => (
+                        <CommandItem
+                          key={seller.name}
+                          value={seller.name}
+                          onSelect={(currentValue) => {
+                            handleSellerChange(currentValue === selectedSeller ? "" : currentValue)
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedSeller === seller.name ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{seller.name}</span>
+                            <span className="text-xs text-muted-foreground">{seller.country} • VAT: {(seller.vatRate * 100).toFixed(0)}%</span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Shipping Method */}
