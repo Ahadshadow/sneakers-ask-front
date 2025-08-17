@@ -1,20 +1,35 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Package, ShoppingCart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Product } from "./types";
 
 interface HeaderActionsProps {
   cartCount?: number;
-  onCartClick?: () => void;
+  cart?: Product[];
 }
 
-export function HeaderActions({ cartCount = 0, onCartClick }: HeaderActionsProps) {
+export function HeaderActions({ cartCount = 0, cart = [] }: HeaderActionsProps) {
+  const navigate = useNavigate();
+
+  const handleCartClick = () => {
+    if (cart.length === 0) {
+      return; // Disable if cart is empty
+    }
+    
+    // Save cart to sessionStorage and navigate to bulk order page
+    sessionStorage.setItem('wtb-cart', JSON.stringify(cart));
+    navigate('/bulk-wtb-order');
+  };
+
   return (
     <div className="flex items-center gap-2 sm:gap-3">
       {/* Cart Button */}
       <Button 
         variant="outline" 
         className="flex items-center gap-1 sm:gap-2 h-9 sm:h-10 px-3 sm:px-4 relative"
-        onClick={onCartClick}
+        onClick={handleCartClick}
+        disabled={cartCount === 0}
       >
         <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         <span className="hidden sm:inline text-sm">Cart</span>

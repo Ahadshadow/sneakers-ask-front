@@ -7,7 +7,6 @@ import { HeaderActions } from "./HeaderActions";
 import { ProductsTable } from "./ProductsTable";
 import { FilterSystem, FilterOptions } from "./FilterSystem";
 import { BoughtItemsGrid } from "./BoughtItemsGrid";
-import { BulkWTBModal } from "./BulkWTBModal";
 import { mockProducts } from "./mockData";
 import { Product, WTBPurchase } from "./types";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +20,6 @@ export function ProductsOverview() {
   const [purchases, setPurchases] = useState<WTBPurchase[]>([]);
   const [activeTab, setActiveTab] = useState("products");
   const [cart, setCart] = useState<Product[]>([]);
-  const [cartModalOpen, setCartModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Get unique values for filter dropdowns
@@ -61,23 +59,6 @@ export function ProductsOverview() {
     setCart(prev => prev.filter(item => item.id !== productId));
   };
 
-  const handleBulkPurchase = (purchases: Omit<WTBPurchase, "id">[]) => {
-    const newPurchases = purchases.map((purchase, index) => ({
-      ...purchase,
-      id: `bulk-purchase-${Date.now()}-${index}`
-    }));
-    
-    setPurchases(prev => [...newPurchases, ...prev]);
-    setCart([]);
-    setCartModalOpen(false);
-    setActiveTab("bought");
-    
-    toast({
-      title: "Bulk Purchase Successful!",
-      description: `${purchases.length} items purchased successfully`,
-    });
-  };
-
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -101,7 +82,7 @@ export function ProductsOverview() {
             />
             <HeaderActions 
               cartCount={cart.length}
-              onCartClick={() => setCartModalOpen(true)}
+              cart={cart}
             />
           </div>
 
@@ -153,14 +134,6 @@ export function ProductsOverview() {
         </TabsContent>
       </Tabs>
 
-      {/* Bulk WTB Modal */}
-      <BulkWTBModal
-        isOpen={cartModalOpen}
-        onClose={() => setCartModalOpen(false)}
-        products={cart}
-        onRemoveFromCart={handleRemoveFromCart}
-        onPurchase={handleBulkPurchase}
-      />
     </div>
   );
 }
