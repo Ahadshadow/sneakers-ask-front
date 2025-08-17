@@ -174,19 +174,19 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
               </Badge>
             </div>
             
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
               {products.map((product) => (
-                <div key={product.id} className="group relative bg-card border border-border rounded-xl p-4 hover:shadow-md transition-all duration-200">
+                <div key={product.id} className="group bg-card border border-border rounded-lg p-4">
                   {/* Product Header */}
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-foreground text-base leading-tight">{product.name}</h4>
+                      <h4 className="font-semibold text-foreground">{product.name}</h4>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
-                          SKU: {product.sku}
+                          {product.sku}
                         </span>
                         <span className="text-sm font-semibold text-primary">
-                          Listed: {product.price}
+                          {product.price}
                         </span>
                       </div>
                     </div>
@@ -194,94 +194,70 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                       variant="ghost"
                       size="sm"
                       onClick={() => onRemoveFromCart(product.id)}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
 
-                  {/* VAT Treatment & Payout */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* VAT Treatment */}
+                  {/* VAT & Payout in a simple row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* VAT Treatment - Simple Buttons */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-foreground">VAT Treatment</Label>
-                      <div className="grid gap-2">
-                        {vatOptions.map(option => (
-                          <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => handleVatChange(product.id, option.id)}
-                            className={`relative text-left p-3 rounded-lg border-2 transition-all duration-200 ${
-                              vatTreatments[product.id] === option.id
-                                ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                                : 'border-border bg-background hover:border-primary/30 hover:bg-muted/20'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`h-4 w-4 rounded-full border-2 transition-colors ${
-                                  vatTreatments[product.id] === option.id
-                                    ? 'border-primary bg-primary'
-                                    : 'border-muted-foreground'
-                                }`}
-                              >
-                                {vatTreatments[product.id] === option.id && (
-                                  <div className="h-full w-full rounded-full bg-primary-foreground scale-50" />
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-medium text-sm text-foreground">{option.name}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {option.id === 'regular' ? 'Standard VAT applied' : 'Second-hand goods'}
-                                </div>
-                              </div>
-                            </div>
-                            {vatTreatments[product.id] === option.id && option.id === 'regular' && selectedSeller && (
-                              <div className="mt-2 pt-2 border-t border-primary/20">
-                                <div className="text-xs text-primary font-medium">
-                                  Auto-calculated based on {availableSellers.find(s => s.name === selectedSeller)?.country} VAT rate
-                                </div>
-                              </div>
-                            )}
-                          </button>
-                        ))}
+                      <Label className="text-sm font-medium">VAT</Label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleVatChange(product.id, 'regular')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
+                            vatTreatments[product.id] === 'regular'
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border bg-background hover:bg-muted'
+                          }`}
+                        >
+                          Regular
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleVatChange(product.id, 'margin')}
+                          className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
+                            vatTreatments[product.id] === 'margin'
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border bg-background hover:bg-muted'
+                          }`}
+                        >
+                          Margin
+                        </button>
                       </div>
                     </div>
 
-                    {/* Payout */}
+                    {/* Payout - Simple Input */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-foreground">Seller Payout</Label>
+                      <Label className="text-sm font-medium">Payout</Label>
                       <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
                           $
-                        </div>
+                        </span>
                         <Input
                           type="number"
                           placeholder="0.00"
                           value={payoutPrices[product.id] || ""}
                           onChange={(e) => handlePayoutChange(product.id, e.target.value)}
-                          className={`pl-8 pr-16 text-right font-mono text-lg ${
+                          className={`pl-7 text-right ${
                             vatTreatments[product.id] === 'regular' 
-                              ? 'bg-muted/30 border-primary/30' 
-                              : 'bg-background'
+                              ? 'bg-muted/30' 
+                              : ''
                           }`}
                           min="0"
                           step="0.01"
                           readOnly={vatTreatments[product.id] === 'regular'}
                         />
                         {vatTreatments[product.id] === 'regular' && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <Badge variant="secondary" className="text-xs">
-                              Auto
-                            </Badge>
-                          </div>
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-primary">
+                            Auto
+                          </span>
                         )}
                       </div>
-                      {vatTreatments[product.id] === 'regular' && (
-                        <p className="text-xs text-muted-foreground">
-                          Automatically calculated excluding VAT
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -289,19 +265,10 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
             </div>
             
             {/* Total Summary */}
-            <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4 border border-primary/20">
+            <div className="bg-muted/30 rounded-lg p-3">
               <div className="flex justify-between items-center">
-                <div>
-                  <span className="font-semibold text-foreground">Total Payout</span>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Sum of all seller payouts
-                  </p>
-                </div>
-                <div className="text-right">
-                  <Badge variant="secondary" className="text-lg font-mono px-3 py-1">
-                    ${totalPayout.toFixed(2)}
-                  </Badge>
-                </div>
+                <span className="font-medium">Total Payout</span>
+                <span className="text-lg font-semibold">${totalPayout.toFixed(2)}</span>
               </div>
             </div>
           </div>
