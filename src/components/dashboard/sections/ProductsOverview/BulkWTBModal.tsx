@@ -255,7 +255,6 @@ export function BulkWTBModal({ isOpen, onClose, products, onRemoveFromCart, onPu
                           }`}
                           min="0"
                           step="0.01"
-                          readOnly={vatTreatments[product.id] === 'regular'}
                         />
                       </div>
                     </div>
