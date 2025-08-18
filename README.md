@@ -55,7 +55,6 @@ This admin dashboard serves as the central command center for SneakerAsk operati
 - Payment processors (integrated through Shopify)
 - Payout processing (Revolt)
 - Shipping providers (Discord reshapers & Sendcloud for UPS/DPD)
-- VAT validation services (VIES)
 
 **Development:**
 - ESLint for code quality
