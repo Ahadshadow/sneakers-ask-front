@@ -126,7 +126,10 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
                 <p className="font-medium text-foreground">Admin User</p>
                 <p className="text-sm text-muted-foreground">admin@sneakerask.com</p>
               </div>
-              <DropdownMenuItem className="hover:bg-muted cursor-pointer">
+              <DropdownMenuItem 
+                className="hover:bg-muted cursor-pointer"
+                onClick={() => window.location.href = '/profile'}
+              >
                 <User className="h-4 w-4 mr-2" />
                 Profile Settings
               </DropdownMenuItem>

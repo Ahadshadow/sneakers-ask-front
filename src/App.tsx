@@ -10,6 +10,7 @@ import AddSeller from "./pages/AddSeller";
 import EditSeller from "./pages/EditSeller";
 import WTBOrder from "./pages/WTBOrder";
 import BulkWTBOrder from "./pages/BulkWTBOrder";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/edit-seller/:id" element={<EditSeller />} />
           <Route path="/wtb-order" element={<WTBOrder />} />
           <Route path="/bulk-wtb-order" element={<BulkWTBOrder />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
