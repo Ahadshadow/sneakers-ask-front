@@ -1,16 +1,25 @@
 # SneakerAsk Admin Dashboard
 
-Admin dashboard for managing a sneaker marketplace. Built with React, TypeScript, and modern web technologies.
+A comprehensive admin dashboard for managing the SneakerAsk marketplace platform. Built with React, TypeScript, and modern web technologies to handle the complex operations of a sneaker reselling business.
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+## About SneakerAsk Platform
 
-## What is this?
+SneakerAsk is a B2B sneaker marketplace that connects sneaker retailers with verified sellers worldwide. The platform operates on a "Want to Buy" (WTB) model where retailers can request specific sneaker models, sizes, and quantities, and our network of sellers can fulfill these orders.
 
-This is an admin dashboard I built for managing a sneaker marketplace. It handles products, users, sellers, orders, and financial operations. The interface is responsive and works well on mobile devices.
+**Platform Overview:**
+- **Retailers** place WTB orders for specific sneakers they need for their stores
+- **Sellers** browse available WTB orders and offer to fulfill them
+- **Admin dashboard** (this application) manages the entire operation
+- **Shopify integration** syncs retail orders and inventory data
+- **Multi-currency support** with automated VAT calculations for EU compliance
+- **Real-time tracking** of orders, payments, and shipping
+
+**Business Model:**
+The platform takes a commission on each successful transaction and provides value through verified seller networks, streamlined operations, and integrated financial processing.
+
+## What This Dashboard Does
+
+This admin dashboard serves as the central command center for SneakerAsk operations. It handles products, users, sellers, orders, and financial operations across multiple currencies and regions. The interface is responsive and optimized for both desktop and mobile usage.
 
 ### Main features
 
@@ -38,6 +47,14 @@ This is an admin dashboard I built for managing a sneaker marketplace. It handle
 - Supabase (PostgreSQL database)
 - Real-time subscriptions
 - Row Level Security
+- RESTful API with automatic OpenAPI documentation
+- Serverless Edge Functions for business logic
+
+**External Integrations:**
+- Shopify Admin API for order synchronization
+- Payment processors (Stripe, PayPal)
+- Shipping providers (DHL, FedEx, UPS)
+- VAT validation services (VIES)
 
 **Development:**
 - ESLint for code quality
@@ -100,35 +117,132 @@ src/
 - `BulkWTBOrder.tsx` - Bulk order processing
 - `ProductsTable.tsx` - Product listing with actions
 
+## Architecture Overview
+
+### System Architecture
+
+The SneakerAsk platform follows a modern microservices-inspired architecture with clear separation of concerns:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Admin Dashboard (React)                 │
+├─────────────────────────────────────────────────────────────┤
+│                    Supabase Backend                         │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐│
+│  │   PostgreSQL    │ │  Edge Functions │ │   File Storage  ││
+│  │    Database     │ │  (Business Logic)│ │   (Documents)   ││
+│  └─────────────────┘ └─────────────────┘ └─────────────────┘│
+├─────────────────────────────────────────────────────────────┤
+│                External Integrations                        │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐│
+│  │   Shopify API   │ │  Payment APIs   │ │  Shipping APIs  ││
+│  │  (Retail Orders)│ │ (Stripe/PayPal) │ │  (DHL/FedEx)    ││
+│  └─────────────────┘ └─────────────────┘ └─────────────────┘│
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Database Structure
+
+The PostgreSQL database is organized around these core entities:
+
+**Core Tables:**
+- `products` - Sneaker inventory with SKUs, sizes, conditions
+- `users` - Platform users with roles and permissions
+- `sellers` - Verified seller profiles with location and ratings
+- `wtb_orders` - Want to Buy orders with specifications and pricing
+- `orders` - Completed transactions with fulfillment details
+- `payments` - Financial transactions and payout records
+
+**Key Relationships:**
+- WTB orders can have multiple product variants
+- Sellers can bid on multiple WTB orders
+- Orders link buyers, sellers, and products
+- Payments track commission splits and VAT calculations
+
+**Supabase Features Used:**
+- Row Level Security (RLS) for data access control
+- Real-time subscriptions for live order updates
+- Edge Functions for complex business logic
+- Built-in authentication with role-based access
+
+### Shopify Integration
+
+The platform integrates with Shopify to sync retail operations:
+
+**Data Flow:**
+1. **Inventory Sync**: Products from Shopify stores flow into our database
+2. **Order Processing**: Retail orders trigger WTB creation in our system
+3. **Fulfillment Updates**: Our order completions update Shopify inventory
+4. **Financial Reconciliation**: Sales data flows back for commission tracking
+
+**Technical Implementation:**
+- Shopify Admin API for real-time data access
+- Webhooks for automatic inventory updates
+- GraphQL queries for efficient data retrieval
+- OAuth authentication for secure store access
+
+**Integration Benefits:**
+- Automatic inventory management
+- Reduced manual data entry
+- Real-time stock level updates
+- Integrated financial reporting
+
 ## Features Deep Dive
 
 ### WTB (Want to Buy) System
 
-This is probably the most complex part. It handles:
+The core business logic of the platform centers around the WTB system:
 
-- Individual product orders with seller selection
-- Bulk orders for multiple products
-- VAT calculations based on seller location (EU compliance)
-- Multiple shipping options including label uploads
-- Shopping cart with persistent storage
+**Order Creation Flow:**
+1. Retailers browse available products or create custom requests
+2. Specifications include size, condition, quantity, and max price
+3. Orders enter the marketplace for seller bidding
+4. Automated matching algorithm suggests optimal seller combinations
+5. Admin approval triggers payment processing and fulfillment
 
-The flow is: browse products → add to cart → bulk order page → configure sellers/VAT/shipping → submit.
+**Complex Features:**
+- Multi-currency pricing with real-time exchange rates
+- EU VAT calculations based on seller/buyer locations
+- Bulk order optimization for shipping efficiency
+- Automated seller performance scoring
+- Commission calculation with tiered pricing
 
 ### Product Management
 
-Standard CRUD operations plus:
-- Advanced filtering and search
-- Inventory tracking
-- Integration with Shopify for order data
-- Status management (open, sold, processing, etc.)
-- Bulk operations
+Beyond standard CRUD operations, the system handles:
+
+**Advanced Inventory Features:**
+- Real-time stock synchronization with Shopify
+- Automated product categorization using SKU patterns
+- Condition grading system (DS, VNDS, Used, etc.)
+- Size availability matrix across multiple sellers
+- Historical pricing analysis and trends
+
+**Integration Capabilities:**
+- Automated product imports from multiple data sources
+- Image recognition for authenticity verification
+- Barcode scanning for quick product lookup
+- Batch operations for high-volume management
 
 ### User & Seller Management
 
-- User profiles with role-based permissions
-- Seller onboarding workflow
-- Performance metrics and analytics
-- Bulk user operations
+**Role-Based Access Control:**
+- Super Admin: Full system access
+- Operations Manager: Order and seller management
+- Financial Controller: Payment and payout oversight
+- Customer Service: User support and basic operations
+
+**Seller Onboarding:**
+- Multi-step verification process
+- Document upload and validation
+- Performance metrics tracking
+- Automated rating system based on delivery and quality
+
+**Advanced Features:**
+- Seller performance analytics and insights
+- Automated suspension based on quality metrics
+- Bulk communication tools for announcements
+- Geographic distribution analysis for shipping optimization
 
 ## Design System
 
