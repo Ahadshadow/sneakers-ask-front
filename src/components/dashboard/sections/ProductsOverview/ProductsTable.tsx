@@ -102,7 +102,7 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
               </TableCell>
               <TableCell className="py-3 sm:py-4 text-center">
                 <div className="flex gap-2 justify-center">
-                  {onAddToCart && (
+                  {onAddToCart && product.status === "open" && (
                     <Button 
                       variant="outline" 
                       size="sm"
