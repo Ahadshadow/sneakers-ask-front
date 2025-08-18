@@ -24,10 +24,23 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "open": return "secondary";
-      case "fliproom_sale": return "outline";
+      case "open": return "default";
+      case "fliproom_sale": return "secondary";
       case "sneakerask": return "default";
       default: return "outline";
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case "open": 
+        return "bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20";
+      case "fliproom_sale": 
+        return "bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20";
+      case "sneakerask": 
+        return "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20";
+      default: 
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -78,8 +91,8 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
                   <p className="font-medium text-foreground leading-none text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{product.name}</p>
                   <p className="text-xs sm:text-sm text-muted-foreground">SKU: {product.sku}</p>
                   <Badge 
-                    variant={getStatusBadgeVariant(product.status)}
-                    className="lg:hidden mt-1 text-xs"
+                    variant="outline"
+                    className={`lg:hidden mt-1 text-xs font-medium ${getStatusBadgeClass(product.status)}`}
                   >
                     {product.status.replace('_', ' ')}
                   </Badge>
@@ -106,7 +119,10 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
                 </Button>
               </TableCell>
               <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
-                <Badge variant={getStatusBadgeVariant(product.status)}>
+                <Badge 
+                  variant="outline" 
+                  className={`font-medium ${getStatusBadgeClass(product.status)}`}
+                >
                   {product.status.replace('_', ' ')}
                 </Badge>
               </TableCell>
