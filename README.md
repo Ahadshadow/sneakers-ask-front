@@ -8,7 +8,6 @@ SneakerAsk is a B2B sneaker marketplace that connects sneaker retailers with ver
 
 **Platform Overview:**
 - **WTB Team** places WTB orders for specific sneakers needed by customers
-- **Sellers** browse available WTB orders and offer to fulfill them
 - **Admin dashboard** (this application) manages the entire operation
 - **Shopify integration** syncs retail orders and inventory data
 - **Multi-currency support** with automated VAT calculations for EU compliance
