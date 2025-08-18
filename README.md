@@ -7,7 +7,7 @@ A comprehensive admin dashboard for managing the SneakerAsk marketplace platform
 SneakerAsk is a B2B sneaker marketplace that connects sneaker retailers with verified sellers worldwide. The platform operates on a "Want to Buy" (WTB) model where retailers can request specific sneaker models, sizes, and quantities, and our network of sellers can fulfill these orders.
 
 **Platform Overview:**
-- **Retailers** place WTB orders for specific sneakers they need for their stores
+- **WTB Team** places WTB orders for specific sneakers needed by customers
 - **Sellers** browse available WTB orders and offer to fulfill them
 - **Admin dashboard** (this application) manages the entire operation
 - **Shopify integration** syncs retail orders and inventory data
@@ -219,7 +219,7 @@ The Products grid displays various statuses that reflect the Fliproom integratio
 The core business logic of the platform centers around the WTB system:
 
 **Order Creation Flow:**
-1. Retailers browse available products or create custom requests
+1. WTB team creates orders for specific sneakers needed by customers
 2. Specifications include size, condition, quantity, and max price
 3. Orders enter the marketplace for seller bidding
 4. Automated matching algorithm suggests optimal seller combinations
