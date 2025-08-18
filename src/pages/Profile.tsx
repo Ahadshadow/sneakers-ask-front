@@ -36,7 +36,6 @@ export default function Profile() {
     firstName: "Admin",
     lastName: "User",
     email: "admin@sneakerask.com",
-    location: "Amsterdam, Netherlands",
     role: "Administrator",
     joinDate: "January 2024",
     currentPassword: "",
@@ -44,20 +43,8 @@ export default function Profile() {
     confirmPassword: ""
   });
 
-  const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
-    orderUpdates: true,
-    marketingEmails: false,
-    securityAlerts: true
-  });
-
   const handleInputChange = (field: string, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleNotificationChange = (field: string, value: boolean) => {
-    setNotifications(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSaveProfile = async () => {
@@ -150,7 +137,7 @@ export default function Profile() {
                       </div>
                       <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-1">
                         <MapPin className="h-4 w-4" />
-                        {profileData.location}
+                        Amsterdam, Netherlands
                       </p>
                     </div>
                   </div>
@@ -159,16 +146,13 @@ export default function Profile() {
 
               {/* Tabs Content */}
               <Tabs defaultValue="general" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-xl">
-                  <TabsTrigger value="general" className="rounded-lg transition-all duration-300">
-                    General
-                  </TabsTrigger>
-                  <TabsTrigger value="security" className="rounded-lg transition-all duration-300">
-                    Security
-                  </TabsTrigger>
-                  <TabsTrigger value="notifications" className="rounded-lg transition-all duration-300">
-                    Notifications
-                  </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl">
+                <TabsTrigger value="general" className="rounded-lg transition-all duration-300">
+                  General
+                </TabsTrigger>
+                <TabsTrigger value="security" className="rounded-lg transition-all duration-300">
+                  Security
+                </TabsTrigger>
                 </TabsList>
 
                 {/* General Settings */}
@@ -223,19 +207,6 @@ export default function Profile() {
                               type="email"
                               value={profileData.email}
                               onChange={(e) => handleInputChange("email", e.target.value)}
-                              disabled={!isEditing}
-                              className="pl-10 h-11 transition-all duration-300 disabled:opacity-60"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor="location">Location</Label>
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              id="location"
-                              value={profileData.location}
-                              onChange={(e) => handleInputChange("location", e.target.value)}
                               disabled={!isEditing}
                               className="pl-10 h-11 transition-all duration-300 disabled:opacity-60"
                             />
@@ -340,60 +311,6 @@ export default function Profile() {
                           {isSaving ? "Updating Password..." : "Change Password"}
                         </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                {/* Notification Settings */}
-                <TabsContent value="notifications">
-                  <Card className="shadow-xl border-0 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                          <Bell className="h-4 w-4 text-blue-600" />
-                        </div>
-                        Notification Preferences
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {[
-                        {
-                          key: "emailNotifications",
-                          title: "Email Notifications",
-                          description: "Receive notifications via email"
-                        },
-                        {
-                          key: "pushNotifications",
-                          title: "Push Notifications",
-                          description: "Receive push notifications in your browser"
-                        },
-                        {
-                          key: "orderUpdates",
-                          title: "Order Updates",
-                          description: "Get notified about order status changes"
-                        },
-                        {
-                          key: "marketingEmails",
-                          title: "Marketing Emails",
-                          description: "Receive promotional emails and newsletters"
-                        },
-                        {
-                          key: "securityAlerts",
-                          title: "Security Alerts",
-                          description: "Important security notifications (recommended)"
-                        }
-                      ].map(({ key, title, description }) => (
-                        <div key={key} className="flex items-center justify-between p-4 rounded-lg border border-border/50 hover:bg-muted/20 transition-colors duration-200">
-                          <div className="space-y-1">
-                            <h4 className="font-medium text-foreground">{title}</h4>
-                            <p className="text-sm text-muted-foreground">{description}</p>
-                          </div>
-                          <Switch
-                            checked={notifications[key as keyof typeof notifications]}
-                            onCheckedChange={(checked) => handleNotificationChange(key, checked)}
-                          />
-                        </div>
-                      ))}
                     </CardContent>
                   </Card>
                 </TabsContent>
