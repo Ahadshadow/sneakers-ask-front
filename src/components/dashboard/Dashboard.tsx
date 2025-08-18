@@ -41,7 +41,7 @@ export function Dashboard() {
   };
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar 
           currentSection={currentSection} 
@@ -52,7 +52,7 @@ export function Dashboard() {
           <OptimizedDashboardHeader currentSection={currentSection} />
           
           <main className="flex-1 overflow-y-auto">
-            <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-8 animate-fade-in">
+            <div className="container mx-auto p-6 space-y-8 animate-fade-in">
               {renderSection()}
             </div>
           </main>

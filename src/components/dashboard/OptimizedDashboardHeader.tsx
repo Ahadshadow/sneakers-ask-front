@@ -42,45 +42,45 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
   const currentInfo = sectionInfo[currentSection as keyof typeof sectionInfo] || sectionInfo.dashboard;
   
   return (
-    <header className="sticky top-0 z-40 h-16 bg-gradient-to-r from-background via-background to-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
-      <div className="flex h-16 items-center justify-between px-4 sm:px-6">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+    <header className="sticky top-0 z-50 h-16 bg-gradient-to-r from-background via-background to-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
+      <div className="flex h-16 items-center justify-between px-6">
+        <div className="flex items-center gap-4 min-w-0 flex-1">
           <SidebarTrigger className="hover:bg-muted transition-all duration-200 flex-shrink-0 h-9 w-9 rounded-lg shadow-sm" />
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-4 min-w-0">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-md flex-shrink-0">
               SA
             </div>
             <div className="flex flex-col min-w-0">
-              <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">
+              <h1 className="text-xl font-semibold text-foreground truncate">
                 {currentInfo.title}
               </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate hidden sm:block">
+              <p className="text-sm text-muted-foreground truncate">
                 {currentInfo.description}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+        <div className="flex items-center gap-4 flex-shrink-0">
 
           {/* Notifications */}
            <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="relative hover:bg-muted transition-all duration-200 h-9 w-9 p-0 rounded-lg shadow-sm">
-                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 text-xs flex items-center justify-center shadow-sm"
-                >
-                  3
-                </Badge>
-              </Button>
+               <Button variant="ghost" size="sm" className="relative hover:bg-muted transition-all duration-200 h-9 w-9 p-0 rounded-lg shadow-sm">
+                 <Bell className="h-5 w-5" />
+                 <Badge 
+                   variant="destructive" 
+                   className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center shadow-sm"
+                 >
+                   3
+                 </Badge>
+               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-72 sm:w-80 rounded-lg bg-background border-border shadow-elegant"
-              align="end"
-              sideOffset={8}
-            >
+             <DropdownMenuContent
+               className="w-80 rounded-lg bg-background border-border shadow-elegant"
+               align="end"
+               sideOffset={8}
+             >
               <div className="p-4 border-b border-border">
                 <h3 className="font-semibold text-foreground">Notifications</h3>
                 <p className="text-sm text-muted-foreground">You have 3 new notifications</p>
