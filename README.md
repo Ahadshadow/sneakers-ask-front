@@ -155,7 +155,6 @@ The PostgreSQL database is organized around these core entities:
 
 **Key Relationships:**
 - WTB orders can have multiple product variants
-- Sellers can bid on multiple WTB orders
 - Orders link buyers, sellers, and products
 - Payments track commission splits and VAT calculations
 
@@ -237,15 +236,8 @@ Beyond standard CRUD operations, the system handles:
 **Advanced Inventory Features:**
 - Real-time stock synchronization with Shopify
 - Automated product categorization using SKU patterns
-- Condition grading system (DS, VNDS, Used, etc.)
 - Size availability matrix across multiple sellers
 - Historical pricing analysis and trends
-
-**Integration Capabilities:**
-- Automated product imports from multiple data sources
-- Image recognition for authenticity verification
-- Barcode scanning for quick product lookup
-- Batch operations for high-volume management
 
 ### User & Seller Management
 
