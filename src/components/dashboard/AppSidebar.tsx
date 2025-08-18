@@ -96,27 +96,31 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const navigate = useNavigate();
 
   return (
-    <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-20" : "w-64")} collapsible="icon">
+    <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-16" : "w-64")} collapsible="icon">
       <SidebarHeader className="h-16 border-b border-border bg-gradient-to-r from-background via-background to-background/95">
-        <div className={cn("flex items-center h-16", isCollapsed ? "justify-center px-0" : "gap-3 px-4")}>
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-md">
-            SA
-          </div>
+        <div className={cn("flex items-center h-16", isCollapsed ? "justify-center" : "gap-3 px-4")}>
           {!isCollapsed && (
-            <div className="flex flex-col">
-              <span className="font-semibold text-foreground">SneakerAsk</span>
-              <span className="text-xs text-muted-foreground">Admin Dashboard</span>
-            </div>
+            <>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-md">
+                SA
+              </div>
+              <div className="flex flex-col">
+                <span className="font-semibold text-foreground">SneakerAsk</span>
+                <span className="text-xs text-muted-foreground">Admin Dashboard</span>
+              </div>
+            </>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="py-2">
+      <SidebarContent className={isCollapsed ? "py-4" : "py-2"}>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground uppercase text-xs font-semibold tracking-wider px-4 py-2">
-            Navigation
-          </SidebarGroupLabel>
-          <SidebarGroupContent className={isCollapsed ? "px-3" : "px-2"}>
+          {!isCollapsed && (
+            <SidebarGroupLabel className="text-muted-foreground uppercase text-xs font-semibold tracking-wider px-4 py-2">
+              Navigation
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent className={isCollapsed ? "px-2" : "px-2"}>
             <SidebarMenu>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
@@ -128,8 +132,8 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       asChild
                       tooltip={isCollapsed ? item.label : undefined}
                       className={cn(
-                        "group transition-all duration-200 hover:bg-muted rounded-lg",
-                        isCollapsed ? "h-12 w-12 mx-auto my-1.5 p-0 justify-center" : "h-11 mx-1 my-0.5",
+                        "group transition-all duration-200 hover:bg-muted rounded-lg relative",
+                        isCollapsed ? "h-10 w-10 mx-auto my-2 p-0 justify-center" : "h-11 mx-1 my-0.5",
                         isActive && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
                       )}
                     >
@@ -137,12 +141,15 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                         onClick={() => onSectionChange(item.id)}
                         className={cn("flex items-center w-full", isCollapsed ? "justify-center p-0" : "gap-3 px-3")}
                       >
-                        <Icon className="h-5 w-5 flex-shrink-0" />
+                        <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5")} />
                         {!isCollapsed && (
                           <span className="font-medium text-sm">{item.label}</span>
                         )}
                         {isActive && !isCollapsed && (
                           <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-foreground/80" />
+                        )}
+                        {isActive && isCollapsed && (
+                          <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 h-2 w-1 rounded-l-full bg-primary" />
                         )}
                       </button>
                     </SidebarMenuButton>
@@ -186,7 +193,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border bg-gradient-to-r from-background via-background to-background/95 p-3">
+      <SidebarFooter className="border-t border-border bg-gradient-to-r from-background via-background to-background/95 p-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -195,7 +202,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                   size="lg"
                   className="hover:bg-muted transition-all duration-200 rounded-lg"
                 >
-                  <Avatar className="h-9 w-9 shadow-sm">
+                  <Avatar className={cn("shadow-sm", isCollapsed ? "h-8 w-8" : "h-9 w-9")}>
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
                       AD
                     </AvatarFallback>
