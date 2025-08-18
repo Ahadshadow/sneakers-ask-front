@@ -231,7 +231,6 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
                   <TableHead className="font-semibold text-foreground text-sm">Payout</TableHead>
                   <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Seller</TableHead>
                   <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
-                  <TableHead className="font-semibold text-foreground text-sm hidden xl:table-cell">VAT</TableHead>
                   <TableHead className="font-semibold text-foreground text-sm text-right">Purchase Date</TableHead>
                 </TableRow>
               </TableHeader>
@@ -281,13 +280,6 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
                       >
                         {getStatusIcon(purchase.status)}
                         {purchase.status}
-                      </Badge>
-                    </TableCell>
-
-                    {/* VAT Column */}
-                    <TableCell className="py-3 sm:py-4 hidden xl:table-cell">
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {purchase.vatTreatment === 'regular' ? 'Regular VAT' : 'Margin Scheme'}
                       </Badge>
                     </TableCell>
 
