@@ -24,6 +24,7 @@ export function ProductsOverview() {
   const [dateTo, setDateTo] = useState<Date>();
   const [purchases, setPurchases] = useState<WTBPurchase[]>([]);
   const [activeTab, setActiveTab] = useState("products");
+  const [cart, setCart] = useState<Product[]>([]);
   
   const { toast } = useToast();
 
@@ -56,11 +57,33 @@ export function ProductsOverview() {
   }, [searchTerm, statusFilter, sellerFilter, dateFrom, dateTo]);
 
   const handleAddToCart = (product: Product) => {
+    if (!cart.find(item => item.id === product.id)) {
+      setCart(prev => [...prev, product]);
+      toast({
+        title: "Added to Cart",
+        description: `${product.name} added to WTB cart`,
+      });
+    } else {
+      toast({
+        title: "Already in Cart",
+        description: `${product.name} is already in your WTB cart`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemoveFromCart = (productId: string) => {
+    setCart(prev => prev.filter(item => item.id !== productId));
     toast({
-      title: "Added to Cart",
-      description: `${product.name} added to WTB cart`,
+      title: "Removed from Cart",
+      description: "Item removed from WTB cart",
     });
   };
+
+  const cartTotal = cart.reduce((total, item) => {
+    const price = parseFloat(item.price.replace('€', ''));
+    return total + price;
+  }, 0);
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
@@ -263,6 +286,52 @@ export function ProductsOverview() {
           <BoughtItemsGrid purchases={purchases} />
         </TabsContent>
       </Tabs>
+
+      {/* Floating Cart Summary */}
+      {cart.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-xl border-0 min-w-64">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-sm">WTB Cart</p>
+                  <p className="text-xs opacity-90">
+                    {cart.length} item{cart.length > 1 ? 's' : ''} • €{cartTotal.toFixed(2)}
+                  </p>
+                </div>
+                <Button 
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => window.location.href = '/bulk-wtb-order'}
+                  className="bg-white text-primary hover:bg-white/90 transition-all duration-300 font-semibold"
+                >
+                  Proceed to WTB
+                </Button>
+              </div>
+              
+              {/* Cart Items Preview */}
+              <div className="mt-3 space-y-2 max-h-32 overflow-y-auto">
+                {cart.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between text-xs bg-white/10 rounded p-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{item.name}</p>
+                      <p className="opacity-75">{item.price}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveFromCart(item.id)}
+                      className="text-white hover:bg-white/20 h-6 w-6 p-0 ml-2"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
     </div>
   );
