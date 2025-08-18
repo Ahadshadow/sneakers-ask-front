@@ -104,41 +104,22 @@ export default function Profile() {
             <div className="container mx-auto p-6 space-y-6 animate-fade-in">
               
               {/* Profile Header */}
-              <Card className="shadow-xl border-0 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
-                <div className="h-24 bg-gradient-to-r from-primary via-primary/80 to-primary/60"></div>
-                <CardContent className="relative pt-0 pb-6">
-                  <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-12">
-                    <div className="relative">
-                      <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-2xl font-bold">
-                          {profileData.firstName[0]}{profileData.lastName[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <Button
-                        size="sm"
-                        className="absolute bottom-1 right-1 h-7 w-7 rounded-full p-0 shadow-lg"
-                      >
-                        <Camera className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <h2 className="text-2xl font-bold text-foreground mb-1">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
+                        {profileData.firstName[0]}{profileData.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">
                         {profileData.firstName} {profileData.lastName}
                       </h2>
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
-                        <Badge className="bg-primary/10 text-primary border-primary/20">
-                          <Shield className="h-3 w-3 mr-1" />
-                          {profileData.role}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Joined {profileData.joinDate}
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-1">
-                        <MapPin className="h-4 w-4" />
-                        Amsterdam, Netherlands
-                      </p>
+                      <Badge variant="secondary">
+                        <Shield className="h-3 w-3 mr-1" />
+                        {profileData.role}
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
