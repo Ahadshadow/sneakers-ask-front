@@ -36,6 +36,10 @@ const sectionInfo = {
     title: "Products",
     description: "View and manage your Shopify product catalog"
   },
+  profile: {
+    title: "Profile Settings",
+    description: "Manage your account settings and preferences"
+  },
 };
 
 export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProps) {
