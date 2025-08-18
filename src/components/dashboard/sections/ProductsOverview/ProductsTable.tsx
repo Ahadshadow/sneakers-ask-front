@@ -52,6 +52,7 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
             <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Orders</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
+            <TableHead className="font-semibold text-foreground text-sm text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -98,6 +99,30 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
                 <Badge variant={getStatusBadgeVariant(product.status)}>
                   {product.status.replace('_', ' ')}
                 </Badge>
+              </TableCell>
+              <TableCell className="py-3 sm:py-4 text-center">
+                <div className="flex gap-2 justify-center">
+                  {onAddToCart && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onAddToCart(product)}
+                      className="h-8 px-3 gap-2 hover-scale transition-all duration-200"
+                    >
+                      <ShoppingCart className="h-3.5 w-3.5" />
+                      <span className="text-sm font-medium hidden sm:inline">Add to Cart</span>
+                    </Button>
+                  )}
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => handleWTBClick(product)}
+                    className="h-8 px-3 gap-2 hover-scale transition-all duration-200"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span className="text-sm font-medium hidden sm:inline">WTB</span>
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
