@@ -97,8 +97,8 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
 
   return (
     <Sidebar className="sticky top-0 h-screen border-r border-border bg-sidebar">
-      <SidebarHeader className="border-b border-border bg-gradient-to-r from-background via-background to-background/95">
-        <div className="flex items-center gap-3 px-4 py-4">
+      <SidebarHeader className="h-16 border-b border-border bg-gradient-to-r from-background via-background to-background/95">
+        <div className="flex items-center gap-3 px-4 py-0 h-16">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-md">
             SA
           </div>
