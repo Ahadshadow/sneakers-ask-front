@@ -221,9 +221,12 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem className="hover:bg-muted cursor-pointer">
+                <DropdownMenuItem 
+                  className="hover:bg-muted cursor-pointer"
+                  onClick={() => navigate('/profile')}
+                >
                   <Settings className="h-4 w-4 mr-2" />
-                  Account Settings
+                  Profile Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem className="hover:bg-muted cursor-pointer">
                   <HelpCircle className="h-4 w-4 mr-2" />
