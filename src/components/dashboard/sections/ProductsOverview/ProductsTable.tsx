@@ -63,7 +63,7 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
             <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Orders</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm text-center">Actions</TableHead>
+            <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -111,39 +111,54 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
                   {product.status.replace('_', ' ')}
                 </Badge>
               </TableCell>
-              <TableCell className="py-3 sm:py-4 text-center">
-                <div className="flex gap-2 justify-center">
-                  {onAddToCart && product.status === "open" && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onAddToCart(product)}
-                      className="h-8 px-3 gap-2 hover-scale transition-all duration-200"
-                    >
-                      <ShoppingCart className="h-3.5 w-3.5" />
-                      <span className="text-sm font-medium hidden sm:inline">Add to Cart</span>
-                    </Button>
+              <TableCell className="py-3 sm:py-4">
+                <div className="flex gap-2 justify-end min-w-[120px]">
+                  {product.status === "open" && onAddToCart && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => onAddToCart(product)}
+                        className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/30 hover:border-primary text-primary hover:bg-primary/10"
+                      >
+                        <ShoppingCart className="h-3.5 w-3.5" />
+                        <span className="text-xs font-medium hidden sm:inline">Cart</span>
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        size="sm"
+                        onClick={() => handleWTBClick(product)}
+                        className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span className="text-xs font-medium hidden sm:inline">WTB</span>
+                      </Button>
+                    </>
                   )}
-                  {isWTBLocked(product) ? (
-                    <Button 
-                      variant="secondary" 
-                      size="sm"
-                      onClick={() => handleUnlockWTB(product.id)}
-                      className="h-8 px-3 gap-2 hover-scale transition-all duration-200 opacity-60"
-                    >
-                      <Lock className="h-3.5 w-3.5" />
-                      <span className="text-sm font-medium hidden sm:inline">Unlock WTB</span>
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="secondary" 
-                      size="sm"
-                      onClick={() => handleWTBClick(product)}
-                      className="h-8 px-3 gap-2 hover-scale transition-all duration-200"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      <span className="text-sm font-medium hidden sm:inline">WTB</span>
-                    </Button>
+                  {product.status !== "open" && (
+                    <>
+                      {isWTBLocked(product) ? (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleUnlockWTB(product.id)}
+                          className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:border-amber-500"
+                        >
+                          <Lock className="h-3.5 w-3.5" />
+                          <span className="text-xs font-medium">Unlock WTB</span>
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={() => handleWTBClick(product)}
+                          className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span className="text-xs font-medium">WTB</span>
+                        </Button>
+                      )}
+                    </>
                   )}
                 </div>
               </TableCell>
