@@ -96,7 +96,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const navigate = useNavigate();
 
   return (
-    <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-16" : "w-64")} collapsible="icon">
+    <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-20" : "w-64")} collapsible="icon">
       <SidebarHeader className="h-16 border-b border-border bg-gradient-to-r from-background via-background to-background/95">
         <div className={cn("flex items-center h-16", isCollapsed ? "justify-center px-0" : "gap-3 px-4")}>
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-md">
@@ -116,7 +116,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
           <SidebarGroupLabel className="text-muted-foreground uppercase text-xs font-semibold tracking-wider px-4 py-2">
             Navigation
           </SidebarGroupLabel>
-          <SidebarGroupContent className={isCollapsed ? "px-2" : "px-2"}>
+          <SidebarGroupContent className={isCollapsed ? "px-3" : "px-2"}>
             <SidebarMenu>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
@@ -129,7 +129,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       tooltip={isCollapsed ? item.label : undefined}
                       className={cn(
                         "group transition-all duration-200 hover:bg-muted rounded-lg",
-                        isCollapsed ? "h-11 w-11 mx-auto my-1 p-0 justify-center" : "h-11 mx-1 my-0.5",
+                        isCollapsed ? "h-12 w-12 mx-auto my-1.5 p-0 justify-center" : "h-11 mx-1 my-0.5",
                         isActive && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
                       )}
                     >
@@ -186,7 +186,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border bg-gradient-to-r from-background via-background to-background/95 p-2">
+      <SidebarFooter className="border-t border-border bg-gradient-to-r from-background via-background to-background/95 p-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
