@@ -49,23 +49,29 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
   }, [purchases, searchTerm, statusFilter, dateFrom, dateTo]);
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "processing": return <Clock className="h-4 w-4" />;
-      case "shipped": return <Truck className="h-4 w-4" />;
-      case "delivered": return <CheckCircle className="h-4 w-4" />;
-      case "confirmed": return <PackageCheck className="h-4 w-4" />;
-      case "pending": return <AlertCircle className="h-4 w-4" />;
-      default: return <Package2 className="h-4 w-4" />;
+      case "processing": return <Clock className="h-3.5 w-3.5" />;
+      case "shipped": return <Truck className="h-3.5 w-3.5" />;
+      case "delivered": return <CheckCircle className="h-3.5 w-3.5" />;
+      case "confirmed": return <PackageCheck className="h-3.5 w-3.5" />;
+      case "pending": return <Clock className="h-3.5 w-3.5" />;
+      default: return <Package2 className="h-3.5 w-3.5" />;
     }
   };
 
-  const getStatusVariant = (status: string) => {
+  const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case "processing": return "secondary";
-      case "shipped": return "outline"; 
-      case "delivered": return "default";
-      case "confirmed": return "default";
-      case "pending": return "destructive";
-      default: return "outline";
+      case "pending":
+        return "bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20";
+      case "processing":
+        return "bg-orange-500/10 text-orange-600 border-orange-500/20 hover:bg-orange-500/20";
+      case "shipped":
+        return "bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20";
+      case "delivered":
+        return "bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20";
+      case "confirmed":
+        return "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20";
+      default:
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -272,11 +278,10 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
                       </div>
                     </TableCell>
 
-                    {/* Status Column */}
                     <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
                       <Badge 
-                        variant={getStatusVariant(purchase.status)}
-                        className="flex items-center gap-1 w-fit text-xs"
+                        variant="outline"
+                        className={`flex items-center gap-2 w-fit text-xs font-medium ${getStatusBadgeClass(purchase.status)}`}
                       >
                         {getStatusIcon(purchase.status)}
                         {purchase.status}
