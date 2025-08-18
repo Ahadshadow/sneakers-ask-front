@@ -96,10 +96,10 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const navigate = useNavigate();
 
   return (
-    <Sidebar className="sticky top-0 h-screen border-r border-border bg-sidebar" collapsible="icon">
+    <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-16" : "w-64")} collapsible="icon">
       <SidebarHeader className="h-16 border-b border-border bg-gradient-to-r from-background via-background to-background/95">
-        <div className="flex items-center gap-3 px-4 py-0 h-16">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-md">
+        <div className={cn("flex items-center h-16", isCollapsed ? "justify-center px-0" : "gap-3 px-4")}>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-md">
             SA
           </div>
           {!isCollapsed && (
@@ -116,7 +116,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
           <SidebarGroupLabel className="text-muted-foreground uppercase text-xs font-semibold tracking-wider px-4 py-2">
             Navigation
           </SidebarGroupLabel>
-          <SidebarGroupContent className="px-2">
+          <SidebarGroupContent className={isCollapsed ? "px-2" : "px-2"}>
             <SidebarMenu>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
@@ -128,13 +128,14 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       asChild
                       tooltip={isCollapsed ? item.label : undefined}
                       className={cn(
-                        "group transition-all duration-200 hover:bg-muted h-11 rounded-lg mx-1 my-0.5",
+                        "group transition-all duration-200 hover:bg-muted rounded-lg",
+                        isCollapsed ? "h-11 w-11 mx-auto my-1 p-0 justify-center" : "h-11 mx-1 my-0.5",
                         isActive && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
                       )}
                     >
                       <button
                         onClick={() => onSectionChange(item.id)}
-                        className="flex items-center gap-3 w-full px-3"
+                        className={cn("flex items-center w-full", isCollapsed ? "justify-center p-0" : "gap-3 px-3")}
                       >
                         <Icon className="h-5 w-5 flex-shrink-0" />
                         {!isCollapsed && (
@@ -194,7 +195,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                   size="lg"
                   className="hover:bg-muted transition-all duration-200 rounded-lg"
                 >
-                  <Avatar className="h-8 w-8 shadow-sm">
+                  <Avatar className="h-9 w-9 shadow-sm">
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
                       AD
                     </AvatarFallback>
