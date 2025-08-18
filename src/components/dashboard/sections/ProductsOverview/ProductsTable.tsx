@@ -52,7 +52,6 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
             <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Orders</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
-            <TableHead className="text-right font-semibold text-foreground text-sm">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -99,35 +98,6 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
                 <Badge variant={getStatusBadgeVariant(product.status)}>
                   {product.status.replace('_', ' ')}
                 </Badge>
-              </TableCell>
-              <TableCell className="text-right py-3 sm:py-4">
-                <div className="flex items-center justify-end gap-1 sm:gap-2">
-                  {product.status === "open" && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleWTBClick(product)}
-                      className="h-7 sm:h-8 px-2 sm:px-3 gap-1 hover-scale transition-all duration-200 text-primary border-primary/20 hover:border-primary/40"
-                    >
-                      <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      <span className="hidden sm:inline text-xs">WTB</span>
-                    </Button>
-                  )}
-                  {product.status === "open" && onAddToCart && (
-                    <Button 
-                      variant={cart.find(item => item.id === product.id) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => onAddToCart(product)}
-                      disabled={!!cart.find(item => item.id === product.id)}
-                      className="h-7 sm:h-8 px-2 sm:px-3 gap-1 hover-scale transition-all duration-200"
-                    >
-                      <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      <span className="hidden sm:inline text-xs">
-                        {cart.find(item => item.id === product.id) ? "Added" : "Cart"}
-                      </span>
-                    </Button>
-                  )}
-                </div>
               </TableCell>
             </TableRow>
           ))}
