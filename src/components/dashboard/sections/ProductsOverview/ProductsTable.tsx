@@ -21,25 +21,16 @@ interface ProductsTableProps {
 export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
   const navigate = useNavigate();
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "open": return "default";
-      case "fliproom_sale": return "secondary";
-      case "sneakerask": return "default";
-      default: return "outline";
-    }
-  };
-
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "open": 
-        return "bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20";
+        return "bg-green-500/15 text-green-600 border-green-500/30 hover:bg-green-500/25 px-3 py-1 rounded-full";
       case "fliproom_sale": 
-        return "bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20";
+        return "bg-blue-500/15 text-blue-600 border-blue-500/30 hover:bg-blue-500/25 px-3 py-1 rounded-full";
       case "sneakerask": 
-        return "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20";
+        return "bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 px-3 py-1 rounded-full";
       default: 
-        return "bg-muted text-muted-foreground border-border";
+        return "bg-muted text-muted-foreground border-border px-3 py-1 rounded-full";
     }
   };
 
@@ -89,7 +80,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
                   <p className="text-xs sm:text-sm text-muted-foreground">SKU: {product.sku}</p>
                   <Badge 
                     variant="outline"
-                    className={`lg:hidden mt-1 text-xs font-medium ${getStatusBadgeClass(product.status)}`}
+                    className={`lg:hidden mt-1 text-xs font-medium border-0 ${getStatusBadgeClass(product.status)}`}
                   >
                     {product.status.replace('_', ' ')}
                   </Badge>
@@ -118,7 +109,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
                 <Badge 
                   variant="outline" 
-                  className={`font-medium ${getStatusBadgeClass(product.status)}`}
+                  className={`font-medium border-0 ${getStatusBadgeClass(product.status)}`}
                 >
                   {product.status.replace('_', ' ')}
                 </Badge>
