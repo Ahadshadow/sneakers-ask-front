@@ -10,7 +10,7 @@ SneakerAsk is a B2B sneaker marketplace that connects sneaker retailers with ver
 - **WTB Team** places WTB orders for specific sneakers needed by customers
 - **Admin dashboard** (this application) manages the entire operation
 - **Shopify integration** syncs retail orders and inventory data
-- **Multi-currency support** with automated VAT calculations for EU compliance
+- **Euro currency** with automated VAT calculations for EU compliance
 - **Real-time tracking** of orders, payments, and shipping
 
 **Business Model:**
@@ -18,7 +18,7 @@ The platform takes a commission on each successful transaction and provides valu
 
 ## What This Dashboard Does
 
-This admin dashboard serves as the central command center for SneakerAsk operations. It handles products, users, sellers, orders, and financial operations across multiple currencies and regions. The interface is responsive and optimized for both desktop and mobile usage.
+This admin dashboard serves as the central command center for SneakerAsk operations. It handles products, users, sellers, orders, and financial operations in Euro currency across EU regions. The interface is responsive and optimized for both desktop and mobile usage.
 
 ### Main features
 
@@ -225,7 +225,7 @@ The core business logic of the platform centers around the WTB system:
 5. Admin approval triggers payment processing and fulfillment
 
 **Complex Features:**
-- Multi-currency pricing with real-time exchange rates
+- Euro pricing with automated VAT calculations
 - EU VAT calculations based on seller/buyer locations
 - Bulk order optimization for shipping efficiency
 - Automated seller performance scoring
