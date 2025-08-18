@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MoreHorizontal, Package, ShoppingCart, Plus } from "lucide-react";
+import { ExternalLink, MoreHorizontal, Package, ShoppingCart, Plus, Lock, Unlock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -20,6 +21,7 @@ interface ProductsTableProps {
 
 export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTableProps) {
   const navigate = useNavigate();
+  const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case "open": return "secondary";
@@ -39,6 +41,15 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
 
   const handleWTBClick = (product: Product) => {
     navigate(`/wtb-order?productId=${product.id}`);
+  };
+
+  const handleUnlockWTB = (productId: string) => {
+    setUnlockedProducts(prev => new Set([...prev, productId]));
+  };
+
+  const isWTBLocked = (product: Product) => {
+    return (product.status === "fliproom_sale" || product.status === "sneakerask") && 
+           !unlockedProducts.has(product.id);
   };
 
   return (
@@ -113,15 +124,27 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
                       <span className="text-sm font-medium hidden sm:inline">Add to Cart</span>
                     </Button>
                   )}
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    onClick={() => handleWTBClick(product)}
-                    className="h-8 px-3 gap-2 hover-scale transition-all duration-200"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    <span className="text-sm font-medium hidden sm:inline">WTB</span>
-                  </Button>
+                  {isWTBLocked(product) ? (
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      onClick={() => handleUnlockWTB(product.id)}
+                      className="h-8 px-3 gap-2 hover-scale transition-all duration-200 opacity-60"
+                    >
+                      <Lock className="h-3.5 w-3.5" />
+                      <span className="text-sm font-medium hidden sm:inline">Unlock WTB</span>
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      onClick={() => handleWTBClick(product)}
+                      className="h-8 px-3 gap-2 hover-scale transition-all duration-200"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span className="text-sm font-medium hidden sm:inline">WTB</span>
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>
