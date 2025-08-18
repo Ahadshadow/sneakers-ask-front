@@ -138,8 +138,12 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       )}
                     >
                       <button
-                        onClick={() => onSectionChange(item.id)}
-                        className={cn("flex items-center w-full", isCollapsed ? "justify-center p-0" : "gap-3 px-3")}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onSectionChange(item.id);
+                        }}
+                        className={cn("flex items-center w-full transition-all duration-200", isCollapsed ? "justify-center p-0" : "gap-3 px-3")}
                       >
                         <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5")} />
                         {!isCollapsed && (
