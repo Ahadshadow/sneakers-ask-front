@@ -52,6 +52,7 @@ This admin dashboard serves as the central command center for SneakerAsk operati
 
 **External Integrations:**
 - Shopify Admin API for order synchronization
+- Fliproom platform for seller inventory management
 - Payment processors (Stripe, PayPal)
 - Shipping providers (DHL, FedEx, UPS)
 - VAT validation services (VIES)
@@ -186,6 +187,29 @@ The platform integrates with Shopify to sync retail operations:
 - Reduced manual data entry
 - Real-time stock level updates
 - Integrated financial reporting
+
+### Fliproom Integration
+
+The platform integrates with Fliproom as the primary seller marketplace where sellers list their inventory:
+
+**Fliproom as Seller Space:**
+- External platform hosted separately from SneakerAsk
+- Sellers maintain their inventory listings on Fliproom
+- SneakerAsk also maintains its own stock on Fliproom for direct sales
+- Acts as the primary inventory source for the WTB marketplace
+
+**Product Status System:**
+The Products grid displays various statuses that reflect the Fliproom integration:
+- Products sourced from Fliproom have specific statuses indicating availability
+- Status determines whether products can be included in WTB orders
+- Some products require special permissions to unlock for WTB usage
+- This separation allows for better inventory control and seller management
+
+**Technical Implementation:**
+- API integration with Fliproom for real-time inventory sync
+- Status-based access control for WTB order eligibility
+- Permission system for unlocking restricted products
+- Automated sync of product availability and pricing
 
 ## Features Deep Dive
 
