@@ -89,22 +89,21 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
                 <span className="font-semibold text-foreground text-base sm:text-lg">{product.price}</span>
               </TableCell>
               <TableCell className="py-3 sm:py-4 hidden md:table-cell">
-                {product.orders.length > 0 ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleShopifyOrdersClick(product)}
-                    className="h-7 sm:h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/20 hover:border-primary/40"
-                  >
-                    <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
-                    <span className="text-xs sm:text-sm font-medium">
-                      {product.orders.length} order{product.orders.length > 1 ? 's' : ''}
-                    </span>
-                    <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-60" />
-                  </Button>
-                ) : (
-                  <span className="text-xs sm:text-sm text-muted-foreground">No orders</span>
-                )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleShopifyOrdersClick(product)}
+                  className="h-7 sm:h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/20 hover:border-primary/40"
+                >
+                  <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+                  <span className="text-xs sm:text-sm font-medium">
+                    {product.orders.length > 0 ? 
+                      `${product.orders.length} order${product.orders.length > 1 ? 's' : ''}` : 
+                      'View orders'
+                    }
+                  </span>
+                  <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-60" />
+                </Button>
               </TableCell>
               <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
                 <Badge variant={getStatusBadgeVariant(product.status)}>
