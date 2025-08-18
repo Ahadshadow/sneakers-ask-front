@@ -302,7 +302,10 @@ export function ProductsOverview() {
                 <Button 
                   variant="secondary"
                   size="sm"
-                  onClick={() => window.location.href = '/bulk-wtb-order'}
+                  onClick={() => {
+                    sessionStorage.setItem('wtb-cart', JSON.stringify(cart));
+                    window.location.href = '/bulk-wtb-order';
+                  }}
                   className="bg-white text-primary hover:bg-white/90 transition-all duration-300 font-semibold"
                 >
                   Proceed to WTB
