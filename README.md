@@ -53,8 +53,9 @@ This admin dashboard serves as the central command center for SneakerAsk operati
 **External Integrations:**
 - Shopify Admin API for order synchronization
 - Fliproom platform for seller inventory management
-- Payment processors (Stripe, PayPal)
-- Shipping providers (DHL, FedEx, UPS)
+- Payment processors (integrated through Shopify)
+- Payout processing (Revolt)
+- Shipping providers (Discord reshapers & Sendcloud for UPS/DPD)
 - VAT validation services (VIES)
 
 **Development:**
