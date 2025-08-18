@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Package, ShoppingCart, Search, CalendarIcon, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { HeaderActions } from "./HeaderActions";
+
 import { ProductsTable } from "./ProductsTable";
 import { BoughtItemsGrid } from "./BoughtItemsGrid";
 import { mockProducts } from "./mockData";
@@ -24,7 +24,7 @@ export function ProductsOverview() {
   const [dateTo, setDateTo] = useState<Date>();
   const [purchases, setPurchases] = useState<WTBPurchase[]>([]);
   const [activeTab, setActiveTab] = useState("products");
-  const [cart, setCart] = useState<Product[]>([]);
+  
   const { toast } = useToast();
 
   // Get unique values for filter dropdowns
@@ -56,17 +56,10 @@ export function ProductsOverview() {
   }, [searchTerm, statusFilter, sellerFilter, dateFrom, dateTo]);
 
   const handleAddToCart = (product: Product) => {
-    if (!cart.find(item => item.id === product.id)) {
-      setCart(prev => [...prev, product]);
-      toast({
-        title: "Added to Cart",
-        description: `${product.name} added to WTB cart`,
-      });
-    }
-  };
-
-  const handleRemoveFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.id !== productId));
+    toast({
+      title: "Added to Cart",
+      description: `${product.name} added to WTB cart`,
+    });
   };
 
   return (
@@ -231,10 +224,6 @@ export function ProductsOverview() {
             )}
           </div>
 
-          <HeaderActions 
-            cartCount={cart.length}
-            cart={cart}
-          />
 
           {/* Main Content */}
           <Card className="bg-gradient-card border-border shadow-soft animate-scale-in">
@@ -255,7 +244,6 @@ export function ProductsOverview() {
               <ProductsTable
                 products={filteredProducts}
                 onAddToCart={handleAddToCart}
-                cart={cart}
               />
               
               {/* Products Summary */}

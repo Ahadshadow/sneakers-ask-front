@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MoreHorizontal, Package, ShoppingCart, Plus, Lock, Unlock } from "lucide-react";
+import { ExternalLink, Package, ShoppingCart, Plus, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
@@ -16,10 +16,9 @@ import { Product } from "./types";
 interface ProductsTableProps {
   products: Product[];
   onAddToCart?: (product: Product) => void;
-  cart?: Product[];
 }
 
-export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTableProps) {
+export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
   const navigate = useNavigate();
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
   const getStatusBadgeVariant = (status: string) => {
@@ -45,9 +44,7 @@ export function ProductsTable({ products, onAddToCart, cart = [] }: ProductsTabl
   };
 
   const handleShopifyOrdersClick = (product: Product) => {
-    // In a real app, you would integrate with Shopify API
-    // For now, we'll open Shopify admin in a new tab
-    const shopifyDomain = "your-store.myshopify.com"; // This would come from your config
+    const shopifyDomain = "your-store.myshopify.com";
     const url = `https://${shopifyDomain}/admin/orders?query=product_id:${product.shopifyId}`;
     window.open(url, '_blank');
   };
