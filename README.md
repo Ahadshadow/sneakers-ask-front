@@ -247,18 +247,6 @@ Beyond standard CRUD operations, the system handles:
 - Financial Controller: Payment and payout oversight
 - Customer Service: User support and basic operations
 
-**Seller Onboarding:**
-- Multi-step verification process
-- Document upload and validation
-- Performance metrics tracking
-- Automated rating system based on delivery and quality
-
-**Advanced Features:**
-- Seller performance analytics and insights
-- Automated suspension based on quality metrics
-- Bulk communication tools for announcements
-- Geographic distribution analysis for shipping optimization
-
 ## Design System
 
 I'm using CSS custom properties for theming in `index.css`. Colors are in HSL format:
