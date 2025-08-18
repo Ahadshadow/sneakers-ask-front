@@ -44,21 +44,11 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
   return (
     <header className="sticky top-0 z-50 h-16 bg-gradient-to-r from-background via-background to-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
       <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-4 min-w-0 flex-1">
-          <SidebarTrigger className="hover:bg-muted transition-all duration-200 flex-shrink-0 h-9 w-9 rounded-lg shadow-sm" />
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-md flex-shrink-0">
-              SA
-            </div>
-            <div className="flex flex-col min-w-0">
-              <h1 className="text-xl font-semibold text-foreground truncate">
-                {currentInfo.title}
-              </h1>
-              <p className="text-sm text-muted-foreground truncate">
-                {currentInfo.description}
-              </p>
-            </div>
-          </div>
+        <div className="flex items-center gap-4">
+          <SidebarTrigger className="h-8 w-8" />
+          <h1 className="text-lg font-medium text-foreground">
+            {currentInfo.title}
+          </h1>
         </div>
 
         <div className="flex items-center gap-4 flex-shrink-0">
