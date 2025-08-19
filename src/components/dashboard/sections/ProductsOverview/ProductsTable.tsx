@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Package, ShoppingCart, Plus, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { Product } from "./types";
 
 interface ProductsTableProps {
@@ -21,6 +22,15 @@ interface ProductsTableProps {
 export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
   const navigate = useNavigate();
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return products.slice(startIndex, endIndex);
+  }, [products, currentPage, itemsPerPage]);
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "open": 
@@ -68,7 +78,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {products.map((product, index) => (
+          {paginatedProducts.map((product, index) => (
             <TableRow 
               key={product.id} 
               className="border-border hover:bg-muted/10 transition-colors duration-200 animate-fade-in"
@@ -170,6 +180,17 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
         </TableBody>
       </Table>
         </div>
+      </div>
+      
+      {/* Pagination */}
+      <div className="mt-4">
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={products.length}
+        />
       </div>
     </div>
   );

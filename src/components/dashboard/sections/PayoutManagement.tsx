@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, CalendarIcon, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -42,6 +43,8 @@ export function PayoutManagement() {
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
   const [pendingFilter, setPendingFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [payouts, setPayouts] = useState<SellerPayout[]>([
     {
       id: "1",
@@ -217,6 +220,13 @@ export function PayoutManagement() {
     });
   }, [payouts, searchTerm, statusFilter, dateFrom, dateTo, pendingFilter]);
 
+  const totalPages = Math.ceil(filteredPayouts.length / itemsPerPage);
+  const paginatedPayouts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredPayouts.slice(startIndex, endIndex);
+  }, [filteredPayouts, currentPage, itemsPerPage]);
+
   const pendingPayouts = payouts.filter(p => p.status === "pending");
   const totalPendingAmount = pendingPayouts.reduce((sum, p) => sum + p.totalAmount, 0);
 
@@ -384,6 +394,7 @@ export function PayoutManagement() {
                   setDateFrom(undefined);
                   setDateTo(undefined);
                   setPendingFilter("all");
+                  setCurrentPage(1);
                 }}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -428,7 +439,7 @@ export function PayoutManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPayouts.map((payout, index) => (
+                {paginatedPayouts.map((payout, index) => (
                   <TableRow 
                     key={payout.id} 
                     className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
@@ -513,6 +524,15 @@ export function PayoutManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredPayouts.length}
+      />
     </div>
   );
 }

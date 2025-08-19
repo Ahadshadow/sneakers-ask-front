@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { WTBPurchase } from "./types";
 
 interface BoughtItemsGridProps {
@@ -28,6 +29,8 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const filteredPurchases = useMemo(() => {
     return purchases.filter(purchase => {
@@ -47,6 +50,13 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
       return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
     });
   }, [purchases, searchTerm, statusFilter, dateFrom, dateTo]);
+
+  const totalPages = Math.ceil(filteredPurchases.length / itemsPerPage);
+  const paginatedPurchases = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredPurchases.slice(startIndex, endIndex);
+  }, [filteredPurchases, currentPage, itemsPerPage]);
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "processing": return <Clock className="h-3.5 w-3.5" />;
@@ -204,6 +214,7 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
                   setStatusFilter("all");
                   setDateFrom(undefined);
                   setDateTo(undefined);
+                  setCurrentPage(1);
                 }}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -241,7 +252,7 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPurchases.map((purchase, index) => (
+                {paginatedPurchases.map((purchase, index) => (
                   <TableRow 
                     key={purchase.id} 
                     className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
@@ -306,6 +317,15 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
           </div>
         </div>
       </div>
+
+      {/* Pagination */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredPurchases.length}
+      />
 
     </div>
   );
