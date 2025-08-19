@@ -141,7 +141,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       tooltip={isCollapsed ? item.label : undefined}
                       className={cn(
                         "group transition-all duration-200 hover:bg-muted rounded-lg relative",
-                        isCollapsed ? "h-10 w-10 mx-auto my-2" : "h-11 mx-1 my-0.5",
+                        isCollapsed ? "h-10 w-10 mx-auto my-2 flex items-center justify-center" : "h-11 mx-1 my-0.5",
                         isActive && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
                       )}
                     >
