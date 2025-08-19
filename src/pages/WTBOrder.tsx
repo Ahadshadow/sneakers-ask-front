@@ -58,6 +58,7 @@ export default function WTBOrder() {
   const [payoutPrice, setPayoutPrice] = useState("");
   const [vatTreatment, setVatTreatment] = useState("");
   const [selectedShipping, setSelectedShipping] = useState("");
+  const [paymentTiming, setPaymentTiming] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -320,6 +321,68 @@ export default function WTBOrder() {
                       Automatically calculated excluding VAT
                     </p>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Payment Timing */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-primary" />
+                    Payment Timing
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Before Shipping */}
+                    <div className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:border-primary/50 transition-colors cursor-pointer">
+                      <div className="flex items-center">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            id="before-shipping"
+                            className="sr-only"
+                            checked={paymentTiming === "before-shipping"}
+                            onChange={() => setPaymentTiming("before-shipping")}
+                          />
+                          <div className="h-5 w-5 border-2 border-border rounded flex items-center justify-center">
+                            {paymentTiming === "before-shipping" && (
+                              <div className="h-3 w-3 bg-primary rounded-sm" />
+                            )}
+                          </div>
+                        </div>
+                        <Label htmlFor="before-shipping" className="ml-3 font-medium cursor-pointer">
+                          Before Shipping
+                        </Label>
+                      </div>
+                    </div>
+
+                    {/* After Delivery */}
+                    <div className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:border-primary/50 transition-colors cursor-pointer">
+                      <div className="flex items-center">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            id="after-delivery"
+                            className="sr-only"
+                            checked={paymentTiming === "after-delivery"}
+                            onChange={() => setPaymentTiming("after-delivery")}
+                          />
+                          <div className="h-5 w-5 border-2 border-border rounded flex items-center justify-center">
+                            {paymentTiming === "after-delivery" && (
+                              <div className="h-3 w-3 bg-primary rounded-sm" />
+                            )}
+                          </div>
+                        </div>
+                        <Label htmlFor="after-delivery" className="ml-3 font-medium cursor-pointer">
+                          After Delivery
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Choose when the seller receives payment
+                  </p>
                 </CardContent>
               </Card>
 
