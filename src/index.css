@@ -7,55 +7,55 @@
 @layer base {
   :root {
     /* Main backgrounds */
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
 
     /* Card system */
-    --card: 240 10% 8%;
-    --card-foreground: 0 0% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
 
     /* Popover */
-    --popover: 240 10% 8%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
 
     /* Primary brand colors */
-    --primary: 263 70% 55%;
+    --primary: 0 0% 9%;
     --primary-foreground: 0 0% 98%;
-    --primary-glow: 263 70% 65%;
+    --primary-glow: 0 0% 15%;
 
     /* Secondary colors */
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
     /* Muted backgrounds */
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45.1%;
 
     /* Accent colors */
-    --accent: 240 4% 16%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
 
     /* Destructive */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     /* Border and input */
-    --border: 240 4% 20%;
-    --input: 240 4% 16%;
-    --ring: 263 70% 55%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
 
     /* Radius */
     --radius: 0.75rem;
 
     /* Sidebar colors */
-    --sidebar-background: 240 10% 6%;
-    --sidebar-foreground: 240 5% 84%;
-    --sidebar-primary: 263 70% 55%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 45.1%;
+    --sidebar-primary: 0 0% 9%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4% 20%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 4% 20%;
-    --sidebar-ring: 263 70% 55%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 89.8%;
+    --sidebar-ring: 0 0% 3.9%;
 
     /* Success colors */
     --success: 142 76% 36%;
