@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Truck, Users, ArrowLeft, Check, ChevronsUpDown, ShoppingCart, Trash2 } from "lucide-react";
+import { Truck, Users, ArrowLeft, Check, ChevronsUpDown, ShoppingCart, Trash2, CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -42,6 +42,7 @@ export default function BulkWTBOrder() {
   const [payoutPrices, setPayoutPrices] = useState<{[key: string]: string}>({});
   const [vatTreatments, setVatTreatments] = useState<{[key: string]: string}>({});
   const [selectedShipping, setSelectedShipping] = useState("");
+  const [paymentTiming, setPaymentTiming] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -400,6 +401,70 @@ export default function BulkWTBOrder() {
                     </span>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Payment Timing */}
+          {selectedSeller && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  Payment Timing
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Before Shipping */}
+                  <div className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:border-primary/50 transition-colors cursor-pointer">
+                    <div className="flex items-center">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          id="before-shipping-bulk"
+                          className="sr-only"
+                          checked={paymentTiming === "before-shipping"}
+                          onChange={() => setPaymentTiming("before-shipping")}
+                        />
+                        <div className="h-5 w-5 border-2 border-border rounded flex items-center justify-center">
+                          {paymentTiming === "before-shipping" && (
+                            <div className="h-3 w-3 bg-primary rounded-sm" />
+                          )}
+                        </div>
+                      </div>
+                      <Label htmlFor="before-shipping-bulk" className="ml-3 font-medium cursor-pointer">
+                        Before Shipping
+                      </Label>
+                    </div>
+                  </div>
+
+                  {/* After Delivery */}
+                  <div className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:border-primary/50 transition-colors cursor-pointer">
+                    <div className="flex items-center">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          id="after-delivery-bulk"
+                          className="sr-only"
+                          checked={paymentTiming === "after-delivery"}
+                          onChange={() => setPaymentTiming("after-delivery")}
+                        />
+                        <div className="h-5 w-5 border-2 border-border rounded flex items-center justify-center">
+                          {paymentTiming === "after-delivery" && (
+                            <div className="h-3 w-3 bg-primary rounded-sm" />
+                          )}
+                        </div>
+                      </div>
+                      <Label htmlFor="after-delivery-bulk" className="ml-3 font-medium cursor-pointer">
+                        After Delivery
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Choose when the seller receives payment
+                </p>
               </CardContent>
             </Card>
           )}
