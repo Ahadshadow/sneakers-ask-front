@@ -236,6 +236,13 @@ export default function AddSeller() {
                   rows={4}
                 />
               </div>
+              
+              {/* Additional Information Note */}
+              <div className="bg-muted/20 border border-border rounded-lg p-4 mt-6">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Extra informatie:</strong> Als je seller toevoegt, graag ook discord naam of nummer als optie kunnen geven - goed eventueel om SMS of E-mail marketing uiteindelijk te doen hiermee.
+                </p>
+              </div>
             </CardContent>
           </Card>
 
