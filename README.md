@@ -22,12 +22,16 @@ This admin dashboard serves as the central command center for SneakerAsk operati
 
 ### Main features
 
-- Dashboard with real-time metrics and analytics
-- Product management with inventory tracking
-- Want to Buy (WTB) order system with bulk processing
-- User and seller management
-- Payout processing with VAT calculations
-- Role-based access control
+- **Dashboard Overview** - Real-time metrics, analytics, and activity tracking
+- **Product Management** - Comprehensive inventory tracking with Shopify integration
+- **Want to Buy (WTB) Order System** - Single and bulk order processing with seller matching
+- **User & Seller Management** - Complete administration of platform participants
+- **Payout Processing** - Automated financial operations with VAT calculations and Revolut integration
+- **Pagination System** - Efficient navigation through large datasets (10 items per page)
+- **Advanced Filtering** - Multi-criteria search and filter capabilities across all grids
+- **Payment Tracking** - Overdue and upcoming payment monitoring with 5-day arrival windows
+- **Authentication System** - Secure sign-in with role-based access control
+- **Responsive Design** - Mobile-first interface optimized for all device sizes
 
 ## Tech Stack
 
@@ -53,8 +57,8 @@ This admin dashboard serves as the central command center for SneakerAsk operati
 - Shopify Admin API for order synchronization
 - Fliproom platform for seller inventory management
 - Payment processors (integrated through Shopify)
-- Payout processing (Revolt)
-- Shipping providers (Discord reshapers & Sendcloud for UPS/DPD)
+- Revolut for payout processing
+- Shipping providers (Discord contacts & Sendcloud for UPS/DPD)
 
 **Development:**
 - ESLint for code quality
@@ -106,16 +110,25 @@ src/
 - `OptimizedDashboardHeader.tsx` - Header with search and actions
 
 **Sections:**
-- `DashboardOverview.tsx` - Analytics overview
-- `ProductsOverview/` - Product management suite
-- `UsersManagement.tsx` - User administration
-- `SellersManagement.tsx` - Seller operations
-- `PayoutManagement.tsx` - Financial operations
+- `DashboardOverview.tsx` - Analytics overview with real-time activity feed
+- `ProductsOverview/` - Product management suite with advanced filtering
+  - `ProductsTable.tsx` - Product listing with pagination and WTB actions
+  - `BoughtItemsGrid.tsx` - WTB purchases tracking with status management
+  - `FilterSystem.tsx` - Multi-criteria filtering for products and purchases
+  - `PaginationControls.tsx` - Reusable pagination component (10 items per page)
+- `UsersManagement.tsx` - User administration with role management
+- `SellersManagement.tsx` - Seller operations and verification
+- `PayoutManagement.tsx` - Financial operations with payment tracking and filters
 
 **WTB System:**
-- `WTBModal.tsx` - Single product orders
-- `BulkWTBOrder.tsx` - Bulk order processing
-- `ProductsTable.tsx` - Product listing with actions
+- `WTBModal.tsx` - Single product order creation with seller selection
+- `BulkWTBOrder.tsx` - Bulk order processing with optimized workflows
+- `WTBOrderFlow.tsx` - Streamlined order creation process
+- `BulkWTBOrderFlow.tsx` - Enhanced bulk ordering with batch processing
+
+**Authentication:**
+- `SignIn.tsx` - Secure authentication interface
+- Role-based access control throughout the application
 
 ## Architecture Overview
 
@@ -211,6 +224,38 @@ The Products grid displays various statuses that reflect the Fliproom integratio
 
 ## Features Deep Dive
 
+### Pagination System
+
+All data grids feature comprehensive pagination to handle large datasets efficiently:
+
+**Implementation:**
+- **Items per page**: Fixed at 10 items for optimal performance
+- **Navigation controls**: Previous/Next buttons with page number indicators
+- **Entry information**: Shows current range (e.g., "Showing 1 to 10 of 156 entries")
+- **Smart page display**: Ellipsis handling for large page counts
+- **Responsive design**: Adapts to mobile and desktop viewports
+
+**Applied to:**
+- Product listings in Products Overview
+- WTB purchases tracking
+- Seller payout management
+- All filterable data tables
+
+### Advanced Filtering System
+
+Multi-criteria filtering across all major data grids:
+
+**Payment Management Filters:**
+- **Status Filter**: Pending, Processing, Completed
+- **Payment Timeline**: "Overdue (5+ days)" and "Upcoming (<5 days)" based on arrival dates
+- **Date Range**: From/To date selection with calendar picker
+- **Search**: Seller names, emails, and product information
+
+**Product Filters:**
+- **Status-based**: Open, Fliproom Sale, SneakerAsk listings
+- **Search capability**: Product names, SKUs, seller information
+- **Date range filtering**: Purchase date ranges with calendar integration
+
 ### WTB (Want to Buy) System
 
 The core business logic of the platform centers around the WTB system:
@@ -221,6 +266,13 @@ The core business logic of the platform centers around the WTB system:
 3. Orders enter the marketplace for seller bidding
 4. Automated matching algorithm suggests optimal seller combinations
 5. Admin approval triggers payment processing and fulfillment
+
+**Enhanced Features:**
+- **Bulk Processing**: Streamlined workflows for multiple orders
+- **Seller Selection**: Comprehensive seller comparison and selection tools
+- **VAT Calculations**: Automated EU VAT handling based on locations
+- **Shipping Integration**: Multiple shipping options with cost calculations
+- **File Upload Support**: Document handling for complex orders
 
 **Complex Features:**
 - Euro pricing with automated VAT calculations
@@ -241,11 +293,28 @@ Beyond standard CRUD operations, the system handles:
 
 ### User & Seller Management
 
+**Enhanced Seller Information:**
+- Comprehensive seller profiles with Discord contact details
+- Marketing integration capabilities for SMS and email campaigns
+- Performance tracking and verification status
+- Location and shipping method preferences
+
 **Role-Based Access Control:**
 - Super Admin: Full system access
 - Operations Manager: Order and seller management
 - Financial Controller: Payment and payout oversight
 - Customer Service: User support and basic operations
+
+## Recent Updates
+
+### January 2025
+- ✅ **Pagination System**: Added comprehensive pagination to all data grids (10 items per page)
+- ✅ **Enhanced Filtering**: Implemented advanced filters for payments, products, and purchases
+- ✅ **Payment Tracking**: Added overdue/upcoming payment monitoring based on 5-day arrival windows
+- ✅ **Seller Information**: Enhanced seller profiles with Discord contacts and marketing options
+- ✅ **Authentication**: Implemented secure sign-in interface
+- ✅ **Bulk WTB Orders**: Refactored and enhanced bulk order processing system
+- ✅ **Mobile Optimization**: Improved responsive design across all components
 
 ## Design System
 
