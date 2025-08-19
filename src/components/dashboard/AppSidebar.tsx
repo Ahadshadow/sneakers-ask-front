@@ -101,14 +101,22 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
         <div className={cn("flex items-center h-16", isCollapsed ? "justify-center" : "gap-3 px-4")}>
           {!isCollapsed && (
             <>
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-md">
-                SA
-              </div>
+              <img 
+                src="/lovable-uploads/eda95fba-94be-49b8-91e4-327afcb9e3da.png" 
+                alt="SneakerAsk Logo" 
+                className="h-8 w-auto"
+              />
               <div className="flex flex-col">
-                <span className="font-semibold text-foreground">SneakerAsk</span>
                 <span className="text-xs text-muted-foreground">Admin Dashboard</span>
               </div>
             </>
+          )}
+          {isCollapsed && (
+            <img 
+              src="/lovable-uploads/eda95fba-94be-49b8-91e4-327afcb9e3da.png" 
+              alt="SneakerAsk Logo" 
+              className="h-6 w-auto"
+            />
           )}
         </div>
       </SidebarHeader>
