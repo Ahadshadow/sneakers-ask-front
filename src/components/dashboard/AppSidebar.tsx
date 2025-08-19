@@ -128,7 +128,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
               Navigation
             </SidebarGroupLabel>
           )}
-          <SidebarGroupContent className={isCollapsed ? "px-2" : "px-2"}>
+          <SidebarGroupContent className={isCollapsed ? "px-1" : "px-2"}>
             <SidebarMenu>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
@@ -140,7 +140,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       asChild
                       tooltip={isCollapsed ? item.label : undefined}
                       className={cn(
-                        "group transition-all duration-200 hover:bg-muted rounded-lg relative",
+                        "group transition-all duration-200 hover:bg-muted rounded-lg relative flex",
                         isCollapsed ? "h-10 w-10 mx-auto my-2 p-0 justify-center items-center" : "h-11 mx-1 my-0.5",
                         isActive && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
                       )}
@@ -151,7 +151,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                           e.stopPropagation();
                           onSectionChange(item.id);
                         }}
-                        className={cn("flex items-center justify-center w-full h-full transition-all duration-200", isCollapsed ? "p-0" : "gap-3 px-3")}
+                        className={cn("flex items-center justify-center w-full h-full transition-all duration-200", isCollapsed ? "" : "gap-3 px-3")}
                       >
                         <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5")} />
                         {!isCollapsed && (
