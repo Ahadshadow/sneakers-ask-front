@@ -96,7 +96,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const navigate = useNavigate();
 
   return (
-    <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-16" : "w-64")} collapsible="icon">
+    <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-16" : "w-56")} collapsible="icon">
       <SidebarHeader className="h-16 border-b border-border bg-gradient-to-r from-background via-background to-background/95">
         <div className={cn("flex items-center h-16", isCollapsed ? "justify-center" : "gap-3 px-4")}>
           {!isCollapsed && (
