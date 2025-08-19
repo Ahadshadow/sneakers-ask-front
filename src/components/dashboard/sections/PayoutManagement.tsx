@@ -41,6 +41,7 @@ export function PayoutManagement() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
+  const [pendingFilter, setPendingFilter] = useState<string>("all");
   const [payouts, setPayouts] = useState<SellerPayout[]>([
     {
       id: "1",
@@ -183,9 +184,38 @@ export function PayoutManagement() {
       const matchesDateFrom = !dateFrom || latestItemDate >= dateFrom;
       const matchesDateTo = !dateTo || latestItemDate <= dateTo;
       
-      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+      // Pending/Unpaid filter based on 5 days after arrival
+      const matchesPendingFilter = (() => {
+        if (pendingFilter === "all") return true;
+        
+        if (pendingFilter === "overdue") {
+          // Show pending payments where it's been more than 5 days since arrival
+          if (payout.status !== "pending") return false;
+          
+          const currentDate = new Date();
+          const arrivalDate = new Date(Math.max(...payout.items.map(item => new Date(item.purchaseDate).getTime())));
+          const daysSinceArrival = Math.floor((currentDate.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          return daysSinceArrival >= 5;
+        }
+        
+        if (pendingFilter === "upcoming") {
+          // Show pending payments where it's been less than 5 days since arrival
+          if (payout.status !== "pending") return false;
+          
+          const currentDate = new Date();
+          const arrivalDate = new Date(Math.max(...payout.items.map(item => new Date(item.purchaseDate).getTime())));
+          const daysSinceArrival = Math.floor((currentDate.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          return daysSinceArrival < 5;
+        }
+        
+        return true;
+      })();
+      
+      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo && matchesPendingFilter;
     });
-  }, [payouts, searchTerm, statusFilter, dateFrom, dateTo]);
+  }, [payouts, searchTerm, statusFilter, dateFrom, dateTo, pendingFilter]);
 
   const pendingPayouts = payouts.filter(p => p.status === "pending");
   const totalPendingAmount = pendingPayouts.reduce((sum, p) => sum + p.totalAmount, 0);
@@ -270,6 +300,23 @@ export function PayoutManagement() {
               </select>
             </div>
 
+            {/* Pending/Unpaid Filter */}
+            <div>
+              <Label htmlFor="pendingFilter" className="text-sm font-medium mb-2 block">
+                Payments
+              </Label>
+              <select
+                id="pendingFilter"
+                value={pendingFilter}
+                onChange={(e) => setPendingFilter(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="all">All Payments</option>
+                <option value="overdue">Overdue (5+ days)</option>
+                <option value="upcoming">Upcoming (&lt;5 days)</option>
+              </select>
+            </div>
+
             {/* Date From */}
             <div>
               <Label className="text-sm font-medium mb-2 block">From Date</Label>
@@ -336,6 +383,7 @@ export function PayoutManagement() {
                   setStatusFilter("all");
                   setDateFrom(undefined);
                   setDateTo(undefined);
+                  setPendingFilter("all");
                 }}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -351,7 +399,7 @@ export function PayoutManagement() {
         <span>
           Showing {filteredPayouts.length} of {payouts.length} sellers
         </span>
-        {(searchTerm || statusFilter !== "all" || dateFrom || dateTo) && (
+        {(searchTerm || statusFilter !== "all" || dateFrom || dateTo || pendingFilter !== "all") && (
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filters active</span>
