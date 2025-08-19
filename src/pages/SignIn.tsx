@@ -72,12 +72,6 @@ const SignIn = () => {
             <Button type="submit" className="w-full">
               Sign In
             </Button>
-            <div className="text-center text-sm">
-              Don't have an account?{" "}
-              <Button variant="link" className="px-0">
-                Sign up
-              </Button>
-            </div>
           </form>
           <div className="mt-6 p-4 bg-muted/20 border border-border rounded-lg">
             <p className="text-sm text-muted-foreground text-center">
