@@ -141,7 +141,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       tooltip={isCollapsed ? item.label : undefined}
                       className={cn(
                         "group transition-all duration-200 hover:bg-muted rounded-lg relative",
-                        isCollapsed ? "h-10 w-10 mx-auto my-2 p-0 justify-center" : "h-11 mx-1 my-0.5",
+                        isCollapsed ? "h-10 w-10 mx-auto my-2" : "h-11 mx-1 my-0.5",
                         isActive && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
                       )}
                     >
@@ -151,7 +151,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                           e.stopPropagation();
                           onSectionChange(item.id);
                         }}
-                        className={cn("flex items-center w-full transition-all duration-200", isCollapsed ? "justify-center p-0" : "gap-3 px-3")}
+                        className={cn("flex items-center w-full h-full transition-all duration-200", isCollapsed ? "justify-center" : "gap-3 px-3")}
                       >
                         <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5")} />
                         {!isCollapsed && (
