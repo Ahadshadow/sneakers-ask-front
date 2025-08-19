@@ -10,93 +10,49 @@ export function DashboardOverview() {
   const dummyPurchases: WTBPurchase[] = [
     {
       id: "1",
-      productId: "1",
       product: {
-        id: "1",
         name: "Nike Air Jordan 1 Retro High OG",
-        sku: "555088-134",
-        category: "Sneakers",
-        price: "€170",
-        stock: 0,
-        status: "bought",
-        seller: "Premium Kicks Store",
-        shopifyId: "shop_001",
-        orders: []
+        sku: "555088-134"
       },
       seller: "Premium Kicks Store",
       payoutPrice: 145,
-      vatTreatment: "regular",
       shippingMethod: "Express",
-      shippingCost: 15,
       purchaseDate: "2024-01-15",
       status: "delivered"
     },
     {
       id: "2",
-      productId: "2",
       product: {
-        id: "2",
         name: "Adidas Yeezy Boost 350 V2",
-        sku: "GZ5541",
-        category: "Sneakers",
-        price: "€230",
-        stock: 0,
-        status: "bought",
-        seller: "Sneaker World",
-        shopifyId: "shop_002",
-        orders: []
+        sku: "GZ5541"
       },
       seller: "Sneaker World",
       payoutPrice: 195,
-      vatTreatment: "margin",
       shippingMethod: "Standard",
-      shippingCost: 10,
       purchaseDate: "2024-01-14",
       status: "shipped"
     },
     {
       id: "3",
-      productId: "3",
       product: {
-        id: "3",
         name: "Nike Dunk Low Retro",
-        sku: "DD1391-100",
-        category: "Sneakers",
-        price: "€110",
-        stock: 0,
-        status: "bought",
-        seller: "Urban Footwear",
-        shopifyId: "shop_003",
-        orders: []
+        sku: "DD1391-100"
       },
       seller: "Urban Footwear",
       payoutPrice: 85,
-      vatTreatment: "regular",
       shippingMethod: "Express",
-      shippingCost: 12,
       purchaseDate: "2024-01-13",
       status: "processing"
     },
     {
       id: "4",
-      productId: "4",
       product: {
-        id: "4",
         name: "New Balance 550 White Green",
-        sku: "BB550WTG",
-        category: "Sneakers",
-        price: "€120",
-        stock: 0,
-        status: "bought",
-        seller: "Classic Runners",
-        shopifyId: "shop_004",
-        orders: []
+        sku: "BB550WTG"
       },
       seller: "Classic Runners",
       payoutPrice: 95,
-      vatTreatment: "margin",
       shippingMethod: "Standard",
-      shippingCost: 8,
       purchaseDate: "2024-01-12",
       status: "delivered"
     }

@@ -61,14 +61,14 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
     if (shippingOption.requiresUpload && !uploadedFile) return;
     
     const purchase: Omit<WTBPurchase, "id"> = {
-      productId: product.id,
-      product: { ...product, status: "bought" },
+      product: {
+        name: product.name,
+        sku: product.sku
+      },
       seller: selectedSeller,
       payoutPrice: parseFloat(payoutPrice),
-      vatTreatment: vatTreatment,
       shippingMethod: shippingOption.name,
-      shippingCost: 0, // No cost for these shipping methods
-      purchaseDate: new Date().toISOString(),
+      purchaseDate: new Date().toISOString().split('T')[0],
       status: "processing"
     };
 

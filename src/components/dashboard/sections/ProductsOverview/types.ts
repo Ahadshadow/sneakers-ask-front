@@ -22,13 +22,13 @@ export interface Product {
 
 export interface WTBPurchase {
   id: string;
-  productId: string;
-  product: Product;
+  product: {
+    name: string;
+    sku: string;
+  };
   seller: string;
   payoutPrice: number;
-  vatTreatment?: string;
   shippingMethod: string;
-  shippingCost: number;
-  purchaseDate: string;
   status: "processing" | "shipped" | "delivered";
+  purchaseDate: string;
 }
