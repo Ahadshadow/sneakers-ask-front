@@ -128,7 +128,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
               Navigation
             </SidebarGroupLabel>
           )}
-          <SidebarGroupContent className={isCollapsed ? "px-2" : "px-2"}>
+          <SidebarGroupContent className={isCollapsed ? "px-1" : "px-2"}>
             <SidebarMenu>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
@@ -161,7 +161,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                           <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-foreground/80" />
                         )}
                         {isActive && isCollapsed && (
-                          <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 h-2 w-1 rounded-l-full bg-primary" />
+                          <div className="absolute -right-0.5 top-1/2 transform -translate-y-1/2 h-2 w-1 rounded-l-full bg-primary" />
                         )}
                       </button>
                     </SidebarMenuButton>
