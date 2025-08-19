@@ -194,8 +194,29 @@ export function WTBModal({ isOpen, onClose, product, onPurchase }: WTBModalProps
               min="0"
               step="0.01"
             />
+            
+            {/* Pricing Explanation */}
+            {vatTreatment && (
+              <div className="bg-muted/20 p-3 rounded-lg border space-y-2">
+                <h5 className="text-sm font-medium text-foreground">Pricing Guide</h5>
+                {vatTreatment === 'regular' ? (
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Regular VAT:</strong> Seller pays VAT to authorities</p>
+                    <p>• You can reclaim input VAT (if VAT registered)</p>
+                    <p>• Higher admin burden but potentially better cash flow</p>
+                  </div>
+                ) : vatTreatment === 'margin' ? (
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Margin Scheme:</strong> VAT only on your profit margin</p>
+                    <p>• Lower VAT liability but no input VAT reclaim</p>
+                    <p>• Simpler administration for second-hand goods</p>
+                  </div>
+                ) : null}
+              </div>
+            )}
+            
             <p className="text-xs text-muted-foreground">
-              This is the amount the seller will receive
+              💡 <strong>Tip:</strong> The payout price affects your profit margin and VAT obligations. Consider your VAT registration status when choosing treatment.
             </p>
           </div>
 

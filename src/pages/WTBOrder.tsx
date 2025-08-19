@@ -312,15 +312,70 @@ export default function WTBOrder() {
                     }`}
                     min="0"
                     step="0.01"
+                    disabled={vatTreatment === 'regular'}
                   />
-                  <p className="text-sm text-muted-foreground">
-                    This is the amount the seller will receive
-                  </p>
-                  {vatTreatment === 'regular' && (
-                    <p className="text-sm text-primary">
-                      Automatically calculated excluding VAT
-                    </p>
+                  
+                  {/* Pricing Breakdown */}
+                  {product && selectedSeller && vatTreatment && (
+                    <div className="bg-muted/20 p-4 rounded-lg space-y-3 border">
+                      <h4 className="font-medium text-foreground">Pricing Breakdown</h4>
+                      
+                      {vatTreatment === 'regular' ? (
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Listed Price (incl. VAT):</span>
+                            <span className="font-medium">{product.price}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              VAT ({(availableSellers.find(s => s.name === selectedSeller)?.vatRate! * 100).toFixed(0)}%):
+                            </span>
+                            <span className="font-medium text-red-600">
+                              -€{(parseFloat(product.price.replace('€', '')) - parseFloat(payoutPrice || '0')).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="border-t border-border pt-2">
+                            <div className="flex justify-between">
+                              <span className="font-medium">Seller Receives (net):</span>
+                              <span className="font-bold text-primary">€{payoutPrice}</span>
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-2">
+                            <strong>Regular VAT:</strong> The seller pays VAT to tax authorities. You receive the product and can claim input VAT (if VAT registered).
+                          </div>
+                        </div>
+                      ) : vatTreatment === 'margin' ? (
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Listed Price:</span>
+                            <span className="font-medium">{product.price}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">Seller Receives:</span>
+                            <span className="font-bold text-primary">€{payoutPrice || '0.00'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Your Margin:</span>
+                            <span className="font-medium text-green-600">
+                              €{payoutPrice ? (parseFloat(product.price.replace('€', '')) - parseFloat(payoutPrice)).toFixed(2) : '0.00'}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-2">
+                            <strong>Margin Scheme:</strong> For second-hand goods. VAT is only paid on your profit margin, not the full sale price. Lower admin burden.
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
                   )}
+
+                  <div className="text-sm space-y-1">
+                    <p className="text-muted-foreground">
+                      💡 <strong>What is payout price?</strong>
+                    </p>
+                    <p className="text-muted-foreground">
+                      This is the net amount the seller receives after VAT considerations. It affects your profit margin and VAT obligations.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
 
