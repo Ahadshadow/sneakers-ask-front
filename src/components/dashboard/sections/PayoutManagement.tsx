@@ -427,7 +427,7 @@ export function PayoutManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-border overflow-hidden">
+          <div className="rounded-lg border border-border overflow-hidden hide-scrollbar">
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-muted/5">

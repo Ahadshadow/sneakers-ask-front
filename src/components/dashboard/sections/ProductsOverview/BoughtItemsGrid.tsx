@@ -239,8 +239,8 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
       </div>
       
       <div className="rounded-lg border border-border bg-gradient-card shadow-soft overflow-hidden">
-        <div className="overflow-x-auto">
-          <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto">
+        <div className="overflow-x-auto hide-scrollbar">
+          <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto hide-scrollbar">
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-muted/5">
