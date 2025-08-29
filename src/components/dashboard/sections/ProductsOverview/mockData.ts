@@ -15,18 +15,14 @@ export const mockProducts: Product[] = [
       {
         orderId: "1",
         orderNumber: "#SP001",
-        quantity: 2,
+        quantity: 3,
         orderDate: "2024-08-15",
         customerName: "John Smith",
-        orderTotal: "€510.00"
-      },
-      {
-        orderId: "3",
-        orderNumber: "#SP003",
-        quantity: 1,
-        orderDate: "2024-08-14",
-        customerName: "Emily Davis",
-        orderTotal: "€390.00"
+        orderTotal: "€510.00",
+        products: [
+          { productId: "1", productName: "Air Jordan 1 Retro High OG", quantity: 2 },
+          { productId: "2", productName: "Nike Dunk Low Retro White", quantity: 1 }
+        ]
       }
     ]
   },
@@ -42,12 +38,16 @@ export const mockProducts: Product[] = [
     shopifyId: "gid://shopify/Product/6789123457",
     orders: [
       {
-        orderId: "2",
-        orderNumber: "#SP002",
-        quantity: 1,
+        orderId: "1",
+        orderNumber: "#SP001",
+        quantity: 3,
         orderDate: "2024-08-15",
-        customerName: "Sarah Johnson",
-        orderTotal: "€330.00"
+        customerName: "John Smith",
+        orderTotal: "€510.00",
+        products: [
+          { productId: "1", productName: "Air Jordan 1 Retro High OG", quantity: 2 },
+          { productId: "2", productName: "Nike Dunk Low Retro White", quantity: 1 }
+        ]
       }
     ]
   },
@@ -68,7 +68,10 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-15",
         customerName: "Sarah Johnson",
-        orderTotal: "€330.00"
+        orderTotal: "€330.00",
+        products: [
+          { productId: "3", productName: "Adidas Yeezy Boost 350 V2", quantity: 1 }
+        ]
       },
       {
         orderId: "3",
@@ -76,7 +79,10 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-14",
         customerName: "Emily Davis",
-        orderTotal: "€390.00"
+        orderTotal: "€390.00",
+        products: [
+          { productId: "3", productName: "Adidas Yeezy Boost 350 V2", quantity: 1 }
+        ]
       },
       {
         orderId: "4",
@@ -84,7 +90,11 @@ export const mockProducts: Product[] = [
         quantity: 2,
         orderDate: "2024-08-13",
         customerName: "Michael Brown",
-        orderTotal: "€440.00"
+        orderTotal: "€440.00",
+        products: [
+          { productId: "3", productName: "Adidas Yeezy Boost 350 V2", quantity: 1 },
+          { productId: "5", productName: "Converse Chuck 70 High Top", quantity: 1 }
+        ]
       }
     ]
   },
@@ -114,10 +124,14 @@ export const mockProducts: Product[] = [
       {
         orderId: "4",
         orderNumber: "#SP004",
-        quantity: 1,
+        quantity: 2,
         orderDate: "2024-08-13",
         customerName: "Michael Brown",
-        orderTotal: "€440.00"
+        orderTotal: "€440.00",
+        products: [
+          { productId: "3", productName: "Adidas Yeezy Boost 350 V2", quantity: 1 },
+          { productId: "5", productName: "Converse Chuck 70 High Top", quantity: 1 }
+        ]
       }
     ]
   },
@@ -150,7 +164,10 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-12",
         customerName: "David Wilson",
-        orderTotal: "€100.00"
+        orderTotal: "€100.00",
+        products: [
+          { productId: "7", productName: "Air Force 1 '07 White", quantity: 1 }
+        ]
       }
     ]
   },
@@ -183,7 +200,10 @@ export const mockProducts: Product[] = [
         quantity: 2,
         orderDate: "2024-08-11",
         customerName: "Lisa Taylor",
-        orderTotal: "€260.00"
+        orderTotal: "€260.00",
+        products: [
+          { productId: "9", productName: "Air Max 90 Essential", quantity: 2 }
+        ]
       }
     ]
   },
@@ -216,7 +236,10 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-10",
         customerName: "Alex Miller",
-        orderTotal: "€110.00"
+        orderTotal: "€110.00",
+        products: [
+          { productId: "11", productName: "Blazer Mid '77 Vintage", quantity: 1 }
+        ]
       }
     ]
   },
@@ -249,7 +272,10 @@ export const mockProducts: Product[] = [
         quantity: 1,
         orderDate: "2024-08-09",
         customerName: "Chris Taylor",
-        orderTotal: "€150.00"
+        orderTotal: "€150.00",
+        products: [
+          { productId: "13", productName: "Ultraboost 22 Core Black", quantity: 1 }
+        ]
       }
     ]
   },
@@ -282,7 +308,10 @@ export const mockProducts: Product[] = [
         quantity: 2,
         orderDate: "2024-08-08",
         customerName: "Emma White",
-        orderTotal: "€210.00"
+        orderTotal: "€210.00",
+        products: [
+          { productId: "15", productName: "Gel-Lyte III Heritage", quantity: 2 }
+        ]
       }
     ]
   }

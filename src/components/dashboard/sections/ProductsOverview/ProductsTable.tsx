@@ -109,7 +109,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
                   <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
                   <span className="text-xs sm:text-sm font-medium">
                     {product.orders.length > 0 ? 
-                      `${product.orders.length} order${product.orders.length > 1 ? 's' : ''}` : 
+                      `${product.orders.reduce((total, order) => total + order.products.length, 0)} products in ${product.orders.length} order${product.orders.length > 1 ? 's' : ''}` : 
                       'View orders'
                     }
                   </span>
