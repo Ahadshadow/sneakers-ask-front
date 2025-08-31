@@ -31,10 +31,13 @@ Deno.serve(async (req) => {
     const demoEmail = email || 'admin@demo.com'
     const demoPassword = password || 'DemoAdmin123!'
 
-    console.log(`Creating demo admin account: ${demoEmail}`)
+    console.log(`Creating/finding demo admin account: ${demoEmail}`)
 
-    // Create auth user
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    // Try to create auth user, or get existing one
+    let authData: any
+    let userId: string
+
+    const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: demoEmail,
       password: demoPassword,
       email_confirm: true, // Auto-confirm email
@@ -44,21 +47,55 @@ Deno.serve(async (req) => {
       }
     })
 
-    if (authError) {
-      console.error('Auth error:', authError)
+    if (createError && createError.message.includes('already been registered')) {
+      console.log('User already exists, fetching existing user')
+      
+      // User already exists, get the existing user
+      const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers()
+      
+      if (listError) {
+        console.error('List error:', listError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to find existing user', 
+            details: listError.message 
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+
+      const existingUser = listData.users.find(u => u.email === demoEmail)
+      if (!existingUser) {
+        return new Response(
+          JSON.stringify({ error: 'User exists but could not be found' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+
+      userId = existingUser.id
+      authData = { user: existingUser }
+    } else if (createError) {
+      console.error('Auth error:', createError)
       return new Response(
         JSON.stringify({ 
           error: 'Failed to create auth user', 
-          details: authError.message 
+          details: createError.message 
         }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
+    } else {
+      authData = createData
+      userId = createData.user?.id
     }
-
-    const userId = authData.user?.id
 
     if (!userId) {
       return new Response(
