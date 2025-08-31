@@ -10,6 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   currentSection: string;
@@ -44,6 +46,18 @@ const sectionInfo = {
 
 export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProps) {
   const currentInfo = sectionInfo[currentSection as keyof typeof sectionInfo] || sectionInfo.dashboard;
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/signin');
+  };
+
+  const getUserInitials = () => {
+    if (!user) return 'U';
+    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+  };
   
   return (
     <header className="sticky top-0 z-50 h-16 bg-gradient-to-r from-background via-background to-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
@@ -114,11 +128,11 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-lg hover:bg-muted transition-all duration-200 p-0 shadow-sm">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
-                    AD
-                  </AvatarFallback>
-                </Avatar>
+                 <Avatar className="h-8 w-8">
+                   <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
+                     {getUserInitials()}
+                   </AvatarFallback>
+                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -126,10 +140,13 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
               align="end"
               sideOffset={8}
             >
-              <div className="p-3 border-b border-border">
-                <p className="font-medium text-foreground">Admin User</p>
-                <p className="text-sm text-muted-foreground">admin@sneakerask.com</p>
-              </div>
+               <div className="p-3 border-b border-border">
+                 <p className="font-medium text-foreground">{user?.firstName} {user?.lastName}</p>
+                 <p className="text-sm text-muted-foreground">{user?.email}</p>
+                 <Badge variant="secondary" className="mt-1 text-xs">
+                   {user?.role.replace('_', ' ').toUpperCase()}
+                 </Badge>
+               </div>
               <DropdownMenuItem 
                 className="hover:bg-muted cursor-pointer"
                 onClick={() => window.location.href = '/profile'}
@@ -138,9 +155,12 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
                 Profile Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="hover:bg-destructive/10 text-destructive cursor-pointer">
-                Sign Out
-              </DropdownMenuItem>
+               <DropdownMenuItem 
+                 className="hover:bg-destructive/10 text-destructive cursor-pointer"
+                 onClick={handleLogout}
+               >
+                 Sign Out
+               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
