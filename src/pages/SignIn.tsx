@@ -7,12 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { createDemoAdmin } from "@/utils/createDemoAdmin";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingDemo, setIsCreatingDemo] = useState(false);
   
   const { login, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
@@ -68,6 +70,33 @@ const SignIn = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateDemoAdmin = async () => {
+    setIsCreatingDemo(true);
+    
+    try {
+      const result = await createDemoAdmin();
+      
+      toast({
+        title: "Demo Admin Created!",
+        description: `Email: ${result.credentials.email}, Password: ${result.credentials.password}`,
+        duration: 10000
+      });
+      
+      // Auto-fill the login form
+      setEmail(result.credentials.email);
+      setPassword(result.credentials.password);
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create demo admin account",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreatingDemo(false);
     }
   };
 
@@ -144,6 +173,26 @@ const SignIn = () => {
               )}
             </Button>
           </form>
+          
+          <div className="mt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full" 
+              onClick={handleCreateDemoAdmin}
+              disabled={isCreatingDemo}
+            >
+              {isCreatingDemo ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Demo Admin...
+                </>
+              ) : (
+                'Create Demo Admin Account'
+              )}
+            </Button>
+          </div>
+          
           <div className="mt-6 p-4 bg-muted/20 border border-border rounded-lg">
             <p className="text-sm text-muted-foreground text-center">
               <strong>Connected to Supabase:</strong> User authentication and role-based access control now active.
