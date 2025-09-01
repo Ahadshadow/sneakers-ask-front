@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.1'
 
 const corsHeaders = {
@@ -32,13 +31,10 @@ Deno.serve(async (req) => {
     const demoEmail = email || 'admin@demo.com'
     const demoPassword = password || 'DemoAdmin123!'
 
-    console.log(`Creating/finding demo admin account: ${demoEmail}`)
+    console.log(`Creating demo admin account: ${demoEmail}`)
 
-    // Try to create auth user, or get existing one
-    let authData: any
-    let userId: string
-
-    const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    // Create auth user
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: demoEmail,
       password: demoPassword,
       email_confirm: true, // Auto-confirm email
@@ -48,55 +44,21 @@ Deno.serve(async (req) => {
       }
     })
 
-    if (createError && createError.message.includes('already been registered')) {
-      console.log('User already exists, fetching existing user')
-      
-      // User already exists, get the existing user
-      const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers()
-      
-      if (listError) {
-        console.error('List error:', listError)
-        return new Response(
-          JSON.stringify({ 
-            error: 'Failed to find existing user', 
-            details: listError.message 
-          }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-
-      const existingUser = listData.users.find(u => u.email === demoEmail)
-      if (!existingUser) {
-        return new Response(
-          JSON.stringify({ error: 'User exists but could not be found' }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-
-      userId = existingUser.id
-      authData = { user: existingUser }
-    } else if (createError) {
-      console.error('Auth error:', createError)
+    if (authError) {
+      console.error('Auth error:', authError)
       return new Response(
         JSON.stringify({ 
           error: 'Failed to create auth user', 
-          details: createError.message 
+          details: authError.message 
         }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
-    } else {
-      authData = createData
-      userId = createData.user?.id
     }
+
+    const userId = authData.user?.id
 
     if (!userId) {
       return new Response(
@@ -110,72 +72,34 @@ Deno.serve(async (req) => {
 
     console.log(`Created auth user with ID: ${userId}`)
 
-    // Check if profile already exists
-    const { data: existingProfile } = await supabaseAdmin
+    // Create or update profile with admin role
+    const { data: profileData, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
+      .upsert({
+        user_id: userId,
+        first_name: 'Demo',
+        last_name: 'Admin',
+        email: demoEmail,
+        role: 'admin',
+        is_active: true
+      })
+      .select()
 
-    let profileData
-    if (existingProfile) {
-      console.log('Profile already exists, updating role to admin')
-      // Update existing profile to ensure admin role
-      const { data: updateData, error: updateError } = await supabaseAdmin
-        .from('profiles')
-        .update({
-          role: 'admin',
-          is_active: true
-        })
-        .eq('user_id', userId)
-        .select()
-
-      if (updateError) {
-        console.error('Profile update error:', updateError)
-        return new Response(
-          JSON.stringify({ 
-            error: 'Failed to update profile', 
-            details: updateError.message 
-          }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-      profileData = updateData
-    } else {
-      console.log('Creating new profile')
-      // Create new profile
-      const { data: createProfileData, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .insert({
-          user_id: userId,
-          first_name: 'Demo',
-          last_name: 'Admin',
-          email: demoEmail,
-          role: 'admin',
-          is_active: true
-        })
-        .select()
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError)
-        return new Response(
-          JSON.stringify({ 
-            error: 'Failed to create profile', 
-            details: profileError.message 
-          }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-      profileData = createProfileData
+    if (profileError) {
+      console.error('Profile error:', profileError)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to create profile', 
+          details: profileError.message 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
 
-    console.log('Demo admin account created/updated successfully')
+    console.log('Demo admin account created successfully')
 
     return new Response(
       JSON.stringify({ 
