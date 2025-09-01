@@ -146,7 +146,7 @@ const SignIn = () => {
           </form>
           <div className="mt-6 p-4 bg-muted/20 border border-border rounded-lg">
             <p className="text-sm text-muted-foreground text-center">
-              <strong>Connected to Supabase:</strong> User authentication and role-based access control now active.
+              <strong>Ready for Laravel:</strong> Connect this to your Laravel API endpoints for authentication.
             </p>
           </div>
         </CardContent>
