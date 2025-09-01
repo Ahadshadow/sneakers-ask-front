@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.1'
 
 const corsHeaders = {
@@ -109,34 +110,72 @@ Deno.serve(async (req) => {
 
     console.log(`Created auth user with ID: ${userId}`)
 
-    // Create or update profile with admin role
-    const { data: profileData, error: profileError } = await supabaseAdmin
+    // Check if profile already exists
+    const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
-      .upsert({
-        user_id: userId,
-        first_name: 'Demo',
-        last_name: 'Admin',
-        email: demoEmail,
-        role: 'admin',
-        is_active: true
-      })
-      .select()
+      .select('*')
+      .eq('user_id', userId)
+      .single()
 
-    if (profileError) {
-      console.error('Profile error:', profileError)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to create profile', 
-          details: profileError.message 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    let profileData
+    if (existingProfile) {
+      console.log('Profile already exists, updating role to admin')
+      // Update existing profile to ensure admin role
+      const { data: updateData, error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          role: 'admin',
+          is_active: true
+        })
+        .eq('user_id', userId)
+        .select()
+
+      if (updateError) {
+        console.error('Profile update error:', updateError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to update profile', 
+            details: updateError.message 
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+      profileData = updateData
+    } else {
+      console.log('Creating new profile')
+      // Create new profile
+      const { data: createProfileData, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          first_name: 'Demo',
+          last_name: 'Admin',
+          email: demoEmail,
+          role: 'admin',
+          is_active: true
+        })
+        .select()
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to create profile', 
+            details: profileError.message 
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+      profileData = createProfileData
     }
 
-    console.log('Demo admin account created successfully')
+    console.log('Demo admin account created/updated successfully')
 
     return new Response(
       JSON.stringify({ 
