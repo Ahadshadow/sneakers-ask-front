@@ -7,6 +7,28 @@ export interface OrderReference {
   orderTotal: string;
 }
 
+// API Product interface (from backend)
+export interface ApiProduct {
+  id: number;
+  name: string;
+  sku: string | null;
+  price: string;
+  currency: string;
+  order_count: number;
+  status: string;
+  order_status_urls: string[];
+  shop_id: number;
+  shopify_id: number;
+  vendor: string;
+  product_type: string;
+  handle: string;
+  variants_count: number;
+  order_item_ids: number[];
+  created_at: string;
+  updated_at: string;
+}
+
+// UI Product interface (for existing design compatibility)
 export interface Product {
   id: string;
   name: string;

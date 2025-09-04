@@ -1,4 +1,4 @@
-import { Bell, User } from "lucide-react";
+import { Bell, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardHeaderProps {
   currentSection: string;
@@ -43,6 +44,25 @@ const sectionInfo = {
 };
 
 export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProps) {
+  const { user, logout, isLoggingOut } = useAuth();
+  
+  // Get user initials for avatar
+  const getUserInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
   const currentInfo = sectionInfo[currentSection as keyof typeof sectionInfo] || sectionInfo.dashboard;
   
   return (
@@ -116,7 +136,7 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
               <Button variant="ghost" className="relative h-9 w-9 rounded-lg hover:bg-muted transition-all duration-200 p-0 shadow-sm">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
-                    AD
+                    {user ? getUserInitials(user.name) : 'AD'}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -127,8 +147,8 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
               sideOffset={8}
             >
               <div className="p-3 border-b border-border">
-                <p className="font-medium text-foreground">Admin User</p>
-                <p className="text-sm text-muted-foreground">admin@sneakerask.com</p>
+                <p className="font-medium text-foreground">{user?.name || 'Admin User'}</p>
+                <p className="text-sm text-muted-foreground">{user?.email || 'admin@sneakerask.com'}</p>
               </div>
               <DropdownMenuItem 
                 className="hover:bg-muted cursor-pointer"
@@ -138,8 +158,13 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
                 Profile Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="hover:bg-destructive/10 text-destructive cursor-pointer">
-                Sign Out
+              <DropdownMenuItem 
+                className="hover:bg-destructive/10 text-destructive cursor-pointer"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                {isLoggingOut ? "Signing out..." : "Sign Out"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
