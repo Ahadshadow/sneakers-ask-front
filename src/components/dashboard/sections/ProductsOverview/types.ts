@@ -5,6 +5,11 @@ export interface OrderReference {
   orderDate: string;
   customerName: string;
   orderTotal: string;
+  products: Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+  }>;
 }
 
 // API Product interface (from backend)
