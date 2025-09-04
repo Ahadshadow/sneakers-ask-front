@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart, Search, CalendarIcon, Filter } from "lucide-react";
+import { Package, ShoppingCart, Search, CalendarIcon, Filter, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ import { BoughtItemsGrid } from "./BoughtItemsGrid";
 import { mockProducts } from "./mockData";
 import { Product, WTBPurchase } from "./types";
 import { useToast } from "@/hooks/use-toast";
+import { productsApi } from "@/lib/api";
 
 export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,16 +27,69 @@ export function ProductsOverview() {
   const [purchases, setPurchases] = useState<WTBPurchase[]>([]);
   const [activeTab, setActiveTab] = useState("products");
   const [cart, setCart] = useState<Product[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const { toast } = useToast();
 
-  // Get unique values for filter dropdowns
+  // Fetch products from API
+  const {
+    data: productsResponse,
+    isLoading: isLoadingProducts,
+    error: productsError,
+    refetch: refetchProducts,
+  } = useQuery({
+    queryKey: ['products', currentPage, searchTerm, statusFilter, sellerFilter],
+    queryFn: async () => {
+      if (searchTerm) {
+        return await productsApi.searchProducts(searchTerm, currentPage);
+      } else if (statusFilter !== "all") {
+        return await productsApi.getProductsByStatus(statusFilter, currentPage);
+      } else if (sellerFilter !== "all") {
+        return await productsApi.getProductsByVendor(sellerFilter, currentPage);
+      } else {
+        return await productsApi.getProducts(currentPage);
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  // Convert API products to UI products (simple mapping)
+  const apiProducts = useMemo(() => {
+    if (productsResponse?.data?.products) {
+      return productsResponse.data.products.map(apiProduct => ({
+        id: apiProduct.id.toString(),
+        name: apiProduct.name,
+        sku: apiProduct.sku || 'N/A',
+        category: apiProduct.product_type,
+        price: `${apiProduct.currency} ${apiProduct.price}`,
+        stock: apiProduct.variants_count,
+        status: apiProduct.status === 'active' ? 'open' : 'fliproom_sale' as const,
+        seller: apiProduct.vendor,
+        shopifyId: apiProduct.shopify_id.toString(),
+        orders: apiProduct.order_item_ids.map((orderId, index) => ({
+          orderId: orderId.toString(),
+          orderNumber: `ORD-${orderId}`,
+          quantity: 1,
+          orderDate: apiProduct.created_at,
+          customerName: 'Customer',
+          orderTotal: apiProduct.price,
+        })),
+      }));
+    }
+    return [];
+  }, [productsResponse]);
+
+  // Use API products or fallback to mock data
+  const allProducts = apiProducts.length > 0 ? apiProducts : mockProducts;
+
+  // Get unique values for filter dropdowns from API products
   const availableSellers = useMemo(() => {
-    return Array.from(new Set(mockProducts.map(product => product.seller))).sort();
-  }, []);
+    return Array.from(new Set(allProducts.map(product => product.seller))).sort();
+  }, [allProducts]);
 
   const filteredProducts = useMemo(() => {
-    return mockProducts.filter(product => {
+    return allProducts.filter(product => {
       // Search filter
       const matchesSearch = searchTerm === "" || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,7 +109,7 @@ export function ProductsOverview() {
 
       return matchesSearch && matchesStatus && matchesSeller && matchesDateFrom && matchesDateTo;
     });
-  }, [searchTerm, statusFilter, sellerFilter, dateFrom, dateTo]);
+  }, [allProducts, searchTerm, statusFilter, sellerFilter, dateFrom, dateTo]);
 
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
@@ -237,7 +292,13 @@ export function ProductsOverview() {
           {/* Results Summary */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              Showing {filteredProducts.length} of {mockProducts.length} products
+              Showing {filteredProducts.length} of {allProducts.length} products
+              {isLoadingProducts && (
+                <span className="ml-2 flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Loading...
+                </span>
+              )}
             </span>
             {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
               <div className="flex items-center gap-1">
@@ -264,20 +325,44 @@ export function ProductsOverview() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <ProductsTable
-                products={filteredProducts}
-                onAddToCart={handleAddToCart}
-              />
-              
-              {/* Products Summary */}
-              <div className="mt-6 pt-4 border-t border-border">
-                <p className="text-sm text-muted-foreground">
-                  Total products displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
-                  {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
-                    <span className="ml-2 text-primary">(filtered from {mockProducts.length})</span>
-                  )}
-                </p>
-              </div>
+              {isLoadingProducts ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Loading products...</p>
+                  </div>
+                </div>
+              ) : productsError ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    <p className="text-sm text-destructive">Failed to load products</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => refetchProducts()}
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <ProductsTable
+                    products={filteredProducts}
+                    onAddToCart={handleAddToCart}
+                  />
+                  
+                  {/* Products Summary */}
+                  <div className="mt-6 pt-4 border-t border-border">
+                    <p className="text-sm text-muted-foreground">
+                      Total products displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
+                      {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
+                        <span className="ml-2 text-primary">(filtered from {allProducts.length})</span>
+                      )}
+                    </p>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
