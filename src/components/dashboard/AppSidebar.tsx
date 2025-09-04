@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Users, 
   Store, 
@@ -94,6 +95,25 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
+  const { user, logout, isLoggingOut } = useAuth();
+  
+  // Get user initials for avatar
+  const getUserInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-16" : "w-64")} collapsible="icon">
@@ -216,13 +236,13 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                 >
                   <Avatar className={cn("shadow-sm", isCollapsed ? "h-8 w-8" : "h-9 w-9")}>
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
-                      AD
+                      {user ? getUserInitials(user.name) : 'AD'}
                     </AvatarFallback>
                   </Avatar>
                   {!isCollapsed && (
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold text-foreground">Admin User</span>
-                      <span className="truncate text-xs text-muted-foreground">admin@sneakerask.com</span>
+                      <span className="truncate font-semibold text-foreground">{user?.name || 'Admin User'}</span>
+                      <span className="truncate text-xs text-muted-foreground">{user?.email || 'admin@sneakerask.com'}</span>
                     </div>
                   )}
                 </SidebarMenuButton>
@@ -245,9 +265,13 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                   Help & Support
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="hover:bg-destructive/10 text-destructive cursor-pointer">
+                <DropdownMenuItem 
+                  className="hover:bg-destructive/10 text-destructive cursor-pointer"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                  {isLoggingOut ? "Signing out..." : "Sign Out"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
