@@ -24,6 +24,45 @@ export interface Product {
   updated_at: string;
 }
 
+// Order Items interfaces based on your API response
+export interface OrderItem {
+  id: number;
+  order_id: number;
+  product_name: string;
+  sku: string;
+  variant: {
+    variant: string;
+  };
+  price: number;
+  currency: string;
+  vendor: string;
+  order_url: string;
+  quantity: number;
+}
+
+export interface OrderItemsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    order_items: OrderItem[];
+    pagination: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+      from: number;
+      to: number;
+      has_more_pages: boolean;
+      links: {
+        first: string | null;
+        last: string | null;
+        prev: string | null;
+        next: string | null;
+      };
+    };
+  };
+}
+
 export interface ProductsResponse {
   success: boolean;
   message: string;
@@ -133,5 +172,20 @@ export const productsApi = {
   // Filter products by vendor
   async getProductsByVendor(vendor: string, page: number = 1): Promise<ProductsResponse> {
     return apiRequest<ProductsResponse>(`/products?vendor=${encodeURIComponent(vendor)}&page=${page}`);
+  },
+
+  // Get order items with pagination
+  async getOrderItems(page: number = 1, perPage: number = 10): Promise<OrderItemsResponse> {
+    return apiRequest<OrderItemsResponse>(`/order-items?page=${page}&per_page=${perPage}`);
+  },
+
+  // Search order items
+  async searchOrderItems(query: string, page: number = 1): Promise<OrderItemsResponse> {
+    return apiRequest<OrderItemsResponse>(`/order-items?search=${encodeURIComponent(query)}&page=${page}`);
+  },
+
+  // Filter order items by vendor
+  async getOrderItemsByVendor(vendor: string, page: number = 1): Promise<OrderItemsResponse> {
+    return apiRequest<OrderItemsResponse>(`/order-items?vendor=${encodeURIComponent(vendor)}&page=${page}`);
   },
 };
