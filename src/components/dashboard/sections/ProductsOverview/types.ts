@@ -5,6 +5,7 @@ export interface OrderReference {
   orderDate: string;
   customerName: string;
   orderTotal: string;
+  orderUrl?: string; // Add order URL support
   products: Array<{
     productId: string;
     productName: string;
@@ -45,6 +46,8 @@ export interface Product {
   seller: string;
   shopifyId: string;
   orders: OrderReference[];
+  orderUrl?: string; // Add order URL support for the product
+  variant?: string; // Add variant support
 }
 
 export interface WTBPurchase {

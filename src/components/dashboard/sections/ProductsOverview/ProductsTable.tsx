@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { Product } from "./types";
+import { toast } from "@/components/ui/use-toast";
 
 interface ProductsTableProps {
   products: Product[];
@@ -45,9 +46,31 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
   };
 
   const handleShopifyOrdersClick = (product: Product) => {
-    const shopifyDomain = "your-store.myshopify.com";
-    const url = `https://${shopifyDomain}/admin/orders?query=product_id:${product.shopifyId}`;
-    window.open(url, '_blank');
+    // Check if product has order URL from API
+    if (product.orderUrl) {
+      // Use the order URL from API
+      window.open(product.orderUrl, '_blank');
+      toast({
+        title: "Opening Order",
+        description: "Redirecting to order details...",
+      });
+    } else if (product.orders.length > 0 && product.orders[0].orderUrl) {
+      // Use the first order's URL if available
+      window.open(product.orders[0].orderUrl, '_blank');
+      toast({
+        title: "Opening Order",
+        description: "Redirecting to order details...",
+      });
+    } else {
+      // Fallback to default Shopify admin URL
+      const shopifyDomain = "your-store.myshopify.com";
+      const url = `https://${shopifyDomain}/admin/orders?query=product_id:${product.shopifyId}`;
+      window.open(url, '_blank');
+      toast({
+        title: "Opening Orders",
+        description: "Redirecting to Shopify admin...",
+      });
+    }
   };
 
   const handleWTBClick = (product: Product) => {
@@ -87,7 +110,16 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               <TableCell className="py-3 sm:py-4">
                 <div className="space-y-1">
                   <p className="font-medium text-foreground leading-none text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{product.name}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">SKU: {product.sku}</p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      SKU: {product.sku}
+                      {product.variant && product.variant !== 'N/A' && (
+                        <span className="text-muted-foreground ml-2">
+                          | Variant: {product.variant}
+                        </span>
+                      )}
+                    </p>
+                  </div>
                   <Badge 
                     variant="outline"
                     className={`lg:hidden mt-1 text-xs font-medium border-0 ${getStatusBadgeClass(product.status)}`}
