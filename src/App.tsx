@@ -14,6 +14,7 @@ import WTBOrder from "./pages/WTBOrder";
 import BulkWTBOrder from "./pages/BulkWTBOrder";
 import Profile from "./pages/Profile";
 import SignIn from "./pages/SignIn";
+import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
