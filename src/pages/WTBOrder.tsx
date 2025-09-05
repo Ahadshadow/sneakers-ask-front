@@ -27,14 +27,14 @@ export default function WTBOrder() {
   const productId = searchParams.get('productId');
   
   // Get product data
-  const product = productId ? mockProducts[productId as keyof typeof mockProducts] : null;
+  const product = productId ? mockProducts[1] : null;
 
-  useEffect(() => {
-    if (!product) {
-      toast.error("Product not found");
-      navigate(-1);
-    }
-  }, [product, navigate]);
+  // useEffect(() => {
+  //   if (!product) {
+  //     toast.error("Product not found");
+  //     navigate(-1);
+  //   }
+  // }, [product, navigate]);
 
   if (!product) {
     return null;

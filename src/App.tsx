@@ -76,9 +76,9 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/bulk-wtb-order" element={
-              <ProtectedRoute requiredRoles={['admin', 'manager', 'employee']}>
+              // <ProtectedRoute requiredRoles={['admin', 'manager', 'employee']}>
                 <BulkWTBOrder />
-              </ProtectedRoute>
+              // </ProtectedRoute>
             } />
             <Route path="/profile" element={
               <ProtectedRoute>
