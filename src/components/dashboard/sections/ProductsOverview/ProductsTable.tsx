@@ -18,20 +18,45 @@ import { toast } from "@/components/ui/use-toast";
 interface ProductsTableProps {
   products: Product[];
   onAddToCart?: (product: Product) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  totalItems?: number;
+  itemsPerPage?: number;
 }
 
-export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
+export function ProductsTable({ 
+  products, 
+  onAddToCart, 
+  currentPage: externalCurrentPage,
+  totalPages: externalTotalPages,
+  onPageChange: externalOnPageChange,
+  totalItems: externalTotalItems,
+  itemsPerPage: externalItemsPerPage
+}: ProductsTableProps) {
   const navigate = useNavigate();
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  
+  // Use external pagination if provided, otherwise use local pagination
+  const currentPage = externalCurrentPage || 1;
+  const totalPages = externalTotalPages || Math.ceil(products.length / 10);
+  const onPageChange = externalOnPageChange || (() => {});
+  const totalItems = externalTotalItems || products.length;
+  const itemsPerPage = externalItemsPerPage || 10;
 
-  const totalPages = Math.ceil(products.length / itemsPerPage);
+  // If external pagination is provided, show all products (API already paginated)
+  // Otherwise, use local pagination
   const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return products.slice(startIndex, endIndex);
-  }, [products, currentPage, itemsPerPage]);
+    if (externalCurrentPage !== undefined) {
+      // API pagination - show all products as they're already paginated
+      return products;
+    } else {
+      // Local pagination - slice products
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return products.slice(startIndex, endIndex);
+    }
+  }, [products, currentPage, itemsPerPage, externalCurrentPage]);
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "open": 
@@ -219,9 +244,9 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
         <PaginationControls
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          onPageChange={onPageChange}
           itemsPerPage={itemsPerPage}
-          totalItems={products.length}
+          totalItems={totalItems}
         />
       </div>
     </div>
