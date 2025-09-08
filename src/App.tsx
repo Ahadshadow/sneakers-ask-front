@@ -6,6 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth";
 import Index from "./pages/Index";
+import Products from "./pages/Products";
+import Payouts from "./pages/Payouts";
+import Users from "./pages/Users";
+import Roles from "./pages/Roles";
+import Sellers from "./pages/Sellers";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
 import AddSeller from "./pages/AddSeller";
@@ -48,6 +53,31 @@ const App = () => (
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/products" element={
+              <ProtectedRoute>
+                <Products />
+              </ProtectedRoute>
+            } />
+            <Route path="/payouts" element={
+              <ProtectedRoute>
+                <Payouts />
+              </ProtectedRoute>
+            } />
+            <Route path="/users" element={
+              <ProtectedRoute>
+                <Users />
+              </ProtectedRoute>
+            } />
+            <Route path="/roles" element={
+              <ProtectedRoute>
+                <Roles />
+              </ProtectedRoute>
+            } />
+            <Route path="/sellers" element={
+              <ProtectedRoute>
+                <Sellers />
               </ProtectedRoute>
             } />
             <Route path="/add-employee" element={

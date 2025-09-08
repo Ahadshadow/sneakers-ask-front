@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -48,31 +48,37 @@ const navigationItems = [
     id: "dashboard",
     label: "Dashboard",
     icon: BarChart3,
+    path: "/",
   },
   {
     id: "products", 
     label: "Products",
     icon: Package,
+    path: "/products",
   },
   {
     id: "payouts",
     label: "Payouts", 
     icon: CreditCard,
+    path: "/payouts",
   },
   {
     id: "users",
     label: "Users",
     icon: Users,
+    path: "/users",
   },
   {
     id: "roles",
     label: "Roles",
     icon: Shield,
+    path: "/roles",
   },
   {
     id: "sellers",
     label: "Sellers",
     icon: Store,
+    path: "/sellers",
   },
 ];
 
@@ -95,6 +101,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout, isLoggingOut } = useAuth();
   
   // Get user initials for avatar
@@ -152,7 +159,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
             <SidebarMenu>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = currentSection === item.id;
+                const isActive = currentSection === item.id || (item.path && location.pathname === item.path);
                 
                 return (
                   <SidebarMenuItem key={item.id}>
@@ -169,7 +176,11 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          onSectionChange(item.id);
+                          if (item.path) {
+                            navigate(item.path);
+                          } else {
+                            onSectionChange(item.id);
+                          }
                         }}
                         className={cn("flex items-center w-full h-full transition-all duration-200", isCollapsed ? "justify-center" : "gap-3 px-3")}
                       >

@@ -462,8 +462,22 @@ export function ProductsOverview() {
               </CardHeader>
               <CardContent className="pt-0">
                 <ProductsTable
-                  products={filteredProducts}
+                  products={filteredProducts as Product[]}
                   onAddToCart={handleAddToCart}
+                  currentPage={currentPage}
+                  totalPages={useOrderItems ? 
+                    (orderItemsResponse?.data?.pagination?.last_page || 1) : 
+                    (productsResponse?.data?.pagination?.last_page || 1)
+                  }
+                  onPageChange={setCurrentPage}
+                  totalItems={useOrderItems ? 
+                    (orderItemsResponse?.data?.pagination?.total || 0) : 
+                    (productsResponse?.data?.pagination?.total || 0)
+                  }
+                  itemsPerPage={useOrderItems ? 
+                    (orderItemsResponse?.data?.pagination?.per_page || 10) : 
+                    (productsResponse?.data?.pagination?.per_page || 10)
+                  }
                 />
                 
                 {/* Summary */}

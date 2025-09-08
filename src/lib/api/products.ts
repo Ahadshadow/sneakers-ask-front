@@ -188,4 +188,99 @@ export const productsApi = {
   async getOrderItemsByVendor(vendor: string, page: number = 1): Promise<OrderItemsResponse> {
     return apiRequest<OrderItemsResponse>(`/order-items?vendor=${encodeURIComponent(vendor)}&page=${page}`);
   },
+
+  // Get single order item details by ID
+  async getOrderItemDetails(id: number): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      order_item: OrderItem & {
+        order_number: string;
+        order_url: string;
+        order_created_at: string;
+        order_updated_at: string;
+        display_name: string;
+        product_type: string;
+        barcode: string;
+        shopify_line_item_id: number;
+        shopify_product_id: number;
+        shopify_variant_id: number;
+        total_price: number;
+        total_discount: number;
+        net_price: number;
+        weight: number;
+        weight_unit: string | null;
+        grams: number;
+        taxable: boolean;
+        requires_shipping: boolean;
+        gift_card: boolean;
+        fulfillment_status: string | null;
+        fulfillment_service: string;
+        customer_email: string;
+        customer_name: string;
+        customer_details: string;
+        properties: any[];
+        discount_allocations: any[];
+        tax_lines: any[];
+        duties: any[];
+        price_set: any;
+        total_discount_set: any;
+        origin_location: any[];
+        variant_inventory_management: string;
+        variant_inventory_policy: string | null;
+        variant_fulfillment_service: string | null;
+        location_id: number | null;
+        fulfillment_line_item_id: number | null;
+        created_at: string;
+        updated_at: string;
+      };
+    };
+  }> {
+    return apiRequest<{
+      success: boolean;
+      message: string;
+      data: {
+        order_item: OrderItem & {
+          order_number: string;
+          order_url: string;
+          order_created_at: string;
+          order_updated_at: string;
+          display_name: string;
+          product_type: string;
+          barcode: string;
+          shopify_line_item_id: number;
+          shopify_product_id: number;
+          shopify_variant_id: number;
+          total_price: number;
+          total_discount: number;
+          net_price: number;
+          weight: number;
+          weight_unit: string | null;
+          grams: number;
+          taxable: boolean;
+          requires_shipping: boolean;
+          gift_card: boolean;
+          fulfillment_status: string | null;
+          fulfillment_service: string;
+          customer_email: string;
+          customer_name: string;
+          customer_details: string;
+          properties: any[];
+          discount_allocations: any[];
+          tax_lines: any[];
+          duties: any[];
+          price_set: any;
+          total_discount_set: any;
+          origin_location: any[];
+          variant_inventory_management: string;
+          variant_inventory_policy: string | null;
+          variant_fulfillment_service: string | null;
+          location_id: number | null;
+          fulfillment_line_item_id: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+      };
+    }>(`/order-items/${id}`);
+  },
 };
