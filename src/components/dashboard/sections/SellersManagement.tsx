@@ -133,8 +133,8 @@ export function SellersManagement() {
   } = useQuery({
     queryKey: ['sellers', currentPage],
     queryFn: () => sellersApi.getSellers(currentPage),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
   });
 
   // Convert API sellers to UI format
@@ -414,19 +414,27 @@ export function SellersManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Owner</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Products</TableHead>
-                <TableHead>Sales</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSellers.map((seller) => (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading sellers...</p>
+              </div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Products</TableHead>
+                  <TableHead>Sales</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredSellers.map((seller) => (
                 <TableRow key={seller.id}>
                   <TableCell>
                     <div>
@@ -513,11 +521,12 @@ export function SellersManagement() {
                   </TableCell>
                 </TableRow>
               ))}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          )}
           
           {/* Pagination */}
-          {sellersResponse?.data && (
+          {!isLoading && sellersResponse?.data && (
             <div className="mt-4">
               <PaginationControls
                 currentPage={currentPage}

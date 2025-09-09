@@ -50,8 +50,8 @@ export function ProductsOverview() {
         return await productsApi.getOrderItems(currentPage);
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
     enabled: useOrderItems, // Only run when useOrderItems is true
   });
 
@@ -74,8 +74,8 @@ export function ProductsOverview() {
         return await productsApi.getProducts(currentPage);
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
     enabled: !useOrderItems, // Only run when useOrderItems is false
   });
 
@@ -473,6 +473,7 @@ export function ProductsOverview() {
                 <ProductsTable
                   products={filteredProducts as Product[]}
                   onAddToCart={handleAddToCart}
+                  isLoading={isLoading}
                 />
                 
                 {/* Pagination */}
