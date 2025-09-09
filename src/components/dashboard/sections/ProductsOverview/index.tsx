@@ -538,8 +538,14 @@ export function ProductsOverview() {
                   variant="secondary"
                   size="sm"
                   onClick={() => {
-                    sessionStorage.setItem('wtb-cart', JSON.stringify(cart));
-                    window.location.href = '/bulk-wtb-order';
+                    // Get product IDs from cart
+                    console.log('Cart items:', cart);
+                    const productIds = cart.map(item => item.id).join(',');
+                    console.log('Cart product IDs:', productIds);
+                    console.log('Cart length:', cart.length);
+                    
+                    // Navigate to bulk WTB order with product IDs
+                    window.location.href = `/bulk-wtb-order?productIds=${productIds}`;
                   }}
                   className="bg-white text-primary hover:bg-white/90 transition-all duration-300 font-semibold"
                 >

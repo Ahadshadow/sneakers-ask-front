@@ -28,16 +28,54 @@ export interface Product {
 export interface OrderItem {
   id: number;
   order_id: number;
+  order_number: string;
+  order_url: string;
+  order_created_at: string;
+  order_updated_at: string;
   product_name: string;
+  variant_title: string;
+  display_name: string;
+  vendor: string;
+  product_type: string;
   sku: string;
+  barcode: string;
+  shopify_line_item_id: number;
+  shopify_product_id: number;
+  shopify_variant_id: number;
+  price: number;
+  currency: string;
+  quantity: number;
+  total_price: number;
+  total_discount: number;
+  net_price: number;
+  weight: number;
+  weight_unit: string | null;
+  grams: number;
+  taxable: boolean;
+  requires_shipping: boolean;
+  gift_card: boolean;
+  fulfillment_status: string | null;
+  fulfillment_service: string;
+  customer_email: string;
+  customer_name: string;
+  customer_details: any;
   variant: {
     variant: string;
   };
-  price: number;
-  currency: string;
-  vendor: string;
-  order_url: string;
-  quantity: number;
+  properties: any[];
+  discount_allocations: any[];
+  tax_lines: any[];
+  duties: any[];
+  price_set: any;
+  total_discount_set: any;
+  origin_location: any[];
+  variant_inventory_management: string;
+  variant_inventory_policy: string | null;
+  variant_fulfillment_service: string | null;
+  location_id: number | null;
+  fulfillment_line_item_id: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface OrderItemsResponse {
@@ -282,5 +320,28 @@ export const productsApi = {
         };
       };
     }>(`/order-items/${id}`);
+  },
+
+  // Get multiple order items by IDs
+  async getMultipleOrderItems(ids: string): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      order_items: OrderItem[];
+      count: number;
+      requested_ids: number[];
+      found_ids: number[];
+    };
+  }> {
+    return apiRequest<{
+      success: boolean;
+      message: string;
+      data: {
+        order_items: OrderItem[];
+        count: number;
+        requested_ids: number[];
+        found_ids: number[];
+      };
+    }>(`/order-items-multiple/${ids}`);
   },
 };
