@@ -299,33 +299,7 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                     </div>
                   )}
 
-                  {/* Product Specifications */}
-                  <div className="border-t pt-4">
-                    <h4 className="font-semibold text-md text-foreground mb-3">Product Specifications</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p><span className="font-medium">Weight:</span> {product.weight || 0} {product.weightUnit || "kg"}</p>
-                        <p><span className="font-medium">Taxable:</span> {product.taxable ? "Yes" : "No"}</p>
-                        <p><span className="font-medium">Requires Shipping:</span> {product.requiresShipping ? "Yes" : "No"}</p>
-                      </div>
-                      <div>
-                        <p><span className="font-medium">Fulfillment Status:</span> {product.fulfillmentStatus || "N/A"}</p>
-                        <p><span className="font-medium">Status:</span> {product.status}</p>
-                      </div>
-                      <div>
-                        {product.taxLines && product.taxLines.length > 0 && (
-                          <div>
-                            <p className="font-medium">Tax Details:</p>
-                            {product.taxLines.map((tax, index) => (
-                              <p key={index} className="pl-2">
-                                {tax.title}: {tax.rate * 100}% ({tax.price_set?.shop_money?.amount} {tax.price_set?.shop_money?.currency_code})
-                              </p>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                 
                 </CardContent>
               </Card>
             ))}
