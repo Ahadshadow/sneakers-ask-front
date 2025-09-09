@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Package, ShoppingCart, Plus, Lock } from "lucide-react";
+import { ExternalLink, Package, ShoppingCart, Plus, Lock, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
 import {
@@ -23,6 +23,7 @@ interface ProductsTableProps {
   onPageChange?: (page: number) => void;
   totalItems?: number;
   itemsPerPage?: number;
+  isLoading?: boolean;
 }
 
 export function ProductsTable({ 
@@ -32,7 +33,8 @@ export function ProductsTable({
   totalPages: externalTotalPages,
   onPageChange: externalOnPageChange,
   totalItems: externalTotalItems,
-  itemsPerPage: externalItemsPerPage
+  itemsPerPage: externalItemsPerPage,
+  isLoading = false
 }: ProductsTableProps) {
   const navigate = useNavigate();
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
@@ -115,18 +117,26 @@ export function ProductsTable({
     <div className="rounded-lg border border-border bg-gradient-card shadow-soft overflow-hidden">
       <div className="overflow-x-auto hide-scrollbar">
         <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto hide-scrollbar">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-border hover:bg-muted/5">
-            <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Orders</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedProducts.map((product, index) => (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading products...</p>
+              </div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-muted/5">
+                  <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
+                  <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
+                  <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Orders</TableHead>
+                  <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
+                  <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedProducts.map((product, index) => (
             <TableRow 
               key={product.id} 
               className="border-border hover:bg-muted/10 transition-colors duration-200 animate-fade-in"
@@ -234,20 +244,10 @@ export function ProductsTable({
               </TableCell>
             </TableRow>
           ))}
-        </TableBody>
-      </Table>
+              </TableBody>
+            </Table>
+          )}
         </div>
-      </div>
-      
-      {/* Pagination */}
-      <div className="mt-4">
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={onPageChange}
-          itemsPerPage={itemsPerPage}
-          totalItems={totalItems}
-        />
       </div>
     </div>
   );

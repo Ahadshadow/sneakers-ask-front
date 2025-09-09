@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 
 import { ProductsTable } from "./ProductsTable";
 import { BoughtItemsGrid } from "./BoughtItemsGrid";
+import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { mockProducts } from "./mockData";
 import { Product, WTBPurchase } from "./types";
 import { useToast } from "@/hooks/use-toast";
@@ -49,8 +50,8 @@ export function ProductsOverview() {
         return await productsApi.getOrderItems(currentPage);
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
     enabled: useOrderItems, // Only run when useOrderItems is true
   });
 
@@ -73,8 +74,8 @@ export function ProductsOverview() {
         return await productsApi.getProducts(currentPage);
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
     enabled: !useOrderItems, // Only run when useOrderItems is false
   });
 
@@ -242,7 +243,11 @@ export function ProductsOverview() {
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger value="products" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            {useOrderItems ? 'Order Items' : 'Products'} ({filteredProducts.length})
+            {useOrderItems ? 'Order Items' : 'Products'} (
+              {useOrderItems 
+                ? (orderItemsResponse?.data?.pagination?.total || filteredProducts.length)
+                : (productsResponse?.data?.pagination?.total || filteredProducts.length)
+              })
           </TabsTrigger>
           <TabsTrigger value="bought" className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" />
@@ -390,7 +395,11 @@ export function ProductsOverview() {
           {/* Results Summary */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              Showing {filteredProducts.length} of {allProducts.length} {useOrderItems ? 'order items' : 'products'}
+              Showing {filteredProducts.length} of {
+                useOrderItems 
+                  ? (orderItemsResponse?.data?.pagination?.total || allProducts.length)
+                  : (productsResponse?.data?.pagination?.total || allProducts.length)
+              } {useOrderItems ? 'order items' : 'products'}
               {isLoading && (
                 <span className="ml-2 flex items-center gap-1">
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -464,34 +473,32 @@ export function ProductsOverview() {
                 <ProductsTable
                   products={filteredProducts as Product[]}
                   onAddToCart={handleAddToCart}
-                  currentPage={currentPage}
-                  totalPages={useOrderItems ? 
-                    (orderItemsResponse?.data?.pagination?.last_page || 1) : 
-                    (productsResponse?.data?.pagination?.last_page || 1)
-                  }
-                  onPageChange={setCurrentPage}
-                  totalItems={useOrderItems ? 
-                    (orderItemsResponse?.data?.pagination?.total || 0) : 
-                    (productsResponse?.data?.pagination?.total || 0)
-                  }
-                  itemsPerPage={useOrderItems ? 
-                    (orderItemsResponse?.data?.pagination?.per_page || 10) : 
-                    (productsResponse?.data?.pagination?.per_page || 10)
-                  }
+                  isLoading={isLoading}
                 />
                 
-                {/* Summary */}
+                {/* Pagination */}
                 <div className="mt-6 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Total {useOrderItems ? 'order items' : 'products'} displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
-                    {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
-                      <span className="ml-2 text-primary">(filtered from {allProducts.length})</span>
-                    )}
-                  </p>
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={useOrderItems ? 
+                      (orderItemsResponse?.data?.pagination?.last_page || 1) : 
+                      (productsResponse?.data?.pagination?.last_page || 1)
+                    }
+                    onPageChange={setCurrentPage}
+                    totalItems={useOrderItems ? 
+                      (orderItemsResponse?.data?.pagination?.total || 0) : 
+                      (productsResponse?.data?.pagination?.total || 0)
+                    }
+                    itemsPerPage={useOrderItems ? 
+                      (orderItemsResponse?.data?.pagination?.per_page || 10) : 
+                      (productsResponse?.data?.pagination?.per_page || 10)
+                    }
+                  />
                 </div>
               </CardContent>
             </Card>
           )}
+
 
           {/* Loading State */}
           {isLoading && (
