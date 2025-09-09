@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Trash2, Upload } from "lucide-react";
 import { Product } from "@/components/dashboard/sections/ProductsOverview/types";
 import { PricingBreakdown } from "./PricingBreakdown";
 
@@ -12,19 +13,41 @@ interface BulkPricingSectionProps {
   selectedSeller: string;
   payoutPrices: {[key: string]: string};
   vatTreatments: {[key: string]: string};
+  selectedShipping: {[key: string]: string};
+  paymentTiming: {[key: string]: string};
+  uploadedFile: {[key: string]: File | null};
   onPayoutChange: (productId: string, value: string) => void;
   onVatChange: (productId: string, value: string) => void;
+  onShippingChange: (productId: string, value: string) => void;
+  onPaymentTimingChange: (productId: string, value: string) => void;
+  onFileUpload: (productId: string, file: File | null) => void;
   onRemoveFromCart: (productId: string) => void;
   availableSellers: Array<{ name: string; country: string; vatRate: number }>;
 }
+
+const shippingOptions = [
+  { id: "discord", name: "Shipper Discord", requiresUpload: false },
+  { id: "upload", name: "Upload shipment label", requiresUpload: true }
+];
+
+const paymentOptions = [
+  { id: "before", name: "Before shipment" },
+  { id: "after", name: "After shipment" }
+];
 
 export function BulkPricingSection({ 
   cartItems,
   selectedSeller, 
   payoutPrices,
   vatTreatments,
+  selectedShipping,
+  paymentTiming,
+  uploadedFile,
   onPayoutChange,
   onVatChange,
+  onShippingChange,
+  onPaymentTimingChange,
+  onFileUpload,
   onRemoveFromCart,
   availableSellers
 }: BulkPricingSectionProps) {
@@ -147,6 +170,56 @@ export function BulkPricingSection({
                     {vatTreatments[product.id] === 'regular' && " (auto-calculated excluding VAT)"}
                   </div>
                 </div>
+              </div>
+
+              {/* Shipping Method Card */}
+              <div className="mt-4">
+                <Card className="bg-muted/10 border border-border">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">Shipping Method</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Shipping Method</Label>
+                      <Select
+                        value={selectedShipping[product.id] || ""}
+                        onValueChange={(value) => onShippingChange(product.id, value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select shipping method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {shippingOptions.map((option) => (
+                            <SelectItem key={option.id} value={option.id}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* File Upload */}
+                    {selectedShipping[product.id] === 'upload' && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Shipment Label</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="file"
+                            accept=".pdf"
+                            onChange={(e) => onFileUpload(product.id, e.target.files?.[0] || null)}
+                            className="flex-1"
+                          />
+                          {uploadedFile[product.id] && (
+                            <div className="flex items-center gap-1 text-xs text-green-600">
+                              <Upload className="h-3 w-3" />
+                              Uploaded
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Individual Product Breakdown */}
