@@ -19,9 +19,14 @@ export default function WTBOrder() {
     queryKey: ['order-item-details', productId],
     queryFn: () => productsApi.getOrderItemDetails(Number(productId)),
     enabled: !!productId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
   });
+
+  // Parse customer details from JSON string
+  const customerDetails = productDetailsResponse?.data?.order_item?.customer_details 
+    ? JSON.parse(productDetailsResponse.data.order_item.customer_details)
+    : null;
 
   // Convert API data to product format
   const product = productDetailsResponse?.data?.order_item ? {
@@ -40,6 +45,33 @@ export default function WTBOrder() {
     totalPrice: productDetailsResponse.data.order_item.total_price,
     customerEmail: productDetailsResponse.data.order_item.customer_email,
     orderCreatedAt: productDetailsResponse.data.order_item.order_created_at,
+    // Customer details
+    customerName: customerDetails?.first_name && customerDetails?.last_name 
+      ? `${customerDetails.first_name} ${customerDetails.last_name}` 
+      : "N/A",
+    customerPhone: customerDetails?.phone || "N/A",
+    customerAddress: customerDetails?.default_address ? {
+      address1: customerDetails.default_address.address1,
+      address2: customerDetails.default_address.address2,
+      city: customerDetails.default_address.city,
+      province: customerDetails.default_address.province,
+      country: customerDetails.default_address.country,
+      zip: customerDetails.default_address.zip,
+      phone: customerDetails.default_address.phone,
+    } : null,
+    // Product details
+    productType: productDetailsResponse.data.order_item.product_type,
+    barcode: productDetailsResponse.data.order_item.barcode,
+    weight: productDetailsResponse.data.order_item.weight,
+    weightUnit: productDetailsResponse.data.order_item.weight_unit,
+    taxable: productDetailsResponse.data.order_item.taxable,
+    requiresShipping: productDetailsResponse.data.order_item.requires_shipping,
+    fulfillmentStatus: productDetailsResponse.data.order_item.fulfillment_status,
+    // Tax details
+    taxLines: productDetailsResponse.data.order_item.tax_lines,
+    // Price details
+    netPrice: productDetailsResponse.data.order_item.net_price,
+    totalDiscount: productDetailsResponse.data.order_item.total_discount,
   } : null;
 
   useEffect(() => {

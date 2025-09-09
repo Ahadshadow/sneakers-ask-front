@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, ArrowLeft } from "lucide-react";
+import { Package, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SellerSelection } from "./SellerSelection";
 import { PricingSection } from "./PricingSection";
 import { ShippingSection } from "./ShippingSection";
+import { sellersApi } from "@/lib/api/sellers";
 
 interface WTBOrderFlowProps {
   product: {
@@ -15,16 +17,44 @@ interface WTBOrderFlowProps {
     sku: string;
     price: string;
     status: string;
+    currency?: string;
+    // Additional details from API
+    orderId?: number;
+    orderNumber?: string;
+    orderUrl?: string;
+    variant?: string;
+    vendor?: string;
+    quantity?: number;
+    totalPrice?: number;
+    customerEmail?: string;
+    orderCreatedAt?: string;
+    // Customer details
+    customerName?: string;
+    customerPhone?: string;
+    customerAddress?: {
+      address1: string;
+      address2: string;
+      city: string;
+      province: string;
+      country: string;
+      zip: string;
+      phone: string;
+    };
+    // Product details
+    productType?: string;
+    barcode?: string;
+    weight?: number;
+    weightUnit?: string;
+    taxable?: boolean;
+    requiresShipping?: boolean;
+    fulfillmentStatus?: string;
+    // Tax details
+    taxLines?: any[];
+    // Price details
+    netPrice?: number;
+    totalDiscount?: number;
   };
 }
-
-const availableSellers = [
-  { name: "Premium Sneakers Co", country: "Netherlands", vatRate: 0.21 },
-  { name: "SoleSupreme", country: "Germany", vatRate: 0.19 }, 
-  { name: "KicksCentral", country: "France", vatRate: 0.20 },
-  { name: "UrbanSole", country: "Belgium", vatRate: 0.21 },
-  { name: "EliteFootwear", country: "Italy", vatRate: 0.22 }
-];
 
 const shippingOptions = [
   { id: "discord", name: "Shipper Discord", requiresUpload: false },
@@ -41,12 +71,53 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
   const [paymentTiming, setPaymentTiming] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
+  // Fetch sellers from API
+  const {
+    data: sellersResponse,
+    isLoading: isLoadingSellers,
+    error: sellersError,
+  } = useQuery({
+    queryKey: ['wtb-sellers'], // Unique key for WTB page
+    queryFn: () => {
+      console.log('Fetching sellers for WTB page...');
+      return sellersApi.getSellers(1, 100);
+    },
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+  });
+
+  // Debug log to see API response
+  console.log('Sellers API Response:', sellersResponse);
+  console.log('Is Loading Sellers:', isLoadingSellers);
+  console.log('Sellers Error:', sellersError);
+
+  // Convert API sellers to dropdown format
+  const availableSellers = sellersResponse?.data?.data?.map(seller => {
+    console.log('Seller data from API:', seller); // Debug log
+    console.log('Seller vat_rate:', seller.vat_rate, 'Type:', typeof seller.vat_rate);
+    console.log('Seller country:', seller.country);
+    console.log('Seller store_name:', seller.store_name);
+    console.log('Seller owner_name:', seller.owner_name);
+    return {
+      name: seller.store_name || seller.owner_name,
+      country: seller.country || "Unknown",
+      vatRate: Number(seller.vat_rate) || 0.21, // Convert string to number
+      id: seller.id,
+      email: seller.email,
+      status: seller.status
+    };
+  }) || [];
+
+  console.log('Final availableSellers:', availableSellers);
+
   const calculateRegularVatPayout = (sellerName: string) => {
     const seller = availableSellers.find(s => s.name === sellerName);
     
     if (seller && product) {
-      const listedPrice = parseFloat(product.price.replace('€', ''));
-      const payoutPriceCalc = listedPrice / (1 + seller.vatRate);
+      const listedPrice = parseFloat(product.price.replace(/[^\d.-]/g, ''));
+      const payoutPriceCalc = listedPrice / (1 + Number(seller.vatRate));
       setPayoutPrice(payoutPriceCalc.toFixed(2));
     }
   };
@@ -133,10 +204,63 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
             <CardHeader>
               <CardTitle className="text-xl">Product Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Product Info */}
+                <div className="space-y-3">
               <h3 className="font-semibold text-lg text-foreground">{product.name}</h3>
-              <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium">SKU:</span> {product.sku}</p>
+                    <p><span className="font-medium">Variant:</span> {product.variant || "N/A"}</p>
+                    <p><span className="font-medium">Vendor:</span> {product.vendor || "N/A"}</p>
+                    <p><span className="font-medium">Product Type:</span> {product.productType || "N/A"}</p>
+                    
+                    <p><span className="font-medium">Quantity:</span> {product.quantity || 1}</p>
+                  </div>
               <p className="text-xl font-bold text-primary">Listed at: {product.price}</p>
+                </div>
+
+                {/* Order Info */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-md text-foreground">Order Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium">Order ID:</span> {product.orderId || "N/A"}</p>
+                    <p><span className="font-medium">Order Number:</span> {product.orderNumber || "N/A"}</p>
+                    <p><span className="font-medium">Order Date:</span> {product.orderCreatedAt ? new Date(product.orderCreatedAt).toLocaleDateString() : "N/A"}</p>
+                    <p><span className="font-medium">Total Price:</span> {product.totalPrice ? `${product.currency || 'IDR'} ${product.totalPrice}` : "N/A"}</p>
+                    <p><span className="font-medium">Net Price:</span> {product.netPrice ? `${product.currency || 'IDR'} ${product.netPrice}` : "N/A"}</p>
+                    <p><span className="font-medium">Discount:</span> {product.totalDiscount ? `${product.currency || 'IDR'} ${product.totalDiscount}` : "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Information */}
+              {product.customerName && (
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold text-md text-foreground mb-3">Customer Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 text-sm">
+                      <p><span className="font-medium">Name:</span> {product.customerName}</p>
+                      <p><span className="font-medium">Email:</span> {product.customerEmail || "N/A"}</p>
+                      <p><span className="font-medium">Phone:</span> {product.customerAddress.phone || "N/A"}</p>
+                    </div>
+                    {product.customerAddress && (
+                      <div className="space-y-2 text-sm">
+                        <p><span className="font-medium">Address:</span></p>
+                        <div className="pl-2 space-y-1">
+                          <p>{product.customerAddress.address1}</p>
+                          {product.customerAddress.address2 && <p>{product.customerAddress.address2}</p>}
+                          <p>{product.customerAddress.city}, {product.customerAddress.province}</p>
+                          <p>{product.customerAddress.country} {product.customerAddress.zip}</p>
+                          
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+             
             </CardContent>
           </Card>
 
@@ -145,6 +269,8 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
             selectedSeller={selectedSeller}
             onSellerChange={handleSellerChange}
             availableSellers={availableSellers}
+            isLoading={isLoadingSellers}
+            error={sellersError}
           />
 
           {selectedSeller && (
