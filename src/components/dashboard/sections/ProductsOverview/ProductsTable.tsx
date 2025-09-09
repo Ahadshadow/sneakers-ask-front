@@ -238,17 +238,6 @@ export function ProductsTable({
       </Table>
         </div>
       </div>
-      
-      {/* Pagination */}
-      <div className="mt-4">
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={onPageChange}
-          itemsPerPage={itemsPerPage}
-          totalItems={totalItems}
-        />
-      </div>
     </div>
   );
 }
