@@ -273,7 +273,7 @@ export function BoughtItemsGrid({ purchases }: BoughtItemsGridProps) {
                     {/* Payout Column */}
                     <TableCell className="py-3 sm:py-4">
                       <div className="font-bold text-primary text-base">
-                        €{purchase.payoutPrice}
+                        EUR{purchase.payoutPrice}
                       </div>
                     </TableCell>
 

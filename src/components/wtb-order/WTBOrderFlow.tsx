@@ -9,6 +9,8 @@ import { SellerSelection } from "./SellerSelection";
 import { PricingSection } from "./PricingSection";
 import { ShippingSection } from "./ShippingSection";
 import { sellersApi } from "@/lib/api/sellers";
+import { getVATRateByCountryCode } from "@/data/euCountryVAT";
+import { wtbOrdersApi, WTBOrderCommon, WTBOrderItem } from "@/lib/api/wtb-orders";
 
 interface WTBOrderFlowProps {
   product: {
@@ -37,6 +39,7 @@ interface WTBOrderFlowProps {
       city: string;
       province: string;
       country: string;
+      country_code: string;
       zip: string;
       phone: string;
     };
@@ -66,21 +69,23 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
   
   const [selectedSeller, setSelectedSeller] = useState("");
   const [payoutPrice, setPayoutPrice] = useState("");
-  const [vatTreatment, setVatTreatment] = useState("");
+  const [vatTreatment, setVatTreatment] = useState("regular");
+  const [vatRefundIncluded, setVatRefundIncluded] = useState(false);
   const [selectedShipping, setSelectedShipping] = useState("");
   const [paymentTiming, setPaymentTiming] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-  // Fetch sellers from API
+
+  // Fetch active sellers from API
   const {
     data: sellersResponse,
     isLoading: isLoadingSellers,
     error: sellersError,
   } = useQuery({
-    queryKey: ['wtb-sellers'], // Unique key for WTB page
+    queryKey: ['wtb-active-sellers'], // Unique key for WTB page
     queryFn: () => {
-      console.log('Fetching sellers for WTB page...');
-      return sellersApi.getSellers(1, 100);
+      console.log('Fetching active sellers for WTB page...');
+      return sellersApi.getActiveSellers();
     },
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
@@ -88,56 +93,49 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
     refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
-  // Debug log to see API response
-  console.log('Sellers API Response:', sellersResponse);
-  console.log('Is Loading Sellers:', isLoadingSellers);
-  console.log('Sellers Error:', sellersError);
 
-  // Convert API sellers to dropdown format
-  const availableSellers = sellersResponse?.data?.data?.map(seller => {
-    console.log('Seller data from API:', seller); // Debug log
-    console.log('Seller vat_rate:', seller.vat_rate, 'Type:', typeof seller.vat_rate);
-    console.log('Seller country:', seller.country);
-    console.log('Seller store_name:', seller.store_name);
-    console.log('Seller owner_name:', seller.owner_name);
+
+  // Convert API active sellers to dropdown format
+  const availableSellers = sellersResponse?.data?.map(seller => {
+    
+    // Use default VAT rate based on country or 21% as fallback
+    const defaultVatRate = 0.21; // Default VAT rate
+    
     return {
-      name: seller.store_name || seller.owner_name,
+      name: seller.owner_name,
       country: seller.country || "Unknown",
-      vatRate: Number(seller.vat_rate) || 0.21, // Convert string to number
+      vatRate: defaultVatRate, // Use default VAT rate since API doesn't provide it
       id: seller.id,
-      email: seller.email,
-      status: seller.status
+      vatRegistered: seller.vat_registered,
+      vatNumber: seller.vat_number,
+      tinNumber: seller.tin_number
     };
   }) || [];
 
-  console.log('Final availableSellers:', availableSellers);
-
   const calculateRegularVatPayout = (sellerName: string) => {
-    const seller = availableSellers.find(s => s.name === sellerName);
-    
-    if (seller && product) {
-      const listedPrice = parseFloat(product.price.replace(/[^\d.-]/g, ''));
-      const payoutPriceCalc = listedPrice / (1 + Number(seller.vatRate));
-      setPayoutPrice(payoutPriceCalc.toFixed(2));
-    }
+    // Don't auto-fill payout price, let user enter manually
+    // This function is kept for future use but doesn't auto-calculate
   };
 
   const handleSellerChange = (sellerName: string) => {
     setSelectedSeller(sellerName);
-    
-    if (vatTreatment === "regular") {
-      calculateRegularVatPayout(sellerName);
-    }
+    // Clear all related fields when seller changes
+    setPayoutPrice("");
+    setVatRefundIncluded(false);
+    // Don't auto-calculate payout price
   };
 
   const handleVatChange = (value: string) => {
     setVatTreatment(value);
+    // Clear payout price and VAT refund when VAT treatment changes
+    setPayoutPrice("");
+    setVatRefundIncluded(false);
+    // Don't auto-calculate payout price
+  };
 
-    if (value === "regular" && selectedSeller) {
-      calculateRegularVatPayout(selectedSeller);
-    } else if (value === "margin") {
-      setPayoutPrice("");
-    }
+  const handleVatRefundIncludedChange = (checked: boolean) => {
+    setVatRefundIncluded(checked);
+    // Don't auto-calculate payout price
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,7 +147,7 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
     }
   };
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!selectedSeller || !payoutPrice || !vatTreatment || !selectedShipping) {
       toast.error("Please fill in all required fields");
       return;
@@ -163,8 +161,111 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
       return;
     }
     
-    toast.success(`WTB order created for ${product.name}`);
-    navigate(-1);
+    try {
+      // Get seller ID from selected seller
+      const selectedSellerData = availableSellers.find(s => s.name === selectedSeller);
+      const sellerId = selectedSellerData?.id;
+      
+      if (!sellerId) {
+        toast.error("Invalid seller selected");
+        return;
+      }
+      
+      // Get customer country code
+      const buyerCountry = product.customerAddress?.country_code || "";
+      
+      // Get VAT rate from customer country for this specific product
+      const customerVatRate = buyerCountry ? getVATRateByCountryCode(buyerCountry) : null;
+      const vatRate = customerVatRate || 0;
+      
+      // Calculate VAT amount
+      const payoutPriceNum = parseFloat(payoutPrice);
+      const vatAmount = vatRefundIncluded ? payoutPriceNum * (vatRate / 100) : 0;
+      
+      // Calculate seller payout with VAT
+      const sellerPayoutAmountWithVat = payoutPriceNum + vatAmount;
+      
+      // Calculate profit
+      const listedPrice = parseFloat(product.price.replace(/[^\d.-]/g, ''));
+      const profitMarginNet = vatTreatment === 'regular' && vatRefundIncluded
+        ? listedPrice - sellerPayoutAmountWithVat
+        : listedPrice - payoutPriceNum;
+      
+      // Prepare common data (same for all items)
+      const commonData: WTBOrderCommon = {
+        // 1. Seller ID
+        seller_id: sellerId,
+        
+        // 3. Buyer Country
+        buyer_country: buyerCountry,
+        
+        // 15. Payment Timing
+        payment_timing: paymentTiming
+      };
+      
+      // Prepare item data (specific to this item)
+      const itemData: WTBOrderItem = {
+        // 2. Order Item ID
+        order_item_id: product.id,
+        
+        // 4. Seller VAT Registered
+        seller_vat_registered: selectedSellerData?.vatRegistered || false,
+        
+        // 5. VAT Scheme
+        vat_scheme: vatTreatment === 'regular' ? 'regular' : 'margin',
+        
+        // 6. VAT Rate
+        vat_rate: vatRate,
+        
+        // 7. VAT Amount
+        vat_amount: vatAmount,
+        
+        // 8. VAT Refund Included
+        vat_refund_included: vatRefundIncluded,
+        
+        // 9. Profit Margin Gross (Seller Payout Amount)
+        profit_margin_gross: payoutPriceNum,
+        
+        // 10. Profit Margin Net (Final Profit)
+        profit_margin_net: profitMarginNet,
+        
+        // 11. Shipping Method
+        shipping_method: selectedShipping,
+        
+        // 12. Shipment Label File
+        shipment_label_file: uploadedFile?.name || null,
+        
+        // 13. Seller Payout Amount
+        seller_payout_amount: payoutPriceNum,
+        
+        // 14. Seller Payout Amount with VAT
+        seller_payout_amount_with_vat: sellerPayoutAmountWithVat
+      };
+      
+      
+      // Show loading toast
+      toast.loading("Creating WTB order...");
+      
+      // Make API call to create WTB order
+      const response = await wtbOrdersApi.createWTBOrder(commonData, itemData);
+      
+      // Dismiss loading toast
+      toast.dismiss();
+      
+      if (response.success) {
+        toast.success(`WTB order created successfully! Order ID: ${response.data.order_id}`);
+        navigate(-1);
+      } else {
+        toast.error(response.message || "Failed to create WTB order");
+      }
+      
+    } catch (error: any) {
+      // Dismiss loading toast
+      toast.dismiss();
+      
+      console.error('WTB Order Creation Error:', error);
+      toast.error(error?.message || "An error occurred while creating the WTB order");
+    }
   };
 
   const selectedShippingOption = shippingOptions.find(option => option.id === selectedShipping);
@@ -227,9 +328,9 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
                     <p><span className="font-medium">Order ID:</span> {product.orderId || "N/A"}</p>
                     <p><span className="font-medium">Order Number:</span> {product.orderNumber || "N/A"}</p>
                     <p><span className="font-medium">Order Date:</span> {product.orderCreatedAt ? new Date(product.orderCreatedAt).toLocaleDateString() : "N/A"}</p>
-                    <p><span className="font-medium">Total Price:</span> {product.totalPrice ? `${product.currency || 'IDR'} ${product.totalPrice}` : "N/A"}</p>
-                    <p><span className="font-medium">Net Price:</span> {product.netPrice ? `${product.currency || 'IDR'} ${product.netPrice}` : "N/A"}</p>
-                    <p><span className="font-medium">Discount:</span> {product.totalDiscount ? `${product.currency || 'IDR'} ${product.totalDiscount}` : "N/A"}</p>
+                    <p><span className="font-medium">Total Price:</span> {product.totalPrice ? `${product.currency || ' EUR'} ${product.totalPrice}` : "N/A"}</p>
+                    <p><span className="font-medium">Net Price:</span> {product.netPrice ? `${product.currency || ' EUR'} ${product.netPrice}` : "N/A"}</p>
+                    <p><span className="font-medium">Discount:</span> {product.totalDiscount ? `${product.currency || ' EUR'} ${product.totalDiscount}` : "N/A"}</p>
                   </div>
                 </div>
               </div>
@@ -243,6 +344,8 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
                       <p><span className="font-medium">Name:</span> {product.customerName}</p>
                       <p><span className="font-medium">Email:</span> {product.customerEmail || "N/A"}</p>
                       <p><span className="font-medium">Phone:</span> {product.customerAddress.phone || "N/A"}</p>
+                      <p><span className="font-medium">Country:</span> {product.customerAddress.country || "N/A"}</p>
+                      <p><span className="font-medium">Country Code:</span> {product.customerAddress.country_code || "N/A"}</p>
                     </div>
                     {product.customerAddress && (
                       <div className="space-y-2 text-sm">
@@ -280,8 +383,10 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
                 selectedSeller={selectedSeller}
                 vatTreatment={vatTreatment}
                 payoutPrice={payoutPrice}
+                vatRefundIncluded={vatRefundIncluded}
                 onVatChange={handleVatChange}
                 onPayoutPriceChange={setPayoutPrice}
+                onVatRefundIncludedChange={handleVatRefundIncludedChange}
                 product={product}
                 availableSellers={availableSellers}
               />

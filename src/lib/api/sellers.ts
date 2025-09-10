@@ -3,6 +3,16 @@
 
 import { config } from '@/lib/config';
 
+// Active Seller interface for WTB orders
+export interface ActiveSeller {
+  id: number;
+  country: string;
+  vat_registered: boolean;
+  vat_number: string | null;
+  tin_number: string | null;
+  owner_name: string;
+}
+
 // Seller interfaces based on your API response
 export interface Seller {
   id: number;
@@ -109,6 +119,41 @@ export interface ApiError {
   message: string;
   code?: string;
   status?: number;
+}
+
+// Seller Payout interfaces based on actual API response
+export interface SellerPayout {
+  id: number;
+  seller_store: string;
+  seller_email: string;
+  owner_name: string;
+  item_name: string;
+  seller_payout_amount: string;
+  status: "pending" | "processing" | "completed";
+  payment_date: string;
+  created_at: string;
+}
+
+export interface SellerPayoutsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    payouts: SellerPayout[];
+    pagination: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+      from: number;
+      to: number;
+      links: {
+        first: string;
+        last: string;
+        prev: string | null;
+        next: string | null;
+      };
+    };
+  };
 }
 
 // Generic API request function
@@ -249,6 +294,36 @@ export const sellersApi = {
     return apiRequest<{ success: boolean; data: Seller; message: string }>(`/sellers/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
+    });
+  },
+
+  // Get active sellers only
+  async getActiveSellers(): Promise<{ success: boolean; data: ActiveSeller[]; message: string; count: number }> {
+    return apiRequest<{ success: boolean; data: ActiveSeller[]; message: string; count: number }>('/sellers/active');
+  },
+
+  // Get seller payouts with pagination
+  async getSellerPayouts(page: number = 1, perPage: number = 15): Promise<SellerPayoutsResponse> {
+    return apiRequest<SellerPayoutsResponse>(`/seller-payouts?page=${page}&per_page=${perPage}`);
+  },
+
+  // Get single seller payout by ID
+  async getSellerPayout(id: string): Promise<{ success: boolean; data: SellerPayout; message: string }> {
+    return apiRequest<{ success: boolean; data: SellerPayout; message: string }>(`/seller-payouts/${id}`);
+  },
+
+  // Update seller payout status
+  async updatePayoutStatus(id: string, status: "pending" | "processing" | "completed"): Promise<{ success: boolean; data: SellerPayout; message: string }> {
+    return apiRequest<{ success: boolean; data: SellerPayout; message: string }>(`/seller-payouts/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  // Mark payout as completed
+  async markPayoutCompleted(id: string): Promise<{ success: boolean; data: SellerPayout; message: string }> {
+    return apiRequest<{ success: boolean; data: SellerPayout; message: string }>(`/seller-payouts/${id}/complete`, {
+      method: 'PATCH',
     });
   },
 };

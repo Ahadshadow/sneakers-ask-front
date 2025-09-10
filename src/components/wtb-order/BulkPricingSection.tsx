@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Upload } from "lucide-react";
 import { Product } from "@/components/dashboard/sections/ProductsOverview/types";
@@ -13,16 +14,24 @@ interface BulkPricingSectionProps {
   selectedSeller: string;
   payoutPrices: {[key: string]: string};
   vatTreatments: {[key: string]: string};
+  vatRefundIncluded: {[key: string]: boolean};
   selectedShipping: {[key: string]: string};
   paymentTiming: {[key: string]: string};
   uploadedFile: {[key: string]: File | null};
   onPayoutChange: (productId: string, value: string) => void;
   onVatChange: (productId: string, value: string) => void;
+  onVatRefundIncludedChange: (productId: string, checked: boolean) => void;
   onShippingChange: (productId: string, value: string) => void;
   onPaymentTimingChange: (productId: string, value: string) => void;
   onFileUpload: (productId: string, file: File | null) => void;
   onRemoveFromCart: (productId: string) => void;
-  availableSellers: Array<{ name: string; country: string; vatRate: number }>;
+  availableSellers: Array<{ 
+    name: string; 
+    country: string; 
+    vatRate: number; 
+    vatRegistered: boolean; 
+    vatNumber: string | null; 
+  }>;
 }
 
 const shippingOptions = [
@@ -40,17 +49,22 @@ export function BulkPricingSection({
   selectedSeller, 
   payoutPrices,
   vatTreatments,
+  vatRefundIncluded,
   selectedShipping,
   paymentTiming,
   uploadedFile,
   onPayoutChange,
   onVatChange,
+  onVatRefundIncludedChange,
   onShippingChange,
   onPaymentTimingChange,
   onFileUpload,
   onRemoveFromCart,
   availableSellers
 }: BulkPricingSectionProps) {
+  // Check if selected seller is eligible for VAT refund
+  const selectedSellerData = availableSellers.find(s => s.name === selectedSeller);
+  const isVatRefundEligible = selectedSellerData?.vatRegistered && selectedSellerData?.vatNumber;
   const calculateTotalWithVat = () => {
     const seller = availableSellers.find(s => s.name === selectedSeller);
     if (!seller) return 0;
@@ -155,19 +169,39 @@ export function BulkPricingSection({
                       placeholder="0.00"
                       value={payoutPrices[product.id] || ""}
                       onChange={(e) => onPayoutChange(product.id, e.target.value)}
-                      className={`pl-7 text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
-                        vatTreatments[product.id] === 'regular' 
-                          ? 'bg-muted/30' 
-                          : ''
-                      }`}
+                      className="pl-7 text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                       min="0"
                       step="0.01"
-                      disabled={vatTreatments[product.id] === 'regular'}
                     />
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Net amount the seller receives
-                    {vatTreatments[product.id] === 'regular' && " (auto-calculated excluding VAT)"}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`vat-refund-included-${product.id}`}
+                        checked={vatRefundIncluded[product.id] || false}
+                        onCheckedChange={(checked) => onVatRefundIncludedChange(product.id, checked as boolean)}
+                        disabled={!isVatRefundEligible}
+                      />
+                      <label
+                        htmlFor={`vat-refund-included-${product.id}`}
+                        className={`text-xs font-medium leading-none ${
+                          !isVatRefundEligible 
+                            ? 'text-muted-foreground cursor-not-allowed' 
+                            : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                        }`}
+                      >
+                        VAT Refund Included
+                        {!isVatRefundEligible && (
+                          <span className="text-xs text-muted-foreground block">
+                            (Seller must be VAT registered)
+                          </span>
+                        )}
+                      </label>
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground">
+                      Net amount the seller receives
+                    </div>
                   </div>
                 </div>
               </div>
@@ -223,13 +257,14 @@ export function BulkPricingSection({
               </div>
 
               {/* Individual Product Breakdown */}
-              {vatTreatments[product.id] && payoutPrices[product.id] && (
+              {vatTreatments[product.id] && (
                 <div className="mt-4">
                   <PricingBreakdown
                     product={product}
                     selectedSeller={selectedSeller}
                     vatTreatment={vatTreatments[product.id]}
                     payoutPrice={payoutPrices[product.id]}
+                    vatRefundIncluded={vatRefundIncluded[product.id] || false}
                     availableSellers={availableSellers}
                   />
                 </div>

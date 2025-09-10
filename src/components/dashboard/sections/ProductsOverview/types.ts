@@ -64,6 +64,7 @@ export interface Product {
     city: string;
     province: string;
     country: string;
+    country_code: string;
     zip: string;
     phone: string;
   };
