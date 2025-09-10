@@ -101,6 +101,48 @@ export interface OrderItemsResponse {
   };
 }
 
+// WTB Items response interface
+export interface WTBItemsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    wtb_items: WTBItem[];
+    pagination: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+      from: number;
+      to: number;
+      has_more_pages: boolean;
+      links: {
+        first: string | null;
+        last: string | null;
+        prev: string | null;
+        next: string | null;
+      };
+    };
+  };
+}
+
+// WTB Item interface based on actual API response
+export interface WTBItem {
+  id: number;
+  order_id: number;
+  product_name: string;
+  sku: string;
+  variant: {
+    variant: string;
+  };
+  price: number;
+  currency: string;
+  vendor: string;
+  order_url: string;
+  quantity: number;
+  status: string;
+  wtb_order_id: string;
+}
+
 export interface ProductsResponse {
   success: boolean;
   message: string;
@@ -343,5 +385,20 @@ export const productsApi = {
         found_ids: number[];
       };
     }>(`/order-items-multiple/${ids}`);
+  },
+
+  // Get WTB items with pagination
+  async getWTBItems(page: number = 1, perPage: number = 10): Promise<WTBItemsResponse> {
+    return apiRequest<WTBItemsResponse>(`/wtb-items?page=${page}&per_page=${perPage}`);
+  },
+
+  // Search WTB items
+  async searchWTBItems(query: string, page: number = 1): Promise<WTBItemsResponse> {
+    return apiRequest<WTBItemsResponse>(`/wtb-items?search=${encodeURIComponent(query)}&page=${page}`);
+  },
+
+  // Filter WTB items by vendor
+  async getWTBItemsByVendor(vendor: string, page: number = 1): Promise<WTBItemsResponse> {
+    return apiRequest<WTBItemsResponse>(`/wtb-items?vendor=${encodeURIComponent(vendor)}&page=${page}`);
   },
 };

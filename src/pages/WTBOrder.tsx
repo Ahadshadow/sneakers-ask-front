@@ -56,6 +56,7 @@ export default function WTBOrder() {
       city: customerDetails.default_address.city,
       province: customerDetails.default_address.province,
       country: customerDetails.default_address.country,
+      country_code: customerDetails.default_address.country_code,
       zip: customerDetails.default_address.zip,
       phone: customerDetails.default_address.phone,
     } : null,
