@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,26 +16,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PaginationControls } from "@/components/dashboard/PaginationControls";
-import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, CalendarIcon, Filter } from "lucide-react";
+import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, CalendarIcon, Filter, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
-interface SellerPayout {
-  id: string;
-  sellerName: string;
-  email: string;
-  totalAmount: number;
-  itemCount: number;
-  status: "pending" | "processing" | "completed";
-  lastPayoutDate?: string;
-  items: {
-    productName: string;
-    sku: string;
-    amount: number;
-    purchaseDate: string;
-  }[];
-}
+import { sellersApi, SellerPayout } from "@/lib/api/sellers";
 
 export function PayoutManagement() {
   const { toast } = useToast();
@@ -45,73 +31,23 @@ export function PayoutManagement() {
   const [pendingFilter, setPendingFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [payouts, setPayouts] = useState<SellerPayout[]>([
-    {
-      id: "1",
-      sellerName: "Premium Kicks Store",
-      email: "payments@premiumkicks.com",
-      totalAmount: 145,
-      itemCount: 1,
-      status: "pending",
-      items: [
-        {
-          productName: "Nike Air Jordan 1 Retro High OG",
-          sku: "555088-134",
-          amount: 145,
-          purchaseDate: "2024-01-15"
-        }
-      ]
-    },
-    {
-      id: "2",
-      sellerName: "Sneaker World",
-      email: "finance@sneakerworld.com",
-      totalAmount: 195,
-      itemCount: 1,
-      status: "pending",
-      items: [
-        {
-          productName: "Adidas Yeezy Boost 350 V2",
-          sku: "GZ5541",
-          amount: 195,
-          purchaseDate: "2024-01-14"
-        }
-      ]
-    },
-    {
-      id: "3",
-      sellerName: "Urban Footwear",
-      email: "payouts@urbanfootwear.com",
-      totalAmount: 85,
-      itemCount: 1,
-      status: "pending",
-      items: [
-        {
-          productName: "Nike Dunk Low Retro",
-          sku: "DD1391-100",
-          amount: 85,
-          purchaseDate: "2024-01-13"
-        }
-      ]
-    },
-    {
-      id: "4",
-      sellerName: "Classic Runners",
-      email: "admin@classicrunners.com",
-      totalAmount: 95,
-      itemCount: 1,
-      status: "completed",
-      lastPayoutDate: "2024-01-10",
-      items: [
-        {
-          productName: "New Balance 550 White Green",
-          sku: "BB550WTG",
-          amount: 95,
-          purchaseDate: "2024-01-12"
-        }
-      ]
-    }
-  ]);
+
+  // Fetch seller payouts from API
+  const {
+    data: payoutsResponse,
+    isLoading: isLoadingPayouts,
+    error: payoutsError,
+    refetch: refetchPayouts,
+  } = useQuery({
+    queryKey: ['seller-payouts', currentPage, itemsPerPage],
+    queryFn: () => sellersApi.getSellerPayouts(currentPage, itemsPerPage),
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+  });
+
+  const payouts = payoutsResponse?.data?.payouts || [];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -131,86 +67,98 @@ export function PayoutManagement() {
     }
   };
 
-  const handlePayWithRevolut = (seller: SellerPayout) => {
-    // Create Revolut payment link
-    const amount = seller.totalAmount.toFixed(2);
-    const recipient = encodeURIComponent(seller.email);
-    const reference = encodeURIComponent(`Payout for ${seller.itemCount} items`);
-    
-    // Revolut Pay link format
-    const revolutUrl = `https://revolut.me/pay?amount=${amount}&currency=EUR&recipient=${recipient}&reference=${reference}`;
-    
-    // Update status to processing
-    setPayouts(prev => prev.map(p => 
-      p.id === seller.id ? { ...p, status: "processing" as const } : p
-    ));
-    
-    // Open Revolut in new tab
-    window.open(revolutUrl, '_blank');
-    
-    toast({
-      title: "Revolut Payment Initiated",
-      description: `Payment of €${amount} to ${seller.sellerName} has been initiated via Revolut.`,
-    });
+  const handlePayWithRevolut = async (seller: SellerPayout) => {
+    try {
+      // Create Revolut payment link
+      const amount = parseFloat(seller.seller_payout_amount).toFixed(2);
+      const recipient = encodeURIComponent(seller.seller_email);
+      const reference = encodeURIComponent(`Payout for ${seller.item_name}`);
+      
+      // Revolut Pay link format
+      const revolutUrl = `https://revolut.me/pay?amount=${amount}&currency=EUR&recipient=${recipient}&reference=${reference}`;
+      
+      // Update status to processing via API
+      await sellersApi.updatePayoutStatus(seller.id.toString(), "processing");
+      
+      // Refetch data to get updated status
+      refetchPayouts();
+      
+      // Open Revolut in new tab
+      window.open(revolutUrl, '_blank');
+      
+      toast({
+        title: "Revolut Payment Initiated",
+        description: `Payment of EUR${amount} to ${seller.seller_store} has been initiated via Revolut.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update payout status",
+        variant: "destructive",
+      });
+    }
   };
 
-  const markAsCompleted = (sellerId: string) => {
-    setPayouts(prev => prev.map(p => 
-      p.id === sellerId ? { 
-        ...p, 
-        status: "completed" as const,
-        lastPayoutDate: new Date().toISOString().split('T')[0]
-      } : p
-    ));
-    
-    toast({
-      title: "Payment Completed",
-      description: "Payout has been marked as completed.",
-    });
+  const markAsCompleted = async (sellerId: number) => {
+    try {
+      await sellersApi.markPayoutCompleted(sellerId.toString());
+      
+      // Refetch data to get updated status
+      refetchPayouts();
+      
+      toast({
+        title: "Payment Completed",
+        description: "Payout has been marked as completed.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to mark payout as completed",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredPayouts = useMemo(() => {
     return payouts.filter(payout => {
       // Search filter
-      const matchesSearch = payout.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          payout.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          payout.items.some(item => 
-                            item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            item.sku.toLowerCase().includes(searchTerm.toLowerCase())
-                          );
+      const matchesSearch = payout.seller_store.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          payout.owner_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          payout.seller_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          payout.item_name.toLowerCase().includes(searchTerm.toLowerCase());
       
       // Status filter
       const matchesStatus = statusFilter === "all" || payout.status === statusFilter;
       
       // Date filter
-      const latestItemDate = new Date(Math.max(...payout.items.map(item => new Date(item.purchaseDate).getTime())));
-      const matchesDateFrom = !dateFrom || latestItemDate >= dateFrom;
-      const matchesDateTo = !dateTo || latestItemDate <= dateTo;
+      const payoutDate = new Date(payout.payment_date);
+      const matchesDateFrom = !dateFrom || payoutDate >= dateFrom;
+      const matchesDateTo = !dateTo || payoutDate <= dateTo;
       
-      // Pending/Unpaid filter based on 5 days after arrival
+      // Pending/Unpaid filter based on 5 days after payment date
       const matchesPendingFilter = (() => {
         if (pendingFilter === "all") return true;
         
         if (pendingFilter === "overdue") {
-          // Show pending payments where it's been more than 5 days since arrival
+          // Show pending payments where it's been more than 5 days since payment date
           if (payout.status !== "pending") return false;
           
           const currentDate = new Date();
-          const arrivalDate = new Date(Math.max(...payout.items.map(item => new Date(item.purchaseDate).getTime())));
-          const daysSinceArrival = Math.floor((currentDate.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24));
+          const paymentDate = new Date(payout.payment_date);
+          const daysSincePayment = Math.floor((currentDate.getTime() - paymentDate.getTime()) / (1000 * 60 * 60 * 24));
           
-          return daysSinceArrival >= 5;
+          return daysSincePayment >= 5;
         }
         
         if (pendingFilter === "upcoming") {
-          // Show pending payments where it's been less than 5 days since arrival
+          // Show pending payments where it's been less than 5 days since payment date
           if (payout.status !== "pending") return false;
           
           const currentDate = new Date();
-          const arrivalDate = new Date(Math.max(...payout.items.map(item => new Date(item.purchaseDate).getTime())));
-          const daysSinceArrival = Math.floor((currentDate.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24));
+          const paymentDate = new Date(payout.payment_date);
+          const daysSincePayment = Math.floor((currentDate.getTime() - paymentDate.getTime()) / (1000 * 60 * 60 * 24));
           
-          return daysSinceArrival < 5;
+          return daysSincePayment < 5;
         }
         
         return true;
@@ -220,15 +168,28 @@ export function PayoutManagement() {
     });
   }, [payouts, searchTerm, statusFilter, dateFrom, dateTo, pendingFilter]);
 
-  const totalPages = Math.ceil(filteredPayouts.length / itemsPerPage);
-  const paginatedPayouts = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredPayouts.slice(startIndex, endIndex);
-  }, [filteredPayouts, currentPage, itemsPerPage]);
+  // Use API pagination instead of client-side pagination
+  const totalPages = payoutsResponse?.data?.pagination?.last_page || 1;
+  const paginatedPayouts = filteredPayouts; // API already handles pagination
 
   const pendingPayouts = payouts.filter(p => p.status === "pending");
-  const totalPendingAmount = pendingPayouts.reduce((sum, p) => sum + p.totalAmount, 0);
+  const totalPendingAmount = pendingPayouts.reduce((sum, p) => sum + parseFloat(p.seller_payout_amount), 0);
+
+  // Show error state only if there's an error
+  if (payoutsError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-destructive mb-4">Failed to load payouts</p>
+            <Button onClick={() => refetchPayouts()} variant="outline">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -239,7 +200,14 @@ export function PayoutManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Pending</p>
-                <p className="text-2xl font-bold text-primary">€{totalPendingAmount.toFixed(2)}</p>
+                {isLoadingPayouts ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-2xl font-bold text-primary">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-primary">€{totalPendingAmount.toFixed(2)}</p>
+                )}
               </div>
               <Euro className="h-8 w-8 text-primary" />
             </div>
@@ -251,7 +219,14 @@ export function PayoutManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Pending Sellers</p>
-                <p className="text-2xl font-bold text-primary">{pendingPayouts.length}</p>
+                {isLoadingPayouts ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-2xl font-bold text-primary">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-primary">{pendingPayouts.length}</p>
+                )}
               </div>
               <Clock className="h-8 w-8 text-primary" />
             </div>
@@ -263,7 +238,14 @@ export function PayoutManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Items</p>
-                <p className="text-2xl font-bold text-primary">{payouts.reduce((sum, p) => sum + p.itemCount, 0)}</p>
+                {isLoadingPayouts ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-2xl font-bold text-primary">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-primary">{payouts.length}</p>
+                )}
               </div>
               <CreditCard className="h-8 w-8 text-primary" />
             </div>
@@ -408,7 +390,14 @@ export function PayoutManagement() {
       {/* Results Summary */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          Showing {filteredPayouts.length} of {payouts.length} sellers
+          {isLoadingPayouts ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Loading payouts...
+            </div>
+          ) : (
+            `Showing ${filteredPayouts.length} of ${payoutsResponse?.data?.pagination?.total || 0} payouts`
+          )}
         </span>
         {(searchTerm || statusFilter !== "all" || dateFrom || dateTo || pendingFilter !== "all") && (
           <div className="flex items-center gap-1">
@@ -439,86 +428,108 @@ export function PayoutManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedPayouts.map((payout, index) => (
-                  <TableRow 
-                    key={payout.id} 
-                    className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <TableCell className="py-4">
-                      <div className="space-y-1">
-                        <h3 className="font-medium text-foreground">{payout.sellerName}</h3>
-                        <p className="text-xs text-muted-foreground">{payout.email}</p>
-                        {payout.lastPayoutDate && (
-                          <p className="text-xs text-muted-foreground">
-                            Last: {new Date(payout.lastPayoutDate).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="py-4">
-                      <div>
-                        <span className="font-medium text-foreground">{payout.itemCount} items</span>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {payout.items.map((item, i) => (
-                            <div key={i} className="truncate max-w-[200px]">
-                              {item.productName}
-                            </div>
-                          ))}
+                {isLoadingPayouts ? (
+                  // Loading skeleton rows
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={`skeleton-${index}`} className="border-border">
+                      <TableCell className="py-4">
+                        <div className="space-y-2">
+                          <div className="h-3 bg-muted rounded animate-pulse w-32"></div>
+                          <div className="h-2 bg-muted rounded animate-pulse w-48"></div>
                         </div>
-                      </div>
-                    </TableCell>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="space-y-2">
+                          <div className="h-3 bg-muted rounded animate-pulse w-16"></div>
+                          <div className="h-2 bg-muted rounded animate-pulse w-40"></div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="h-6 bg-muted rounded animate-pulse w-24 ml-auto"></div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  paginatedPayouts.map((payout, index) => (
+                    <TableRow 
+                      key={payout.id} 
+                      className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <TableCell className="py-4">
+                        <div className="space-y-1">
+                          <h3 className="font-medium text-foreground">{payout.seller_store}</h3>
+                          <p className="text-xs text-muted-foreground">{payout.seller_email}</p>
+                        </div>
+                      </TableCell>
 
-                    <TableCell className="py-4">
-                      <div className="font-bold text-primary text-lg">
-                        €{payout.totalAmount.toFixed(2)}
-                      </div>
-                    </TableCell>
+                      <TableCell className="py-4">
+                        <div>
+                          <span className="font-medium text-foreground">1 item</span>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            <div className="truncate max-w-[200px]">
+                              {payout.item_name}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
 
-                    <TableCell className="py-4">
-                      <Badge 
-                        variant={getStatusVariant(payout.status)}
-                        className="flex items-center gap-1 w-fit"
-                      >
-                        {getStatusIcon(payout.status)}
-                        {payout.status}
-                      </Badge>
-                    </TableCell>
+                      <TableCell className="py-4">
+                        <div className="font-bold text-primary text-lg">
+                          EUR{parseFloat(payout.seller_payout_amount).toFixed(2)}
+                        </div>
+                      </TableCell>
 
-                    <TableCell className="text-right py-4">
-                      <div className="flex gap-2 justify-end">
-                        {payout.status === "pending" && (
-                          <Button 
-                            onClick={() => handlePayWithRevolut(payout)}
-                            size="sm"
-                            className="flex items-center gap-1"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            Pay via Revolut
-                          </Button>
-                        )}
-                        {payout.status === "processing" && (
-                          <Button 
-                            onClick={() => markAsCompleted(payout.id)}
-                            size="sm"
-                            variant="outline"
-                            className="flex items-center gap-1"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                            Mark Complete
-                          </Button>
-                        )}
-                        {payout.status === "completed" && (
-                          <Badge variant="default" className="flex items-center gap-1">
-                            <CheckCircle className="h-4 w-4" />
-                            Completed
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      <TableCell className="py-4">
+                        <Badge 
+                          variant={getStatusVariant(payout.status)}
+                          className="flex items-center gap-1 w-fit"
+                        >
+                          {getStatusIcon(payout.status)}
+                          {payout.status}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-right py-4">
+                        <div className="flex gap-2 justify-end">
+                          {payout.status === "pending" && (
+                            <Button 
+                              onClick={() => handlePayWithRevolut(payout)}
+                              size="sm"
+                              className="flex items-center gap-1"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              Pay via Revolut
+                            </Button>
+                          )}
+                          {payout.status === "processing" && (
+                            <Button 
+                              onClick={() => markAsCompleted(payout.id)}
+                              size="sm"
+                              variant="outline"
+                              className="flex items-center gap-1"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                              Mark Complete
+                            </Button>
+                          )}
+                          {payout.status === "completed" && (
+                            <Badge variant="default" className="flex items-center gap-1">
+                              <CheckCircle className="h-4 w-4" />
+                              Completed
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
@@ -526,13 +537,22 @@ export function PayoutManagement() {
       </Card>
 
       {/* Pagination */}
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        totalItems={filteredPayouts.length}
-      />
+      {isLoadingPayouts ? (
+        <div className="flex items-center justify-center py-4">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span className="text-sm text-muted-foreground">Loading pagination...</span>
+          </div>
+        </div>
+      ) : (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          totalItems={payoutsResponse?.data?.pagination?.total || 0}
+        />
+      )}
     </div>
   );
 }

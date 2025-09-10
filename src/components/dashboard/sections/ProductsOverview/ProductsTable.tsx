@@ -24,6 +24,7 @@ interface ProductsTableProps {
   totalItems?: number;
   itemsPerPage?: number;
   isLoading?: boolean;
+  showActions?: boolean;
 }
 
 export function ProductsTable({ 
@@ -34,7 +35,8 @@ export function ProductsTable({
   onPageChange: externalOnPageChange,
   totalItems: externalTotalItems,
   itemsPerPage: externalItemsPerPage,
-  isLoading = false
+  isLoading = false,
+  showActions = true
 }: ProductsTableProps) {
   const navigate = useNavigate();
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
@@ -67,6 +69,8 @@ export function ProductsTable({
         return "bg-blue-500/15 text-blue-600 border-blue-500/30 hover:bg-blue-500/25 px-3 py-1 rounded-full";
       case "sneakerask": 
         return "bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 px-3 py-1 rounded-full";
+      case "bought": 
+        return "bg-purple-500/15 text-purple-600 border-purple-500/30 hover:bg-purple-500/25 px-3 py-1 rounded-full";
       default: 
         return "bg-muted text-muted-foreground border-border px-3 py-1 rounded-full";
     }
@@ -132,7 +136,9 @@ export function ProductsTable({
                   <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
                   <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Orders</TableHead>
                   <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
-                  <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
+                  {showActions && (
+                    <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,43 +197,20 @@ export function ProductsTable({
                   {product.status.replace('_', ' ')}
                 </Badge>
               </TableCell>
-              <TableCell className="py-3 sm:py-4">
-                <div className="flex gap-2 justify-end min-w-[120px]">
-                  {product.status === "open" && onAddToCart && (
-                    <>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => onAddToCart(product)}
-                        className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/30 hover:border-primary text-primary hover:bg-primary/10"
-                      >
-                        <ShoppingCart className="h-3.5 w-3.5" />
-                        <span className="text-xs font-medium hidden sm:inline">Cart</span>
-                      </Button>
-                      <Button 
-                        variant="secondary" 
-                        size="sm"
-                        onClick={() => handleWTBClick(product)}
-                        className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span className="text-xs font-medium hidden sm:inline">WTB</span>
-                      </Button>
-                    </>
-                  )}
-                  {product.status !== "open" && (
-                    <>
-                      {isWTBLocked(product) ? (
+              {showActions && (
+                <TableCell className="py-3 sm:py-4">
+                  <div className="flex gap-2 justify-end min-w-[120px]">
+                    {product.status === "open" && onAddToCart && (
+                      <>
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleUnlockWTB(product.id)}
-                          className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:border-amber-500"
+                          onClick={() => onAddToCart(product)}
+                          className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/30 hover:border-primary text-primary hover:bg-primary/10"
                         >
-                          <Lock className="h-3.5 w-3.5" />
-                          <span className="text-xs font-medium">Unlock WTB</span>
+                          <ShoppingCart className="h-3.5 w-3.5" />
+                          <span className="text-xs font-medium hidden sm:inline">Cart</span>
                         </Button>
-                      ) : (
                         <Button 
                           variant="secondary" 
                           size="sm"
@@ -235,13 +218,38 @@ export function ProductsTable({
                           className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200"
                         >
                           <Plus className="h-3.5 w-3.5" />
-                          <span className="text-xs font-medium">WTB</span>
+                          <span className="text-xs font-medium hidden sm:inline">WTB</span>
                         </Button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </TableCell>
+                      </>
+                    )}
+                    {product.status !== "open" && (
+                      <>
+                        {isWTBLocked(product) ? (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleUnlockWTB(product.id)}
+                            className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:border-amber-500"
+                          >
+                            <Lock className="h-3.5 w-3.5" />
+                            <span className="text-xs font-medium">Unlock WTB</span>
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="secondary" 
+                            size="sm"
+                            onClick={() => handleWTBClick(product)}
+                            className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            <span className="text-xs font-medium">WTB</span>
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
           ))}
               </TableBody>

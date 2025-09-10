@@ -17,7 +17,7 @@ import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { mockProducts } from "./mockData";
 import { Product, WTBPurchase } from "./types";
 import { useToast } from "@/hooks/use-toast";
-import { productsApi, OrderItem } from "@/lib/api";
+import { productsApi, OrderItem, WTBItem } from "@/lib/api";
 
 export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,6 +29,7 @@ export function ProductsOverview() {
   const [activeTab, setActiveTab] = useState("products");
   const [cart, setCart] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [boughtItemsPage, setBoughtItemsPage] = useState(1);
   const [useOrderItems, setUseOrderItems] = useState(true); // Use order-items API by default
   
   const { toast } = useToast();
@@ -77,6 +78,30 @@ export function ProductsOverview() {
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
     enabled: !useOrderItems, // Only run when useOrderItems is false
+  });
+
+  // Fetch WTB items from API
+  const {
+    data: wtbItemsResponse,
+    isLoading: isLoadingWTBItems,
+    error: wtbItemsError,
+    refetch: refetchWTBItems,
+  } = useQuery({
+    queryKey: ['wtb-items', boughtItemsPage, searchTerm, sellerFilter],
+    queryFn: async () => {
+      if (searchTerm) {
+        return await productsApi.searchWTBItems(searchTerm, boughtItemsPage);
+      } else if (sellerFilter !== "all") {
+        return await productsApi.getWTBItemsByVendor(sellerFilter, boughtItemsPage);
+      } else {
+        return await productsApi.getWTBItems(boughtItemsPage);
+      }
+    },
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
+    enabled: true, // Always run - fetch on page load
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 
   // Convert API order items to UI products
@@ -136,6 +161,37 @@ export function ProductsOverview() {
     }
     return [];
   }, [productsResponse]);
+
+  // Convert API WTB items to UI products
+  const apiWTBItems = useMemo(() => {
+    console.log('WTB Items Response:', wtbItemsResponse);
+    if (wtbItemsResponse?.data?.wtb_items) {
+      console.log('Converting WTB items:', wtbItemsResponse.data.wtb_items);
+      return wtbItemsResponse.data.wtb_items.map((wtbItem: WTBItem) => ({
+        id: wtbItem.id.toString(),
+        name: wtbItem.product_name,
+        sku: wtbItem.sku === "N/A" ? "N/A" : wtbItem.sku,
+        category: wtbItem.variant.variant || 'N/A',
+        price: `${wtbItem.currency} ${wtbItem.price.toFixed(2)}`,
+        stock: wtbItem.quantity,
+        status: 'bought' as const, // Mark as bought
+        seller: wtbItem.vendor,
+        shopifyId: wtbItem.order_id.toString(),
+        orderUrl: wtbItem.order_url,
+        variant: wtbItem.variant.variant,
+        orders: [{
+          orderId: wtbItem.order_id.toString(),
+          orderNumber: `WTB-${wtbItem.wtb_order_id}`,
+          quantity: wtbItem.quantity,
+          orderDate: new Date().toISOString().split('T')[0], // Use current date as fallback
+          customerName: 'Customer', // No customer name in WTB items
+          orderTotal: wtbItem.price.toString(),
+          orderUrl: wtbItem.order_url,
+        }],
+      }));
+    }
+    return [];
+  }, [wtbItemsResponse]);
 
   // Determine which data to use
   const allProducts = useMemo(() => {
@@ -251,7 +307,7 @@ export function ProductsOverview() {
           </TabsTrigger>
           <TabsTrigger value="bought" className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" />
-            Bought Items ({purchases.length})
+            Bought Items ({wtbItemsResponse?.data?.pagination?.total || 0})
           </TabsTrigger>
         </TabsList>
 
@@ -518,7 +574,165 @@ export function ProductsOverview() {
         </TabsContent>
 
         <TabsContent value="bought" className="space-y-4 sm:space-y-6">
-          <BoughtItemsGrid purchases={purchases} />
+          {/* Filter System for Bought Items */}
+          <Card className="bg-gradient-card border-border shadow-soft">
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Search */}
+                <div className="flex-1">
+                  <Label htmlFor="search-bought" className="text-sm font-medium mb-2 block">
+                    Search Bought Items
+                  </Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search-bought"
+                      placeholder="Search by product name, SKU, or vendor..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Vendor Filter */}
+                <div>
+                  <Label htmlFor="vendor-bought" className="text-sm font-medium mb-2 block">
+                    Vendor
+                  </Label>
+                  <select
+                    id="vendor-bought"
+                    value={sellerFilter}
+                    onChange={(e) => setSellerFilter(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="all">All Vendors</option>
+                    {Array.from(new Set(apiWTBItems.map(item => item.seller))).sort().map(vendor => (
+                      <option key={vendor} value={vendor}>{vendor}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Clear Filters */}
+                <div className="flex items-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setSellerFilter("all");
+                    }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Results Summary */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Showing {apiWTBItems.length} of {wtbItemsResponse?.data?.pagination?.total || 0} bought items
+              {isLoadingWTBItems && (
+                <span className="ml-2 flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Loading...
+                </span>
+              )}
+            </span>
+            {(searchTerm || sellerFilter !== "all") && (
+              <div className="flex items-center gap-1">
+                <Filter className="h-4 w-4" />
+                <span>Filters active</span>
+              </div>
+            )}
+          </div>
+
+          {/* No Records State */}
+          {!isLoadingWTBItems && apiWTBItems.length === 0 && (
+            <Card className="bg-muted/20 border-border">
+              <CardContent className="p-8">
+                <div className="text-center space-y-3">
+                  <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
+                  <h3 className="text-lg font-semibold text-foreground">No Bought Items Found</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {searchTerm || sellerFilter !== "all"
+                      ? "No bought items match your current filters."
+                      : "No bought items available at the moment."
+                    }
+                  </p>
+                  {(searchTerm || sellerFilter !== "all") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSellerFilter("all");
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Main Content - Same design as order items but without actions */}
+          {!isLoadingWTBItems && apiWTBItems.length > 0 && (
+            <Card className="bg-gradient-card border-border shadow-soft animate-scale-in">
+              <CardHeader className="pb-4 sm:pb-6">
+                <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                    <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
+                  <div>
+                    <span className="text-foreground">Bought Items Overview</span>
+                    <p className="text-xs sm:text-sm font-normal text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
+                      View all items you have bought through WTB orders
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <ProductsTable
+                  products={apiWTBItems as Product[]}
+                  onAddToCart={() => {}} // No actions for bought items
+                  isLoading={isLoadingWTBItems}
+                  showActions={false} // Hide all actions
+                />
+                
+                {/* Pagination */}
+                <div className="mt-6 pt-4 border-t border-border">
+                  <PaginationControls
+                    currentPage={boughtItemsPage}
+                    totalPages={wtbItemsResponse?.data?.pagination?.last_page || 1}
+                    onPageChange={setBoughtItemsPage}
+                    totalItems={wtbItemsResponse?.data?.pagination?.total || 0}
+                    itemsPerPage={wtbItemsResponse?.data?.pagination?.per_page || 10}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Loading State */}
+          {isLoadingWTBItems && (
+            <Card className="bg-gradient-card border-border shadow-soft">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">
+                      Loading bought items...
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -531,7 +745,7 @@ export function ProductsOverview() {
                 <div>
                   <p className="font-semibold text-sm">WTB Cart</p>
                   <p className="text-xs opacity-90">
-                    {cart.length} item{cart.length > 1 ? 's' : ''} • €{cartTotal.toFixed(2)}
+                    {cart.length} item{cart.length > 1 ? 's' : ''} • EUR{cartTotal.toFixed(2)}
                   </p>
                 </div>
                 <Button 

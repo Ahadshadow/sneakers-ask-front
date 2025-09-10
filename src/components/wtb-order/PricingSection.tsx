@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CreditCard } from "lucide-react";
 import { PricingBreakdown } from "./PricingBreakdown";
 
@@ -7,10 +8,17 @@ interface PricingSectionProps {
   selectedSeller: string;
   vatTreatment: string;
   payoutPrice: string;
+  vatRefundIncluded: boolean;
   onVatChange: (value: string) => void;
   onPayoutPriceChange: (value: string) => void;
+  onVatRefundIncludedChange: (checked: boolean) => void;
   product: { price: string };
-  availableSellers: Array<{ name: string; vatRate: number }>;
+  availableSellers: Array<{ 
+    name: string; 
+    vatRate: number; 
+    vatRegistered: boolean; 
+    vatNumber: string | null; 
+  }>;
 }
 
 const vatOptions = [
@@ -22,11 +30,16 @@ export function PricingSection({
   selectedSeller, 
   vatTreatment, 
   payoutPrice, 
+  vatRefundIncluded,
   onVatChange, 
   onPayoutPriceChange,
+  onVatRefundIncludedChange,
   product,
   availableSellers
 }: PricingSectionProps) {
+  // Check if selected seller is eligible for VAT refund
+  const selectedSellerData = availableSellers.find(s => s.name === selectedSeller);
+  const isVatRefundEligible = selectedSellerData?.vatRegistered && selectedSellerData?.vatNumber;
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* VAT Treatment */}
@@ -84,28 +97,54 @@ export function PricingSection({
             className="text-lg h-12"
             min="0"
             step="0.01"
-            disabled={vatTreatment === 'regular'}
           />
           
-          <div className="text-sm space-y-1">
-            <p className="text-muted-foreground">
-              💡 <strong>What is payout price?</strong>
-            </p>
-            <p className="text-muted-foreground">
-              This is the net amount the seller receives after VAT considerations.
-            </p>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="vat-refund-included"
+                checked={vatRefundIncluded}
+                onCheckedChange={onVatRefundIncludedChange}
+                disabled={!isVatRefundEligible}
+              />
+              <label
+                htmlFor="vat-refund-included"
+                className={`text-sm font-medium leading-none ${
+                  !isVatRefundEligible 
+                    ? 'text-muted-foreground cursor-not-allowed' 
+                    : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                }`}
+              >
+                VAT Refund Included
+                {!isVatRefundEligible && (
+                  <span className="text-xs text-muted-foreground block">
+                    (Seller must be VAT registered with VAT number)
+                  </span>
+                )}
+              </label>
+            </div>
+            
+            <div className="text-sm space-y-1">
+              <p className="text-muted-foreground">
+                💡 <strong>What is payout price?</strong>
+              </p>
+              <p className="text-muted-foreground">
+                This is the net amount the seller receives after VAT considerations.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Pricing Breakdown */}
-      {selectedSeller && vatTreatment && payoutPrice && (
+      {selectedSeller && vatTreatment && (
         <div className="md:col-span-2">
           <PricingBreakdown
             product={product}
             selectedSeller={selectedSeller}
             vatTreatment={vatTreatment}
             payoutPrice={payoutPrice}
+            vatRefundIncluded={vatRefundIncluded}
             availableSellers={availableSellers}
           />
         </div>

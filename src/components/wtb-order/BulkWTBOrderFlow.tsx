@@ -11,6 +11,8 @@ import { BulkPricingSection } from "./BulkPricingSection";
 import { ShippingSection } from "./ShippingSection";
 import { Product } from "@/components/dashboard/sections/ProductsOverview/types";
 import { sellersApi } from "@/lib/api/sellers";
+import { getVATRateByCountryCode } from "@/data/euCountryVAT";
+import { wtbOrdersApi, WTBOrderCommon, WTBOrderItem } from "@/lib/api/wtb-orders";
 
 const shippingOptions = [
   { id: "discord", name: "Shipper Discord", requiresUpload: false },
@@ -27,20 +29,22 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
   const [selectedSeller, setSelectedSeller] = useState("");
   const [payoutPrices, setPayoutPrices] = useState<{[key: string]: string}>({});
   const [vatTreatments, setVatTreatments] = useState<{[key: string]: string}>({});
+  const [vatRefundIncluded, setVatRefundIncluded] = useState<{[key: string]: boolean}>({});
   const [selectedShipping, setSelectedShipping] = useState<{[key: string]: string}>({});
   const [paymentTiming, setPaymentTiming] = useState<{[key: string]: string}>({});
   const [uploadedFile, setUploadedFile] = useState<{[key: string]: File | null}>({});
 
-  // Fetch sellers from API
+
+  // Fetch active sellers from API
   const {
     data: sellersResponse,
     isLoading: isLoadingSellers,
     error: sellersError,
   } = useQuery({
-    queryKey: ['bulk-wtb-sellers'], // Unique key for bulk WTB page
+    queryKey: ['bulk-wtb-active-sellers'], // Unique key for bulk WTB page
     queryFn: () => {
-      console.log('Fetching sellers for Bulk WTB page...');
-      return sellersApi.getSellers(1, 100);
+      console.log('Fetching active sellers for Bulk WTB page...');
+      return sellersApi.getActiveSellers();
     },
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
@@ -48,49 +52,52 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
-  // Convert API sellers to dropdown format
-  const availableSellers = sellersResponse?.data?.data?.map(seller => {
-    console.log('Seller data from API:', seller); // Debug log
-    console.log('Seller vat_rate:', seller.vat_rate, 'Type:', typeof seller.vat_rate);
-    console.log('Seller country:', seller.country);
-    console.log('Seller store_name:', seller.store_name);
-    console.log('Seller owner_name:', seller.owner_name);
+
+  // Convert API active sellers to dropdown format
+  const availableSellers = sellersResponse?.data?.map(seller => {
+    // Use default VAT rate based on country or 21% as fallback
+    const defaultVatRate = 0.21; // Default VAT rate
+    
     return {
-      name: seller.store_name || seller.owner_name,
+      name: seller.owner_name,
       country: seller.country || "Unknown",
-      vatRate: Number(seller.vat_rate) || 0.21, // Convert string to number
+      vatRate: defaultVatRate, // Use default VAT rate since API doesn't provide it
       id: seller.id,
-      email: seller.email,
-      status: seller.status
+      vatRegistered: seller.vat_registered,
+      vatNumber: seller.vat_number,
+      tinNumber: seller.tin_number
     };
   }) || [];
 
-  console.log('Final availableSellers:', availableSellers);
 
-  const calculateRegularVatPayout = (productId: string, sellerName: string) => {
-    const seller = availableSellers.find(s => s.name === sellerName);
-    const product = products.find(p => p.id === productId);
+  // Set default VAT treatment to "regular" for all products
+  useEffect(() => {
+    const defaultVatTreatments: {[key: string]: string} = {};
+    products.forEach(product => {
+      if (!vatTreatments[product.id]) {
+        defaultVatTreatments[product.id] = 'regular';
+      }
+    });
     
-    if (seller && product) {
-      const listedPrice = parseFloat(product.price.replace(/[^\d.-]/g, ''));
-      const payoutPrice = listedPrice / (1 + Number(seller.vatRate));
-      
-      setPayoutPrices(prev => ({
+    if (Object.keys(defaultVatTreatments).length > 0) {
+      setVatTreatments(prev => ({
         ...prev,
-        [productId]: payoutPrice.toFixed(2)
+        ...defaultVatTreatments
       }));
     }
+  }, [products, vatTreatments]);
+
+  const calculateRegularVatPayout = (productId: string, sellerName: string) => {
+    // Don't auto-fill payout price, let user enter manually
+    // This function is kept for future use but doesn't auto-calculate
   };
 
   const handleSellerChange = (sellerName: string) => {
     setSelectedSeller(sellerName);
-    
-    // Auto-calculate payout for all products with Regular VAT
-    products.forEach(product => {
-      if (vatTreatments[product.id] === "regular") {
-        calculateRegularVatPayout(product.id, sellerName);
-      }
-    });
+    // Clear all related fields when seller changes
+    setPayoutPrices({});
+    setVatRefundIncluded({});
+    // Don't auto-calculate payout price
   };
 
   const handlePayoutChange = (productId: string, value: string) => {
@@ -105,17 +112,26 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       ...prev,
       [productId]: value
     }));
+    // Clear payout price and VAT refund for this product when VAT treatment changes
+    setPayoutPrices(prev => {
+      const newPayoutPrices = { ...prev };
+      delete newPayoutPrices[productId];
+      return newPayoutPrices;
+    });
+    setVatRefundIncluded(prev => {
+      const newVatRefundIncluded = { ...prev };
+      delete newVatRefundIncluded[productId];
+      return newVatRefundIncluded;
+    });
+    // Don't auto-calculate payout price
+  };
 
-    // Auto-calculate payout for Regular VAT
-    if (value === "regular" && selectedSeller) {
-      calculateRegularVatPayout(productId, selectedSeller);
-    } else if (value === "margin") {
-      // Clear payout for margin scheme to let user enter manually
-      setPayoutPrices(prev => ({
-        ...prev,
-        [productId]: ""
-      }));
-    }
+  const handleVatRefundIncludedChange = (productId: string, checked: boolean) => {
+    setVatRefundIncluded(prev => ({
+      ...prev,
+      [productId]: checked
+    }));
+    // Don't auto-calculate payout price
   };
 
   const handleShippingChange = (productId: string, value: string) => {
@@ -134,9 +150,9 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
 
   const handleFileUpload = (productId: string, file: File | null) => {
     setUploadedFile(prev => ({
-      ...prev,
+        ...prev,
       [productId]: file
-    }));
+      }));
   };
 
   const handleRemoveFromCart = (productId: string) => {
@@ -151,12 +167,17 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       delete newState[productId];
       return newState;
     });
+    setVatRefundIncluded(prev => {
+      const newState = { ...prev };
+      delete newState[productId];
+      return newState;
+    });
 
     toast.success("Product removed from bulk order");
   };
 
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!selectedSeller) {
       toast.error("Please select a seller");
       return;
@@ -183,10 +204,117 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       return;
     }
 
+    try {
+      // Get seller ID from selected seller
+      const selectedSellerData = availableSellers.find(s => s.name === selectedSeller);
+      const sellerId = selectedSellerData?.id;
+      
+      if (!sellerId) {
+        toast.error("Invalid seller selected");
+      return;
+      }
+      
+      // Get common values (assuming all products have same buyer country and payment timing)
+      const firstProduct = products[0];
+      const buyerCountry = firstProduct.customerAddress?.country_code || "";
+      const commonPaymentTiming = paymentTiming[Object.keys(paymentTiming)[0]] || "";
+      
+      // Prepare common data (same for all items)
+      const commonData: WTBOrderCommon = {
+        // 1. Seller ID
+        seller_id: sellerId,
+        
+        // 3. Buyer Country
+        buyer_country: buyerCountry,
+        
+        // 15. Payment Timing
+        payment_timing: commonPaymentTiming
+      };
+      
+      // Prepare items data (specific to each product)
+      const itemsData: WTBOrderItem[] = products.map(product => {
+        // Calculate VAT rate for this specific product based on its customer country
+        const productBuyerCountry = product.customerAddress?.country_code || "";
+        const productVatRate = productBuyerCountry ? getVATRateByCountryCode(productBuyerCountry) : 0;
+        
+        // Calculate VAT amount for this product
+        const payoutPriceNum = parseFloat(payoutPrices[product.id] || "0");
+        const productVatRefundIncluded = vatRefundIncluded[product.id] || false;
+        const vatAmount = productVatRefundIncluded ? payoutPriceNum * (productVatRate / 100) : 0;
+        
+        // Calculate seller payout with VAT
+        const sellerPayoutAmountWithVat = payoutPriceNum + vatAmount;
+        
+        // Calculate profit for this product
+        const listedPrice = parseFloat(product.price.replace(/[^\d.-]/g, ''));
+        const vatTreatment = vatTreatments[product.id];
+        const profitMarginNet = vatTreatment === 'regular' && productVatRefundIncluded
+          ? listedPrice - sellerPayoutAmountWithVat
+          : listedPrice - payoutPriceNum;
+        
+        return {
+          // 2. Order Item ID
+          order_item_id: product.id,
+          
+          // 4. Seller VAT Registered
+          seller_vat_registered: selectedSellerData?.vatRegistered || false,
+          
+          // 5. VAT Scheme
+          vat_scheme: vatTreatment === 'regular' ? 'regular' : 'margin',
+          
+          // 6. VAT Rate
+          vat_rate: productVatRate,
+          
+          // 7. VAT Amount
+          vat_amount: vatAmount,
+          
+          // 8. VAT Refund Included
+          vat_refund_included: productVatRefundIncluded,
+          
+          // 9. Profit Margin Gross (Seller Payout Amount)
+          profit_margin_gross: payoutPriceNum,
+          
+          // 10. Profit Margin Net (Final Profit)
+          profit_margin_net: profitMarginNet,
+          
+          // 11. Shipping Method
+          shipping_method: selectedShipping[product.id],
+          
+          // 12. Shipment Label File
+          shipment_label_file: uploadedFile[product.id]?.name || null,
+          
+          // 13. Seller Payout Amount
+          seller_payout_amount: payoutPriceNum,
+          
+          // 14. Seller Payout Amount with VAT
+          seller_payout_amount_with_vat: sellerPayoutAmountWithVat
+        };
+      });
+      
+      
+      // Show loading toast
+      toast.loading(`Creating bulk WTB order for ${products.length} items...`);
+      
+      // Make API call to create bulk WTB orders
+      const response = await wtbOrdersApi.createBulkWTBOrders(commonData, itemsData);
     
-    // Navigate back
-    toast.success(`Bulk WTB order created for ${products.length} items`);
-    navigate(-1);
+    // Dismiss loading toast
+    toast.dismiss();
+    
+    if (response.success) {
+      toast.success(`Bulk WTB order created successfully! ${products.length} items processed.`);
+      navigate(-1);
+    } else {
+      toast.error(response.message || "Failed to create bulk WTB order");
+    }
+    
+  } catch (error: any) {
+    // Dismiss loading toast
+    toast.dismiss();
+    
+    console.error('Bulk WTB Order Creation Error:', error);
+    toast.error(error?.message || "An error occurred while creating the bulk WTB order");
+  }
   };
 
   const allProductsHavePayout = products.every(product => 
@@ -267,9 +395,9 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                         <p><span className="font-medium">Order ID:</span> {product.orderId || "N/A"}</p>
                         <p><span className="font-medium">Order Number:</span> {product.orderNumber || "N/A"}</p>
                         <p><span className="font-medium">Order Date:</span> {product.orderCreatedAt ? new Date(product.orderCreatedAt).toLocaleDateString() : "N/A"}</p>
-                        <p><span className="font-medium">Total Price:</span> {product.totalPrice ? `${product.currency || 'IDR'} ${product.totalPrice}` : "N/A"}</p>
-                        <p><span className="font-medium">Net Price:</span> {product.netPrice ? `${product.currency || 'IDR'} ${product.netPrice}` : "N/A"}</p>
-                        <p><span className="font-medium">Discount:</span> {product.totalDiscount ? `${product.currency || 'IDR'} ${product.totalDiscount}` : "N/A"}</p>
+                        <p><span className="font-medium">Total Price:</span> {product.totalPrice ? `${product.currency || ' EUR'} ${product.totalPrice}` : "N/A"}</p>
+                        <p><span className="font-medium">Net Price:</span> {product.netPrice ? `${product.currency || ' EUR'} ${product.netPrice}` : "N/A"}</p>
+                        <p><span className="font-medium">Discount:</span> {product.totalDiscount ? `${product.currency || ' EUR'} ${product.totalDiscount}` : "N/A"}</p>
                       </div>
                     </div>
                   </div>
@@ -283,6 +411,8 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                           <p><span className="font-medium">Name:</span> {product.customerName}</p>
                           <p><span className="font-medium">Email:</span> {product.customerEmail || "N/A"}</p>
                           <p><span className="font-medium">Phone:</span> {product.customerAddress?.phone || "N/A"}</p>
+                          <p><span className="font-medium">Country:</span> {product.customerAddress?.country || "N/A"}</p>
+                          <p><span className="font-medium">Country Code:</span> {product.customerAddress?.country_code || "N/A"}</p>
                         </div>
                         {product.customerAddress && (
                           <div className="space-y-2 text-sm">
@@ -322,11 +452,13 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                 selectedSeller={selectedSeller}
                 payoutPrices={payoutPrices}
                 vatTreatments={vatTreatments}
+                vatRefundIncluded={vatRefundIncluded}
                 selectedShipping={selectedShipping}
                 paymentTiming={paymentTiming}
                 uploadedFile={uploadedFile}
                 onPayoutChange={handlePayoutChange}
                 onVatChange={handleVatChange}
+                onVatRefundIncludedChange={handleVatRefundIncludedChange}
                 onShippingChange={handleShippingChange}
                 onPaymentTimingChange={handlePaymentTimingChange}
                 onFileUpload={handleFileUpload}
