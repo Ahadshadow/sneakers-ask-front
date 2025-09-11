@@ -165,8 +165,12 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       return;
     }
 
-    if (file.type !== "application/pdf") {
-      toast.error("Please select a PDF file");
+    // Check if file is PDF or image
+    const isValidFile = file.type === "application/pdf" || 
+                       file.type.startsWith("image/");
+    
+    if (!isValidFile) {
+      toast.error("Please select a PDF or image file");
       setUploadedFile(prev => ({ ...prev, [productId]: null }));
       setUploadedFileUrl(prev => ({ ...prev, [productId]: null }));
       return;

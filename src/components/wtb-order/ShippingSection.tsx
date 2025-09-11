@@ -77,17 +77,17 @@ export function ShippingSection({
             </div>
           </RadioGroup>
           <p className="text-sm text-muted-foreground">
-            Upload a PDF shipment label for this order
+            Upload a PDF or image shipment label for this order
           </p>
 
           <div className="space-y-3">
             <Label htmlFor="shipment-file" className="text-sm font-medium">
-              Upload Shipment Label (PDF)
+              Upload Shipment Label (PDF or Image)
             </Label>
             <Input
               id="shipment-file"
               type="file"
-              accept=".pdf"
+              accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
               onChange={onFileUpload}
               className="cursor-pointer"
               disabled={isUploadingFile}

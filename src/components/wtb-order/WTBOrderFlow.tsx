@@ -147,8 +147,12 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
       return;
     }
 
-    if (file.type !== "application/pdf") {
-      toast.error("Please select a PDF file");
+    // Check if file is PDF or image
+    const isValidFile = file.type === "application/pdf" || 
+                       file.type.startsWith("image/");
+    
+    if (!isValidFile) {
+      toast.error("Please select a PDF or image file");
       setUploadedFile(null);
       setUploadedFileUrl(null);
       return;

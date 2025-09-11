@@ -226,7 +226,7 @@ export function BulkPricingSection({
                       </div>
                     </RadioGroup>
                     <p className="text-xs text-muted-foreground">
-                      Upload a PDF shipment label for this order
+                      Upload a PDF or image shipment label for this order
                     </p>
 
                     {/* File Upload - Always visible */}
@@ -235,7 +235,7 @@ export function BulkPricingSection({
                       <div className="flex items-center gap-2">
                         <Input
                           type="file"
-                          accept=".pdf"
+                          accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
                           onChange={(e) => onFileUpload(product.id, e.target.files?.[0] || null)}
                           className="flex-1"
                         />
