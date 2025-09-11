@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ShoppingCart, ArrowLeft, Loader2 } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Loader2, Package } from "lucide-react";
 import { toast } from "sonner";
 import { SellerSelection } from "./SellerSelection";
 import { BulkPricingSection } from "./BulkPricingSection";
@@ -12,12 +12,8 @@ import { ShippingSection } from "./ShippingSection";
 import { Product } from "@/components/dashboard/sections/ProductsOverview/types";
 import { sellersApi } from "@/lib/api/sellers";
 import { getVATRateByCountryCode } from "@/data/euCountryVAT";
-import { wtbOrdersApi, WTBOrderCommon, WTBOrderItem } from "@/lib/api/wtb-orders";
+import { wtbOrdersApi, WTBOrderCommon, WTBOrderItem, FileUploadResponse } from "@/lib/api/wtb-orders";
 
-const shippingOptions = [
-  { id: "discord", name: "Shipper Discord", requiresUpload: false },
-  { id: "upload", name: "Upload shipment label", requiresUpload: true }
-];
 
 interface BulkWTBOrderFlowProps {
   products: Product[];
@@ -33,6 +29,9 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
   const [selectedShipping, setSelectedShipping] = useState<{[key: string]: string}>({});
   const [paymentTiming, setPaymentTiming] = useState<{[key: string]: string}>({});
   const [uploadedFile, setUploadedFile] = useState<{[key: string]: File | null}>({});
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<{[key: string]: string | null}>({});
+  const [isUploadingFile, setIsUploadingFile] = useState<{[key: string]: boolean}>({});
+  const [trackingData, setTrackingData] = useState<{[key: string]: FileUploadResponse}>({});
 
 
   // Fetch active sellers from API
@@ -60,6 +59,7 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     
     return {
       name: seller.owner_name,
+      email: seller.email,
       country: seller.country || "Unknown",
       vatRate: defaultVatRate, // Use default VAT rate since API doesn't provide it
       id: seller.id,
@@ -86,6 +86,16 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       }));
     }
   }, [products, vatTreatments]);
+
+  // Set shipping method to "upload" for all products (always upload)
+  useEffect(() => {
+    const shippingMethods: {[key: string]: string} = {};
+    products.forEach(product => {
+      shippingMethods[product.id] = 'upload';
+    });
+    
+    setSelectedShipping(shippingMethods);
+  }, [products]);
 
   const calculateRegularVatPayout = (productId: string, sellerName: string) => {
     // Don't auto-fill payout price, let user enter manually
@@ -148,11 +158,42 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     }));
   };
 
-  const handleFileUpload = (productId: string, file: File | null) => {
-    setUploadedFile(prev => ({
-        ...prev,
-      [productId]: file
-      }));
+  const handleFileUpload = async (productId: string, file: File | null) => {
+    if (!file) {
+      setUploadedFile(prev => ({ ...prev, [productId]: null }));
+      setUploadedFileUrl(prev => ({ ...prev, [productId]: null }));
+      return;
+    }
+
+    if (file.type !== "application/pdf") {
+      toast.error("Please select a PDF file");
+      setUploadedFile(prev => ({ ...prev, [productId]: null }));
+      setUploadedFileUrl(prev => ({ ...prev, [productId]: null }));
+      return;
+    }
+
+    try {
+      setIsUploadingFile(prev => ({ ...prev, [productId]: true }));
+      setUploadedFile(prev => ({ ...prev, [productId]: file }));
+      
+      // Upload file to server and get tracking data
+      const uploadResponse = await wtbOrdersApi.uploadFile(file);
+      
+      if (uploadResponse.success) {
+        setTrackingData(prev => ({ ...prev, [productId]: uploadResponse }));
+        setUploadedFileUrl(prev => ({ ...prev, [productId]: URL.createObjectURL(file) }));
+        toast.success(`File uploaded successfully for ${products.find(p => p.id === productId)?.name || 'product'}`);
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      console.error('File upload error:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to upload file");
+      setUploadedFile(prev => ({ ...prev, [productId]: null }));
+      setUploadedFileUrl(prev => ({ ...prev, [productId]: null }));
+    } finally {
+      setIsUploadingFile(prev => ({ ...prev, [productId]: false }));
+    }
   };
 
   const handleRemoveFromCart = (productId: string) => {
@@ -280,13 +321,22 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
           // 11. Shipping Method
           shipping_method: selectedShipping[product.id],
           
-          // 12. Shipment Label File
-          shipment_label_file: uploadedFile[product.id]?.name || null,
+          // 12. Shipment Label File (will be sent separately in FormData)
+          shipment_label_file: null,
           
-          // 13. Seller Payout Amount
+          // 13. Shipment Method
+          shipment_method: trackingData[product.id]?.shipment_method || null,
+          
+          // 14. Tracking Consignment Number
+          tracking_consignment_number: trackingData[product.id]?.tracking_consignment_number || null,
+          
+          // 15. Shipment Method Raw Data
+          shipment_method_raw_data: trackingData[product.id]?.raw_data || null,
+          
+          // 16. Seller Payout Amount
           seller_payout_amount: payoutPriceNum,
           
-          // 14. Seller Payout Amount with VAT
+          // 17. Seller Payout Amount with VAT
           seller_payout_amount_with_vat: sellerPayoutAmountWithVat
         };
       });
@@ -295,8 +345,8 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       // Show loading toast
       toast.loading(`Creating bulk WTB order for ${products.length} items...`);
       
-      // Make API call to create bulk WTB orders
-      const response = await wtbOrdersApi.createBulkWTBOrders(commonData, itemsData);
+      // Make API call to create bulk WTB orders with files
+      const response = await wtbOrdersApi.createBulkWTBOrders(commonData, itemsData, uploadedFile);
     
     // Dismiss loading toast
     toast.dismiss();
@@ -325,10 +375,9 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     selectedShipping[product.id] && selectedShipping[product.id].trim() !== ""
   );
   
-  // Check if all products have required file uploads
+  // Check if all products have required file uploads (always required for upload shipping)
   const allProductsHaveRequiredFiles = products.every(product => {
-    const shippingOption = shippingOptions.find(option => option.id === selectedShipping[product.id]);
-    return !shippingOption?.requiresUpload || uploadedFile[product.id];
+    return uploadedFile[product.id];
   });
   
   const canSubmit = selectedSeller && allProductsHaveShipping && allProductsHavePayout && allProductsHaveVat && allProductsHaveRequiredFiles;
@@ -456,6 +505,8 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                 selectedShipping={selectedShipping}
                 paymentTiming={paymentTiming}
                 uploadedFile={uploadedFile}
+                uploadedFileUrl={uploadedFileUrl}
+                isUploadingFile={isUploadingFile}
                 onPayoutChange={handlePayoutChange}
                 onVatChange={handleVatChange}
                 onVatRefundIncludedChange={handleVatRefundIncludedChange}
@@ -465,6 +516,44 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                 onRemoveFromCart={handleRemoveFromCart}
                 availableSellers={availableSellers}
               />
+
+              {/* Tracking Data Display */}
+              {Object.keys(trackingData).length > 0 && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardHeader>
+                    <CardTitle className="text-green-800 flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Tracking Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {Object.entries(trackingData).map(([productId, data]) => {
+                      const product = products.find(p => p.id === productId);
+                      return (
+                        <div key={productId} className="border border-green-200 rounded-lg p-4 bg-green-100">
+                          <h4 className="font-medium text-green-800 mb-3">{product?.name}</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-sm font-medium text-green-700">Shipment Method</Label>
+                              <p className="text-sm text-green-600 font-mono">{data.shipment_method}</p>
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium text-green-700">Tracking Number</Label>
+                              <p className="text-sm text-green-600 font-mono">{data.tracking_consignment_number}</p>
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <Label className="text-sm font-medium text-green-700">Raw Data</Label>
+                            <p className="text-xs text-green-600 bg-green-200 p-2 rounded font-mono break-all">
+                              {data.raw_data}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Payment Timing Section */}
               <div className="space-y-6">

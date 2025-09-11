@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Package, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SellerSelection } from "./SellerSelection";
@@ -10,7 +11,7 @@ import { PricingSection } from "./PricingSection";
 import { ShippingSection } from "./ShippingSection";
 import { sellersApi } from "@/lib/api/sellers";
 import { getVATRateByCountryCode } from "@/data/euCountryVAT";
-import { wtbOrdersApi, WTBOrderCommon, WTBOrderItem } from "@/lib/api/wtb-orders";
+import { wtbOrdersApi, WTBOrderCommon, WTBOrderItem, FileUploadResponse } from "@/lib/api/wtb-orders";
 
 interface WTBOrderFlowProps {
   product: {
@@ -59,10 +60,6 @@ interface WTBOrderFlowProps {
   };
 }
 
-const shippingOptions = [
-  { id: "discord", name: "Shipper Discord", requiresUpload: false },
-  { id: "upload", name: "Upload shipment label", requiresUpload: true }
-];
 
 export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
   const navigate = useNavigate();
@@ -71,9 +68,12 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
   const [payoutPrice, setPayoutPrice] = useState("");
   const [vatTreatment, setVatTreatment] = useState("regular");
   const [vatRefundIncluded, setVatRefundIncluded] = useState(false);
-  const [selectedShipping, setSelectedShipping] = useState("");
+  const [selectedShipping, setSelectedShipping] = useState("upload");
   const [paymentTiming, setPaymentTiming] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [trackingData, setTrackingData] = useState<FileUploadResponse | null>(null);
 
 
   // Fetch active sellers from API
@@ -103,6 +103,7 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
     
     return {
       name: seller.owner_name,
+      email: seller.email,
       country: seller.country || "Unknown",
       vatRate: defaultVatRate, // Use default VAT rate since API doesn't provide it
       id: seller.id,
@@ -138,12 +139,42 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
     // Don't auto-calculate payout price
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === "application/pdf") {
-      setUploadedFile(file);
-    } else {
+    if (!file) {
       setUploadedFile(null);
+      setUploadedFileUrl(null);
+      return;
+    }
+
+    if (file.type !== "application/pdf") {
+      toast.error("Please select a PDF file");
+      setUploadedFile(null);
+      setUploadedFileUrl(null);
+      return;
+    }
+
+    try {
+      setIsUploadingFile(true);
+      setUploadedFile(file);
+      
+      // Upload file to server and get tracking data
+      const uploadResponse = await wtbOrdersApi.uploadFile(file);
+      
+      if (uploadResponse.success) {
+        setTrackingData(uploadResponse);
+        setUploadedFileUrl(URL.createObjectURL(file));
+        toast.success("File uploaded successfully");
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      console.error('File upload error:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to upload file");
+      setUploadedFile(null);
+      setUploadedFileUrl(null);
+    } finally {
+      setIsUploadingFile(false);
     }
   };
 
@@ -153,10 +184,8 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
       return;
     }
 
-    const shippingOption = shippingOptions.find(option => option.id === selectedShipping);
-    if (!shippingOption) return;
-
-    if (shippingOption.requiresUpload && !uploadedFile) {
+    // Always require file upload for shipping
+    if (!uploadedFile) {
       toast.error("Please upload a shipment label");
       return;
     }
@@ -232,13 +261,22 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
         // 11. Shipping Method
         shipping_method: selectedShipping,
         
-        // 12. Shipment Label File
-        shipment_label_file: uploadedFile?.name || null,
+        // 12. Shipment Label File (will be sent separately in FormData)
+        shipment_label_file: null,
         
-        // 13. Seller Payout Amount
+        // 13. Shipment Method
+        shipment_method: trackingData?.shipment_method || null,
+        
+        // 14. Tracking Consignment Number
+        tracking_consignment_number: trackingData?.tracking_consignment_number || null,
+        
+        // 15. Shipment Method Raw Data
+        shipment_method_raw_data: trackingData?.raw_data || null,
+        
+        // 16. Seller Payout Amount
         seller_payout_amount: payoutPriceNum,
         
-        // 14. Seller Payout Amount with VAT
+        // 17. Seller Payout Amount with VAT
         seller_payout_amount_with_vat: sellerPayoutAmountWithVat
       };
       
@@ -246,8 +284,8 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
       // Show loading toast
       toast.loading("Creating WTB order...");
       
-      // Make API call to create WTB order
-      const response = await wtbOrdersApi.createWTBOrder(commonData, itemData);
+      // Make API call to create WTB order with file
+      const response = await wtbOrdersApi.createWTBOrder(commonData, itemData, uploadedFile);
       
       // Dismiss loading toast
       toast.dismiss();
@@ -268,9 +306,7 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
     }
   };
 
-  const selectedShippingOption = shippingOptions.find(option => option.id === selectedShipping);
-  const canSubmit = selectedSeller && payoutPrice && parseFloat(payoutPrice) > 0 && vatTreatment && selectedShipping && 
-    (!selectedShippingOption?.requiresUpload || uploadedFile);
+  const canSubmit = selectedSeller && payoutPrice && parseFloat(payoutPrice) > 0 && vatTreatment && selectedShipping && uploadedFile && !isUploadingFile;
 
   return (
     <div className="min-h-screen bg-background">
@@ -393,13 +429,44 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
 
               {/* Shipping Section */}
               <ShippingSection
-                selectedShipping={selectedShipping}
-                onShippingChange={setSelectedShipping}
                 paymentTiming={paymentTiming}
                 onPaymentTimingChange={setPaymentTiming}
+                selectedShipping={selectedShipping}
+                onShippingChange={setSelectedShipping}
                 uploadedFile={uploadedFile}
                 onFileUpload={handleFileUpload}
+                isUploadingFile={isUploadingFile}
               />
+
+              {/* Tracking Data Display */}
+              {trackingData && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardHeader>
+                    <CardTitle className="text-green-800 flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Tracking Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-green-700">Shipment Method</Label>
+                        <p className="text-sm text-green-600 font-mono">{trackingData.shipment_method}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-green-700">Tracking Number</Label>
+                        <p className="text-sm text-green-600 font-mono">{trackingData.tracking_consignment_number}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-green-700">Raw Data</Label>
+                      <p className="text-xs text-green-600 bg-green-100 p-2 rounded font-mono break-all">
+                        {trackingData.raw_data}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Action Buttons */}
               <div className="flex gap-4 pt-4">
