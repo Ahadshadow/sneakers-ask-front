@@ -1,32 +1,29 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Truck } from "lucide-react";
 
 interface ShippingSectionProps {
-  selectedShipping: string;
-  onShippingChange: (value: string) => void;
   paymentTiming: string;
   onPaymentTimingChange: (value: string) => void;
+  selectedShipping: string;
+  onShippingChange: (value: string) => void;
   uploadedFile: File | null;
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isUploadingFile?: boolean;
 }
 
-const shippingOptions = [
-  { id: "discord", name: "Shipper Discord", requiresUpload: false },
-  { id: "upload", name: "Upload shipment label", requiresUpload: true }
-];
 
 export function ShippingSection({ 
-  selectedShipping, 
-  onShippingChange, 
   paymentTiming, 
   onPaymentTimingChange,
+  selectedShipping,
+  onShippingChange,
   uploadedFile,
-  onFileUpload
+  onFileUpload,
+  isUploadingFile = false
 }: ShippingSectionProps) {
-  const selectedShippingOption = shippingOptions.find(option => option.id === selectedShipping);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -72,39 +69,43 @@ export function ShippingSection({
         </CardHeader>
         <CardContent className="space-y-4">
           <RadioGroup value={selectedShipping} onValueChange={onShippingChange}>
-            {shippingOptions.map((option) => (
-              <div key={option.id} className="flex items-center space-x-3 p-3 border border-border rounded-lg hover:border-primary/50 transition-colors">
-                <RadioGroupItem value={option.id} id={option.id} />
-                <Label htmlFor={option.id} className="font-medium cursor-pointer">
-                  {option.name}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-
-          {selectedShipping === "upload" && (
-            <div className="space-y-3 mt-4">
-              <Label htmlFor="shipment-file" className="text-sm font-medium">
-                Upload Shipment Label (PDF)
+            <div className="flex items-center space-x-3 p-3 border border-border rounded-lg bg-muted/20">
+              <RadioGroupItem value="upload" id="upload" defaultChecked />
+              <Label htmlFor="upload" className="font-medium text-foreground cursor-pointer">
+                Upload Shipment Label
               </Label>
-              <Input
-                id="shipment-file"
-                type="file"
-                accept=".pdf"
-                onChange={onFileUpload}
-                className="cursor-pointer"
-              />
-              {uploadedFile ? (
-                <p className="text-xs text-green-600">
-                  ✓ File uploaded: {uploadedFile.name}
-                </p>
-              ) : selectedShippingOption?.requiresUpload && (
-                <p className="text-xs text-red-600">
-                  Please upload a PDF shipment label to continue
-                </p>
-              )}
             </div>
-          )}
+          </RadioGroup>
+          <p className="text-sm text-muted-foreground">
+            Upload a PDF or image shipment label for this order
+          </p>
+
+          <div className="space-y-3">
+            <Label htmlFor="shipment-file" className="text-sm font-medium">
+              Upload Shipment Label (PDF or Image)
+            </Label>
+            <Input
+              id="shipment-file"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+              onChange={onFileUpload}
+              className="cursor-pointer"
+              disabled={isUploadingFile}
+            />
+            {isUploadingFile ? (
+              <p className="text-xs text-blue-600">
+                ⏳ Uploading file...
+              </p>
+            ) : uploadedFile ? (
+              <p className="text-xs text-green-600">
+                ✓ File ready: {uploadedFile.name}
+              </p>
+            ) : (
+              <p className="text-xs text-red-600">
+                Please upload a PDF shipment label to continue
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

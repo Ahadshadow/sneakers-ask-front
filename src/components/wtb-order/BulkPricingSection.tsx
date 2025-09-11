@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Trash2, Upload } from "lucide-react";
 import { Product } from "@/components/dashboard/sections/ProductsOverview/types";
 import { PricingBreakdown } from "./PricingBreakdown";
@@ -18,6 +19,8 @@ interface BulkPricingSectionProps {
   selectedShipping: {[key: string]: string};
   paymentTiming: {[key: string]: string};
   uploadedFile: {[key: string]: File | null};
+  uploadedFileUrl?: {[key: string]: string | null};
+  isUploadingFile?: {[key: string]: boolean};
   onPayoutChange: (productId: string, value: string) => void;
   onVatChange: (productId: string, value: string) => void;
   onVatRefundIncludedChange: (productId: string, checked: boolean) => void;
@@ -35,7 +38,6 @@ interface BulkPricingSectionProps {
 }
 
 const shippingOptions = [
-  { id: "discord", name: "Shipper Discord", requiresUpload: false },
   { id: "upload", name: "Upload shipment label", requiresUpload: true }
 ];
 
@@ -53,6 +55,8 @@ export function BulkPricingSection({
   selectedShipping,
   paymentTiming,
   uploadedFile,
+  uploadedFileUrl = {},
+  isUploadingFile = {},
   onPayoutChange,
   onVatChange,
   onVatRefundIncludedChange,
@@ -213,45 +217,45 @@ export function BulkPricingSection({
                     <CardTitle className="text-sm font-medium">Shipping Method</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Shipping Method</Label>
-                      <Select
-                        value={selectedShipping[product.id] || ""}
-                        onValueChange={(value) => onShippingChange(product.id, value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select shipping method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {shippingOptions.map((option) => (
-                            <SelectItem key={option.id} value={option.id}>
-                              {option.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* File Upload */}
-                    {selectedShipping[product.id] === 'upload' && (
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Shipment Label</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="file"
-                            accept=".pdf"
-                            onChange={(e) => onFileUpload(product.id, e.target.files?.[0] || null)}
-                            className="flex-1"
-                          />
-                          {uploadedFile[product.id] && (
-                            <div className="flex items-center gap-1 text-xs text-green-600">
-                              <Upload className="h-3 w-3" />
-                              Uploaded
-                            </div>
-                          )}
-                        </div>
+                    <RadioGroup value={selectedShipping[product.id] || "upload"} onValueChange={(value) => onShippingChange(product.id, value)}>
+                      <div className="flex items-center space-x-3 p-3 border border-border rounded-lg bg-muted/20">
+                        <RadioGroupItem value="upload" id={`upload-${product.id}`} defaultChecked />
+                        <Label htmlFor={`upload-${product.id}`} className="text-sm font-medium text-foreground cursor-pointer">
+                          Upload Shipment Label
+                        </Label>
                       </div>
-                    )}
+                    </RadioGroup>
+                    <p className="text-xs text-muted-foreground">
+                      Upload a PDF or image shipment label for this order
+                    </p>
+
+                    {/* File Upload - Always visible */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Shipment Label</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+                          onChange={(e) => onFileUpload(product.id, e.target.files?.[0] || null)}
+                          className="flex-1"
+                        />
+                        {isUploadingFile[product.id] ? (
+                          <div className="flex items-center gap-1 text-xs text-blue-600">
+                            <Upload className="h-3 w-3 animate-spin" />
+                            Uploading...
+                          </div>
+                        ) : uploadedFile[product.id] ? (
+                          <div className="flex items-center gap-1 text-xs text-green-600">
+                            <Upload className="h-3 w-3" />
+                            Ready
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-xs text-red-600">
+                            Required
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
