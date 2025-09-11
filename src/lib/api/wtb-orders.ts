@@ -64,12 +64,21 @@ export interface WTBOrderItem {
   shipping_method: string;
   
   // 12. Shipment Label File
-  shipment_label_file: string | null;
+  shipment_label_file: File | string | null;
   
-  // 13. Seller Payout Amount
+  // 13. Shipment Method
+  shipment_method: string | null;
+  
+  // 14. Tracking Consignment Number
+  tracking_consignment_number: string | null;
+  
+  // 15. Shipment Method Raw Data
+  shipment_method_raw_data: string | null;
+  
+  // 16. Seller Payout Amount
   seller_payout_amount: number;
   
-  // 14. Seller Payout Amount with VAT
+  // 17. Seller Payout Amount with VAT
   seller_payout_amount_with_vat: number;
 }
 
@@ -89,36 +98,145 @@ export interface WTBOrderResponse {
   };
 }
 
+// File upload function
+async function uploadFile(file: File): Promise<{ success: boolean; data: { file_url: string; file_name: string }; message: string }> {
+  const token = localStorage.getItem('auth_token');
+  
+  const formData = new FormData();
+  formData.append("file", file); // name must match API expected field
+  
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/upload-file`, {
+    method: 'POST',
+    body: formData, // No need to set Content-Type manually, browser handles it
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Upload failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// File upload API response interface
+export interface FileUploadResponse {
+  success: boolean;
+  shipment_method: string;
+  tracking_consignment_number: string;
+  raw_data: string;
+}
+
 export const wtbOrdersApi = {
-  // Create single WTB order
-  async createWTBOrder(common: WTBOrderCommon, item: WTBOrderItem): Promise<WTBOrderResponse> {
-    const orderData: WTBOrderData = {
-      common,
-      items: [item]
-    };
+  // Upload file and get tracking data
+  async uploadFile(file: File): Promise<FileUploadResponse> {
+    const token = localStorage.getItem('auth_token');
+    const formData = new FormData();
+    formData.append('file', file);
     
-    return apiRequest<WTBOrderResponse>('/wtb-order', {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/upload-file`, {
       method: 'POST',
-      body: JSON.stringify(orderData),
+      body: formData,
       headers: {
-        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
   },
 
-  // Create bulk WTB orders
-  async createBulkWTBOrders(common: WTBOrderCommon, items: WTBOrderItem[]): Promise<WTBOrderResponse> {
-    const orderData: WTBOrderData = {
-      common,
-      items
-    };
+  // Create single WTB order with file
+  async createWTBOrder(common: WTBOrderCommon, item: WTBOrderItem, file?: File): Promise<WTBOrderResponse> {
+    const token = localStorage.getItem('auth_token');
     
-    return apiRequest<WTBOrderResponse>('/wtb-order', {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    if (file) {
+      // Send as FormData with file
+      const formData = new FormData();
+      formData.append('common', JSON.stringify(common));
+      formData.append('items', JSON.stringify([item]));
+      formData.append('shipment_label_file', file);
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/wtb-order`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } else {
+      // Send as JSON without file
+      const orderData: WTBOrderData = {
+        common,
+        items: [item]
+      };
+      
+      return apiRequest<WTBOrderResponse>('/wtb-order', {
+        method: 'POST',
+        body: JSON.stringify(orderData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+  },
+
+  // Create bulk WTB orders with files
+  async createBulkWTBOrders(common: WTBOrderCommon, items: WTBOrderItem[], files?: {[key: string]: File}): Promise<WTBOrderResponse> {
+    const token = localStorage.getItem('auth_token');
+    
+    if (files && Object.keys(files).length > 0) {
+      // Send as FormData with files
+      const formData = new FormData();
+      formData.append('common', JSON.stringify(common));
+      formData.append('items', JSON.stringify(items));
+      
+      // Add each file with product ID as key
+      Object.entries(files).forEach(([productId, file]) => {
+        formData.append(`shipment_label_file_${productId}`, file);
+      });
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'}/wtb-order`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } else {
+      // Send as JSON without files
+      const orderData: WTBOrderData = {
+        common,
+        items
+      };
+      
+      return apiRequest<WTBOrderResponse>('/wtb-order', {
+        method: 'POST',
+        body: JSON.stringify(orderData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
   },
 };

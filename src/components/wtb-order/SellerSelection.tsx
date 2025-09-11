@@ -88,7 +88,7 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
                           <div className="flex flex-col">
                             <span className="font-medium">{seller.name}</span>
                             <span className="text-xs text-muted-foreground">
-                              {seller.country} • VAT: {(Number(seller.vatRate) * 100).toFixed(0)}%
+                              {seller.email}
                             </span>
                           </div>
                         </CommandItem>
@@ -103,7 +103,7 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
         
         {seller && (
           <div className="text-sm text-muted-foreground bg-muted/20 p-3 rounded-lg">
-            <strong>{seller.country}</strong> VAT rate: <strong>{(Number(seller.vatRate) * 100).toFixed(0)}%</strong>
+            <strong>Email:</strong> {seller.email}
           </div>
         )}
       </CardContent>

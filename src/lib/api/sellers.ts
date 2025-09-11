@@ -11,6 +11,7 @@ export interface ActiveSeller {
   vat_number: string | null;
   tin_number: string | null;
   owner_name: string;
+  email: string;
 }
 
 // Seller interfaces based on your API response
