@@ -38,8 +38,10 @@ import { usersApi, User, Role } from "@/lib/api";
 export function UsersManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: User | null }>({
     open: false,
     user: null
@@ -72,6 +74,15 @@ export function UsersManagement() {
         )
       );
       
+      // Also update filtered users
+      setFilteredUsers(prevFiltered => 
+        prevFiltered.map(user => 
+          user.id === variables.id 
+            ? { ...user, status: variables.status }
+            : user
+        )
+      );
+      
       toast({
         title: "Status Updated",
         description: `User status has been updated to ${variables.status}.`,
@@ -93,6 +104,7 @@ export function UsersManagement() {
     mutationFn: (id: number) => usersApi.deleteUser(id),
     onSuccess: () => {
       const userName = deleteDialog.user?.full_name || deleteDialog.user?.email || "User";
+      setDeletingUserId(null);
       setDeleteDialog({ open: false, user: null });
       toast({
         title: "User Deleted",
@@ -102,6 +114,7 @@ export function UsersManagement() {
       refetch();
     },
     onError: (error) => {
+      setDeletingUserId(null);
       console.error('Error deleting user:', error);
       toast({
         title: "Something went wrong",
@@ -118,9 +131,8 @@ export function UsersManagement() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['users', pagination.current_page, searchTerm],
+    queryKey: ['users', pagination.current_page],
     queryFn: () => usersApi.getUsers({
-      search: searchTerm || undefined,
       per_page: pagination.per_page,
       page: pagination.current_page
     }),
@@ -147,6 +159,7 @@ export function UsersManagement() {
       }));
       
       setUsers(processedUsers);
+      setFilteredUsers(processedUsers); // Initialize filtered users
       setPagination({
         current_page: usersResponse.data.current_page || 1,
         last_page: usersResponse.data.last_page || 1,
@@ -155,6 +168,21 @@ export function UsersManagement() {
       });
     }
   }, [usersResponse]);
+
+  // Filter users based on search term (client-side search)
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredUsers(users);
+    } else {
+      const filtered = users.filter(user => 
+        user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.role?.name && user.role.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        user.status.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    }
+  }, [searchTerm, users]);
 
   // Update loading state based on React Query
   useEffect(() => {
@@ -228,6 +256,7 @@ export function UsersManagement() {
 
   const confirmDelete = () => {
     if (deleteDialog.user) {
+      setDeletingUserId(deleteDialog.user.id);
       deleteUserMutation.mutate(deleteDialog.user.id);
     }
   };
@@ -241,7 +270,8 @@ export function UsersManagement() {
   };
 
   const handleSearch = () => {
-    refetch();
+    // Client-side search - no API call needed
+    // The search is handled by the useEffect that filters users
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -365,7 +395,7 @@ export function UsersManagement() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user) => (
+                  filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <div>
@@ -416,10 +446,11 @@ export function UsersManagement() {
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDeleteUser(user)}
+                              disabled={deletingUserId === user.id}
                               className="text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                              {deletingUserId === user.id ? 'Deleting...' : 'Delete'}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -446,9 +477,17 @@ export function UsersManagement() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deletingUserId === deleteDialog.user?.id}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
             >
-              Delete Employee
+              {deletingUserId === deleteDialog.user?.id ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </div>
+              ) : (
+                "Delete Employee"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
