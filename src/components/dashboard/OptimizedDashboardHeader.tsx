@@ -47,7 +47,10 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
   const { user, logout, isLoggingOut } = useAuth();
   
   // Get user initials for avatar
-  const getUserInitials = (name: string) => {
+  const getUserInitials = (name: string | undefined | null) => {
+    if (!name || typeof name !== 'string') {
+      return 'AD'; // Default initials
+    }
     return name
       .split(' ')
       .map(word => word.charAt(0))
@@ -136,7 +139,7 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
               <Button variant="ghost" className="relative h-9 w-9 rounded-lg hover:bg-muted transition-all duration-200 p-0 shadow-sm">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
-                    {user ? getUserInitials(user.name) : 'AD'}
+                    {getUserInitials(user?.name)}
                   </AvatarFallback>
                 </Avatar>
               </Button>

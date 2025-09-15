@@ -105,7 +105,10 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const { user, logout, isLoggingOut } = useAuth();
   
   // Get user initials for avatar
-  const getUserInitials = (name: string) => {
+  const getUserInitials = (name: string | undefined | null) => {
+    if (!name || typeof name !== 'string') {
+      return 'AD'; // Default initials
+    }
     return name
       .split(' ')
       .map(word => word.charAt(0))
@@ -247,7 +250,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                 >
                   <Avatar className={cn("shadow-sm", isCollapsed ? "h-8 w-8" : "h-9 w-9")}>
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
-                      {user ? getUserInitials(user.name) : 'AD'}
+                      {getUserInitials(user?.name)}
                     </AvatarFallback>
                   </Avatar>
                   {!isCollapsed && (
