@@ -289,7 +289,7 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
       toast.loading("Creating WTB order...");
       
       // Make API call to create WTB order with file
-      const response = await wtbOrdersApi.createWTBOrder(commonData, itemData, uploadedFile);
+      const response = await wtbOrdersApi.createWTBOrder(commonData, itemData, trackingData?.file_path );
       
       // Dismiss loading toast
       toast.dismiss();
