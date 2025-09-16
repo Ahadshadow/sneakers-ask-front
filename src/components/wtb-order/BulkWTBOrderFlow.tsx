@@ -4,11 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ShoppingCart, ArrowLeft, Loader2, Package } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ShoppingCart, ArrowLeft, Loader2, Package, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { SellerSelection } from "./SellerSelection";
 import { BulkPricingSection } from "./BulkPricingSection";
 import { ShippingSection } from "./ShippingSection";
+import { PricingBreakdown } from "./PricingBreakdown";
 import { Product } from "@/components/dashboard/sections/ProductsOverview/types";
 import { sellersApi } from "@/lib/api/sellers";
 import { getVATRateByCountryCode } from "@/data/euCountryVAT";
@@ -69,33 +72,41 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     };
   }) || [];
 
+  // Check if selected seller is eligible for VAT refund
+  const selectedSellerData = availableSellers.find(s => s.name === selectedSeller);
+  const isVatRefundEligible = selectedSellerData?.vatRegistered && selectedSellerData?.vatNumber;
+
 
   // Set default VAT treatment to "regular" for all products
   useEffect(() => {
-    const defaultVatTreatments: {[key: string]: string} = {};
-    products.forEach(product => {
-      if (!vatTreatments[product.id]) {
-        defaultVatTreatments[product.id] = 'regular';
+    if (selectedSeller) {
+      const defaultVatTreatments: {[key: string]: string} = {};
+      products.forEach(product => {
+        if (!vatTreatments[product.id]) {
+          defaultVatTreatments[product.id] = 'regular';
+        }
+      });
+      
+      if (Object.keys(defaultVatTreatments).length > 0) {
+        setVatTreatments(prev => ({
+          ...prev,
+          ...defaultVatTreatments
+        }));
       }
-    });
-    
-    if (Object.keys(defaultVatTreatments).length > 0) {
-      setVatTreatments(prev => ({
-        ...prev,
-        ...defaultVatTreatments
-      }));
     }
-  }, [products, vatTreatments]);
+  }, [products, selectedSeller]);
 
   // Set shipping method to "upload" for all products (always upload)
   useEffect(() => {
-    const shippingMethods: {[key: string]: string} = {};
-    products.forEach(product => {
-      shippingMethods[product.id] = 'upload';
-    });
-    
-    setSelectedShipping(shippingMethods);
-  }, [products]);
+    if (selectedSeller) {
+      const shippingMethods: {[key: string]: string} = {};
+      products.forEach(product => {
+        shippingMethods[product.id] = 'upload';
+      });
+      
+      setSelectedShipping(shippingMethods);
+    }
+  }, [products, selectedSeller]);
 
   const calculateRegularVatPayout = (productId: string, sellerName: string) => {
     // Don't auto-fill payout price, let user enter manually
@@ -107,6 +118,12 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     // Clear all related fields when seller changes
     setPayoutPrices({});
     setVatRefundIncluded({});
+    setVatTreatments({});
+    setSelectedShipping({});
+    setPaymentTiming({});
+    setUploadedFile({});
+    setUploadedFileUrl({});
+    setTrackingData({});
     // Don't auto-calculate payout price
   };
 
@@ -391,24 +408,38 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
+      <div className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(-1)}
-              className="hover:bg-muted"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-            <div className="flex items-center gap-3">
-              <ShoppingCart className="h-5 w-5 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">
-                Bulk WTB Order ({products.length} items)
-              </h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => navigate(-1)}
+                className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <ShoppingCart className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    Bulk WTB Order
+                  </h1>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {products.length} items selected
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">
+                {products.length} Items
+              </div>
             </div>
           </div>
         </div>
@@ -416,220 +447,452 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
 
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8">
           
-          {/* Product Details Cards */}
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-foreground">Order Items Details</h2>
-            {products.map((product) => (
-              <Card key={product.id} className="bg-muted/20 border border-border">
-                <CardHeader>
-                  <CardTitle className="text-xl">{product.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Basic Product Info */}
-                    <div className="space-y-3">
-                      <h3 className="font-semibold text-lg text-foreground">{product.name}</h3>
-                      <div className="space-y-2 text-sm">
-                        <p><span className="font-medium">SKU:</span> {product.sku}</p>
-                        <p><span className="font-medium">Variant:</span> {product.variant || "N/A"}</p>
-                        <p><span className="font-medium">Vendor:</span> {product.vendor || "N/A"}</p>
-                        <p><span className="font-medium">Product Type:</span> {product.productType || "N/A"}</p>
-                        <p><span className="font-medium">Quantity:</span> {product.quantity || 1}</p>
-                      </div>
-                      <p className="text-xl font-bold text-primary">Listed at: {product.price}</p>
-                    </div>
+          {/* Seller Selection - At the Top */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <div className="p-1 bg-primary/20 rounded">
+                  <Package className="h-4 w-4 text-primary" />
+                </div>
+                Select Seller
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                Choose the seller for all items in this bulk order
+              </p>
+            </div>
+            <div className="p-6">
+              <SellerSelection
+                selectedSeller={selectedSeller}
+                onSellerChange={handleSellerChange}
+                availableSellers={availableSellers}
+                isLoading={isLoadingSellers}
+                error={sellersError}
+              />
+            </div>
+          </div>
 
-                    {/* Order Info */}
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-md text-foreground">Order Information</h4>
-                      <div className="space-y-2 text-sm">
-                        <p><span className="font-medium">Order ID:</span> {product.orderId || "N/A"}</p>
-                        <p><span className="font-medium">Order Number:</span> {product.orderNumber || "N/A"}</p>
-                        <p><span className="font-medium">Order Date:</span> {product.orderCreatedAt ? new Date(product.orderCreatedAt).toLocaleDateString() : "N/A"}</p>
-                        <p><span className="font-medium">Total Price:</span> {product.totalPrice ? `${product.currency || ' EUR'} ${product.totalPrice}` : "N/A"}</p>
-                        <p><span className="font-medium">Net Price:</span> {product.netPrice ? `${product.currency || ' EUR'} ${product.netPrice}` : "N/A"}</p>
-                        <p><span className="font-medium">Discount:</span> {product.totalDiscount ? `${product.currency || ' EUR'} ${product.totalDiscount}` : "N/A"}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Customer Information */}
-                  {product.customerName && (
-                    <div className="border-t pt-4">
-                      <h4 className="font-semibold text-md text-foreground mb-3">Customer Information</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2 text-sm">
-                          <p><span className="font-medium">Name:</span> {product.customerName}</p>
-                          <p><span className="font-medium">Email:</span> {product.customerEmail || "N/A"}</p>
-                          <p><span className="font-medium">Phone:</span> {product.customerAddress?.phone || "N/A"}</p>
-                          <p><span className="font-medium">Country:</span> {product.customerAddress?.country || "N/A"}</p>
-                          <p><span className="font-medium">Country Code:</span> {product.customerAddress?.country_code || "N/A"}</p>
+          {/* Individual Item Cards */}
+          {selectedSeller && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                  Order Items
+                </h2>
+               
+              </div>
+              
+              <div className="grid gap-6">
+                {products.map((product, index) => (
+                  <Card key={product.id} className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-xl transition-all duration-300">
+                    {/* Card Header */}
+                    <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600 px-6 py-4 border-b border-slate-200 dark:border-slate-600">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-center w-10 h-10 bg-primary/10 text-primary font-bold rounded-lg">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                              {product.name}
+                            </h3>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-xs bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 px-2 py-1 rounded">
+                                {product.sku}
+                              </span>
+                              <span className="text-sm font-medium text-primary">
+                                {product.price}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        {product.customerAddress && (
-                          <div className="space-y-2 text-sm">
-                            <p><span className="font-medium">Address:</span></p>
-                            <div className="pl-2 space-y-1">
-                              <p>{product.customerAddress.address1}</p>
-                              {product.customerAddress.address2 && <p>{product.customerAddress.address2}</p>}
-                              <p>{product.customerAddress.city}, {product.customerAddress.province}</p>
-                              <p>{product.customerAddress.country} {product.customerAddress.zip}</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveFromCart(product.id)}
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <CardContent className="p-6 space-y-6">
+                      {/* Product Details Grid */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Basic Product Info */}
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                            <div className="w-2 h-2 bg-primary rounded-full"></div>
+                            Product Information
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-slate-600 dark:text-slate-400">Variant:</span>
+                                <p className="font-medium text-slate-900 dark:text-slate-100">{product.variant || "N/A"}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-600 dark:text-slate-400">Vendor:</span>
+                                <p className="font-medium text-slate-900 dark:text-slate-100">{product.vendor || "N/A"}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-600 dark:text-slate-400">Type:</span>
+                                <p className="font-medium text-slate-900 dark:text-slate-100">{product.productType || "N/A"}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-600 dark:text-slate-400">Quantity:</span>
+                                <p className="font-medium text-slate-900 dark:text-slate-100">{product.quantity || 1}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Order Information */}
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            Order Details
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-slate-600 dark:text-slate-400">Order ID:</span>
+                                <p className="font-medium text-slate-900 dark:text-slate-100 font-mono text-xs">{product.orderId || "N/A"}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-600 dark:text-slate-400">Order #:</span>
+                                <p className="font-medium text-slate-900 dark:text-slate-100">{product.orderNumber || "N/A"}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-600 dark:text-slate-400">Date:</span>
+                                <p className="font-medium text-slate-900 dark:text-slate-100">
+                                  {product.orderCreatedAt ? new Date(product.orderCreatedAt).toLocaleDateString() : "N/A"}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-slate-600 dark:text-slate-400">Total:</span>
+                                <p className="font-medium text-slate-900 dark:text-slate-100">
+                                  {product.totalPrice ? `${product.currency || ' EUR'} ${product.totalPrice}` : "N/A"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Customer Information */}
+                      {product.customerName && (
+                        <div className="border-t border-slate-200 dark:border-slate-600 pt-6">
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 mb-4">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            Customer Information
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-slate-600 dark:text-slate-400">Name:</span>
+                                  <p className="font-medium text-slate-900 dark:text-slate-100">{product.customerName}</p>
+                                </div>
+                                <div>
+                                  <span className="text-slate-600 dark:text-slate-400">Email:</span>
+                                  <p className="font-medium text-slate-900 dark:text-slate-100">{product.customerEmail || "N/A"}</p>
+                                </div>
+                                <div>
+                                  <span className="text-slate-600 dark:text-slate-400">Phone:</span>
+                                  <p className="font-medium text-slate-900 dark:text-slate-100">{product.customerAddress?.phone || "N/A"}</p>
+                                </div>
+                                <div>
+                                  <span className="text-slate-600 dark:text-slate-400">Country:</span>
+                                  <p className="font-medium text-slate-900 dark:text-slate-100">{product.customerAddress?.country || "N/A"}</p>
+                                </div>
+                              </div>
+                            </div>
+                            {product.customerAddress && (
+                              <div className="space-y-3">
+                                <div className="text-sm">
+                                  <span className="text-slate-600 dark:text-slate-400">Address:</span>
+                                  <div className="mt-1 space-y-1 text-slate-900 dark:text-slate-100">
+                                    <p className="font-medium">{product.customerAddress.address1}</p>
+                                    {product.customerAddress.address2 && <p className="text-slate-600 dark:text-slate-400">{product.customerAddress.address2}</p>}
+                                    <p className="text-slate-600 dark:text-slate-400">
+                                      {product.customerAddress.city}, {product.customerAddress.province}
+                                    </p>
+                                    <p className="text-slate-600 dark:text-slate-400">
+                                      {product.customerAddress.country} {product.customerAddress.zip}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Configuration Form */}
+                      <div className="border-t border-slate-200 dark:border-slate-600 pt-6">
+                        <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 mb-6">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          Configuration
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* VAT Treatment */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">VAT Treatment</Label>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleVatChange(product.id, 'regular')}
+                                className={`flex-1 px-4 py-3 text-sm rounded-lg border transition-all duration-200 ${
+                                  vatTreatments[product.id] === 'regular'
+                                    ? 'border-primary bg-primary text-white shadow-md'
+                                    : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-primary/50 hover:bg-primary/5'
+                                }`}
+                              >
+                                Regular VAT
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleVatChange(product.id, 'margin')}
+                                className={`flex-1 px-4 py-3 text-sm rounded-lg border transition-all duration-200 ${
+                                  vatTreatments[product.id] === 'margin'
+                                    ? 'border-primary bg-primary text-white shadow-md'
+                                    : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-primary/50 hover:bg-primary/5'
+                                }`}
+                              >
+                                Margin Scheme
+                              </button>
+                            </div>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {vatTreatments[product.id] === 'regular' 
+                                ? "Standard VAT treatment - seller pays VAT to authorities"
+                                : "For second-hand goods - VAT only on profit margin"
+                              }
+                            </p>
+                          </div>
+
+                          {/* Payout Price */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Seller Payout Price</Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
+                                €
+                              </span>
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                value={payoutPrices[product.id] || ""}
+                                onChange={(e) => handlePayoutChange(product.id, e.target.value)}
+                                className="pl-8 text-right h-12 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-primary/20"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`vat-refund-included-${product.id}`}
+                                checked={vatRefundIncluded[product.id] || false}
+                                onCheckedChange={(checked) => handleVatRefundIncludedChange(product.id, checked as boolean)}
+                                disabled={!isVatRefundEligible}
+                                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                              <label
+                                htmlFor={`vat-refund-included-${product.id}`}
+                                className={`text-xs font-medium leading-none ${
+                                  !isVatRefundEligible 
+                                    ? 'text-slate-400 cursor-not-allowed' 
+                                    : 'text-slate-600 dark:text-slate-300 cursor-pointer'
+                                }`}
+                              >
+                                VAT Refund Included
+                                {!isVatRefundEligible && (
+                                  <span className="block text-slate-400">
+                                    (Seller must be VAT registered)
+                                  </span>
+                                )}
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Shipping Method */}
+                        <div className="mt-6">
+                          <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 block">Shipping Method</Label>
+                          <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer">
+                                  Upload Shipment Label
+                                </Label>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  Upload a PDF or image shipment label for this order
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-4 space-y-2">
+                              <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Shipment Label</Label>
+                              <div className="flex items-center gap-3">
+                                <Input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+                                  onChange={(e) => handleFileUpload(product.id, e.target.files?.[0] || null)}
+                                  className="flex-1 h-10 border-slate-300 dark:border-slate-600"
+                                />
+                                {isUploadingFile[product.id] ? (
+                                  <div className="flex items-center gap-2 text-xs text-blue-600">
+                                    <Upload className="h-3 w-3 animate-spin" />
+                                    Uploading...
+                                  </div>
+                                ) : uploadedFile[product.id] ? (
+                                  <div className="flex items-center gap-2 text-xs text-green-600">
+                                    <Upload className="h-3 w-3" />
+                                    Ready
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 text-xs text-red-500">
+                                    Required
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Tracking Information - Inside each card */}
+                        {trackingData[product.id] && (
+                          <div className="mt-6 border-t border-slate-200 dark:border-slate-600 pt-6">
+                            <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 mb-4">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              Tracking Information
+                            </h4>
+                            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label className="text-sm font-medium text-green-700 dark:text-green-300">Shipment Method</Label>
+                                  <p className="text-sm text-green-600 dark:text-green-400 font-mono">{trackingData[product.id].shipment_method}</p>
+                                </div>
+                                <div>
+                                  <Label className="text-sm font-medium text-green-700 dark:text-green-300">Tracking Number</Label>
+                                  <p className="text-sm text-green-600 dark:text-green-400 font-mono">{trackingData[product.id].tracking_consignment_number}</p>
+                                </div>
+                              </div>
+                              <div className="mt-3">
+                                <Label className="text-sm font-medium text-green-700 dark:text-green-300">Raw Data</Label>
+                                <p className="text-xs text-green-600 dark:text-green-400 bg-green-200 dark:bg-green-800 p-2 rounded font-mono break-all">
+                                  {trackingData[product.id].raw_data}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         )}
+
+                        {/* Pricing Breakdown */}
+                        {vatTreatments[product.id] && (
+                          <div className="mt-6">
+                            <PricingBreakdown
+                              product={product}
+                              selectedSeller={selectedSeller}
+                              vatTreatment={vatTreatments[product.id]}
+                              payoutPrice={payoutPrices[product.id]}
+                              vatRefundIncluded={vatRefundIncluded[product.id] || false}
+                              availableSellers={availableSellers}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Payment Timing Section */}
+          {selectedSeller && (
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <div className="p-1 bg-blue-500/20 rounded">
+                    <Package className="h-4 w-4 text-blue-600" />
+                  </div>
+                  Payment Timing
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                  Choose when payment should be made for all items
+                </p>
+              </div>
+              <div className="p-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {["before-shipping", "after-delivery"].map((timing) => (
+                    <div 
+                      key={timing}
+                      className={`flex items-center space-x-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                        paymentTiming[products[0]?.id] === timing
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-slate-200 dark:border-slate-600 hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-slate-700'
+                      }`}
+                      onClick={() => {
+                        const newPaymentTiming: {[key: string]: string} = {};
+                        products.forEach(product => {
+                          newPaymentTiming[product.id] = timing;
+                        });
+                        setPaymentTiming(newPaymentTiming);
+                      }}
+                    >
+                      <div className="relative">
+                        <div className={`h-5 w-5 border-2 rounded-full flex items-center justify-center ${
+                          paymentTiming[products[0]?.id] === timing
+                            ? 'border-primary bg-primary'
+                            : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {paymentTiming[products[0]?.id] === timing && (
+                            <div className="h-2 w-2 bg-white rounded-full" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <Label className="text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer">
+                          {timing === "before-shipping" ? "Before shipping" : "After delivery"}
+                        </Label>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          {timing === "before-shipping" 
+                            ? "Payment is made before the item is shipped"
+                            : "Payment is made after the item is delivered"
+                          }
+                        </p>
                       </div>
                     </div>
-                  )}
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
-                 
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {/* Seller Selection */}
-          <SellerSelection
-            selectedSeller={selectedSeller}
-            onSellerChange={handleSellerChange}
-            availableSellers={availableSellers}
-            isLoading={isLoadingSellers}
-            error={sellersError}
-          />
-
+          {/* Action Buttons */}
           {selectedSeller && (
-            <>
-              {/* Bulk Pricing Section */}
-              <BulkPricingSection
-                cartItems={products}
-                selectedSeller={selectedSeller}
-                payoutPrices={payoutPrices}
-                vatTreatments={vatTreatments}
-                vatRefundIncluded={vatRefundIncluded}
-                selectedShipping={selectedShipping}
-                paymentTiming={paymentTiming}
-                uploadedFile={uploadedFile}
-                uploadedFileUrl={uploadedFileUrl}
-                isUploadingFile={isUploadingFile}
-                onPayoutChange={handlePayoutChange}
-                onVatChange={handleVatChange}
-                onVatRefundIncludedChange={handleVatRefundIncludedChange}
-                onShippingChange={handleShippingChange}
-                onPaymentTimingChange={handlePaymentTimingChange}
-                onFileUpload={handleFileUpload}
-                onRemoveFromCart={handleRemoveFromCart}
-                availableSellers={availableSellers}
-              />
-
-              {/* Tracking Data Display */}
-              {Object.keys(trackingData).length > 0 && (
-                <Card className="bg-green-50 border-green-200">
-                  <CardHeader>
-                    <CardTitle className="text-green-800 flex items-center gap-2">
-                      <Package className="h-5 w-5" />
-                      Tracking Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {Object.entries(trackingData).map(([productId, data]) => {
-                      const product = products.find(p => p.id === productId);
-                      return (
-                        <div key={productId} className="border border-green-200 rounded-lg p-4 bg-green-100">
-                          <h4 className="font-medium text-green-800 mb-3">{product?.name}</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label className="text-sm font-medium text-green-700">Shipment Method</Label>
-                              <p className="text-sm text-green-600 font-mono">{data.shipment_method}</p>
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium text-green-700">Tracking Number</Label>
-                              <p className="text-sm text-green-600 font-mono">{data.tracking_consignment_number}</p>
-                            </div>
-                          </div>
-                          <div className="mt-3">
-                            <Label className="text-sm font-medium text-green-700">Raw Data</Label>
-                            <p className="text-xs text-green-600 bg-green-200 p-2 rounded font-mono break-all">
-                              {data.raw_data}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Payment Timing Section */}
-              <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-foreground">Payment Timing</h2>
-                <Card className="bg-muted/20 border border-border">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Payment Timing</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-6 md:grid-cols-2">
-                      {/* Payment Timing */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Payment Timing</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-3">
-                            {["before-shipping", "after-delivery"].map((timing) => (
-                              <div 
-                                key={timing}
-                                className="flex items-center space-x-3 p-3 border border-border rounded-lg hover:border-primary/50 transition-colors cursor-pointer"
-                                onClick={() => {
-                                  // Set payment timing for all products
-                                  const newPaymentTiming: {[key: string]: string} = {};
-                                  products.forEach(product => {
-                                    newPaymentTiming[product.id] = timing;
-                                  });
-                                  setPaymentTiming(newPaymentTiming);
-                                }}
-                              >
-                                <div className="relative">
-                                  <div className="h-5 w-5 border-2 border-border rounded flex items-center justify-center">
-                                    {paymentTiming[products[0]?.id] === timing && (
-                                      <div className="h-3 w-3 bg-primary rounded-sm" />
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex-1">
-                                  <Label className="text-sm font-medium cursor-pointer">
-                                    {timing === "before-shipping" ? "Before shipping" : "After delivery"}
-                                  </Label>
-                                  <p className="text-xs text-muted-foreground">
-                                    {timing === "before-shipping" 
-                                      ? "Payment is made before the item is shipped"
-                                      : "Payment is made after the item is delivered"
-                                    }
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-4">
-                <Button variant="outline" onClick={() => navigate(-1)} className="flex-1">
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handlePurchase}
-                  disabled={!canSubmit}
-                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  Confirm Bulk Purchase
-                </Button>
-              </div>
-            </>
+            <div className="flex gap-4 pt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate(-1)} 
+                className="flex-1 h-12 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handlePurchase}
+                disabled={!canSubmit}
+                className="flex-1 h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {canSubmit ? 'Confirm Bulk Purchase' : 'Complete All Fields'}
+              </Button>
+            </div>
           )}
         </div>
       </div>
