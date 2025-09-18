@@ -99,40 +99,42 @@ export function PricingSection({
             step="0.01"
           />
           
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="vat-refund-included"
-                checked={vatRefundIncluded}
-                onCheckedChange={onVatRefundIncludedChange}
-                disabled={!isVatRefundEligible}
-              />
-              <label
-                htmlFor="vat-refund-included"
-                className={`text-sm font-medium leading-none ${
-                  !isVatRefundEligible 
-                    ? 'text-muted-foreground cursor-not-allowed' 
-                    : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-                }`}
-              >
-                VAT Refund Included
-                {!isVatRefundEligible && (
-                  <span className="text-xs text-muted-foreground block">
-                    (Seller must be VAT registered with VAT number)
-                  </span>
-                )}
-              </label>
+          {vatTreatment !== 'margin' && (
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="vat-refund-included"
+                  checked={vatRefundIncluded}
+                  onCheckedChange={onVatRefundIncludedChange}
+                  disabled={!isVatRefundEligible}
+                />
+                <label
+                  htmlFor="vat-refund-included"
+                  className={`text-sm font-medium leading-none ${
+                    !isVatRefundEligible 
+                      ? 'text-muted-foreground cursor-not-allowed' 
+                      : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                  }`}
+                >
+                  VAT Refund Included
+                  {!isVatRefundEligible && (
+                    <span className="text-xs text-muted-foreground block">
+                      (Seller must be VAT registered with VAT number)
+                    </span>
+                  )}
+                </label>
+              </div>
+              
+              <div className="text-sm space-y-1">
+                <p className="text-muted-foreground">
+                  💡 <strong>What is payout price?</strong>
+                </p>
+                <p className="text-muted-foreground">
+                  This is the net amount the seller receives after VAT considerations.
+                </p>
+              </div>
             </div>
-            
-            <div className="text-sm space-y-1">
-              <p className="text-muted-foreground">
-                💡 <strong>What is payout price?</strong>
-              </p>
-              <p className="text-muted-foreground">
-                This is the net amount the seller receives after VAT considerations.
-              </p>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
