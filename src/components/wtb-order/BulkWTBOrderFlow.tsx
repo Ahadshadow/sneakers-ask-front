@@ -691,30 +691,32 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                                 step="0.01"
                               />
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`vat-refund-included-${product.id}`}
-                                checked={vatRefundIncluded[product.id] || false}
-                                onCheckedChange={(checked) => handleVatRefundIncludedChange(product.id, checked as boolean)}
-                                disabled={!isVatRefundEligible}
-                                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                              />
-                              <label
-                                htmlFor={`vat-refund-included-${product.id}`}
-                                className={`text-xs font-medium leading-none ${
-                                  !isVatRefundEligible 
-                                    ? 'text-slate-400 cursor-not-allowed' 
-                                    : 'text-slate-600 dark:text-slate-300 cursor-pointer'
-                                }`}
-                              >
-                                VAT Refund Included
-                                {!isVatRefundEligible && (
-                                  <span className="block text-slate-400">
-                                    (Seller must be VAT registered)
-                                  </span>
-                                )}
-                              </label>
-                            </div>
+                            {vatTreatments[product.id] !== 'margin' && (
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`vat-refund-included-${product.id}`}
+                                  checked={vatRefundIncluded[product.id] || false}
+                                  onCheckedChange={(checked) => handleVatRefundIncludedChange(product.id, checked as boolean)}
+                                  disabled={!isVatRefundEligible}
+                                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                />
+                                <label
+                                  htmlFor={`vat-refund-included-${product.id}`}
+                                  className={`text-xs font-medium leading-none ${
+                                    !isVatRefundEligible 
+                                      ? 'text-slate-400 cursor-not-allowed' 
+                                      : 'text-slate-600 dark:text-slate-300 cursor-pointer'
+                                  }`}
+                                >
+                                  VAT Refund Included
+                                  {!isVatRefundEligible && (
+                                    <span className="block text-slate-400">
+                                      (Seller must be VAT registered)
+                                    </span>
+                                  )}
+                                </label>
+                              </div>
+                            )}
                           </div>
                         </div>
 
