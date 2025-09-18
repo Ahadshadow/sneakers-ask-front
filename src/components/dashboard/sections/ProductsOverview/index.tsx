@@ -233,25 +233,11 @@ export function ProductsOverview() {
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
       setCart(prev => [...prev, product]);
-      toast({
-        title: "Added to Cart",
-        description: `${product.name} added to WTB cart`,
-      });
-    } else {
-      toast({
-        title: "Already in Cart",
-        description: `${product.name} is already in your WTB cart`,
-        variant: "destructive"
-      });
     }
   };
 
   const handleRemoveFromCart = (productId: string) => {
     setCart(prev => prev.filter(item => item.id !== productId));
-    toast({
-      title: "Removed from Cart",
-      description: "Item removed from WTB cart",
-    });
   };
 
   const cartTotal = cart.reduce((total, item) => {

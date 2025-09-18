@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { sellersApi } from "@/lib/api/sellers";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { validateIBAN, cn } from "@/lib/utils";
 
 const businessTypes = [
   "Private",
@@ -45,6 +46,7 @@ export default function EditSeller() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [ibanError, setIbanError] = useState(false);
   
   const [formData, setFormData] = useState({
     // Basic Info
@@ -150,6 +152,11 @@ export default function EditSeller() {
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
+    
+    // Clear IBAN error when user starts typing
+    if (field === 'iban') {
+      setIbanError(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -228,6 +235,11 @@ export default function EditSeller() {
         const errorMessage = errorMessages.join(', ');
         
         console.log('Validation errors found:', errorMessages);
+        
+        // Check if IBAN validation error exists
+        if (error.errors.iban || errorMessage.toLowerCase().includes('iban')) {
+          setIbanError(true);
+        }
         
         toast({
           title: "Validation Error",
@@ -593,8 +605,14 @@ export default function EditSeller() {
                     value={formData.iban}
                     onChange={(e) => handleInputChange("iban", e.target.value)}
                     placeholder="Enter IBAN"
-                    className="transition-all duration-200 focus:scale-[1.02]"
+                    className={cn(
+                      "transition-all duration-200 focus:scale-[1.02]",
+                      ibanError && "border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50"
+                    )}
                   />
+                  {ibanError && (
+                    <p className="text-sm text-red-500">Please enter a valid IBAN number</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bankName">Bank Name</Label>

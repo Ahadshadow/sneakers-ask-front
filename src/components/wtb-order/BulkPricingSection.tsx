@@ -178,35 +178,37 @@ export function BulkPricingSection({
                       step="0.01"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`vat-refund-included-${product.id}`}
-                        checked={vatRefundIncluded[product.id] || false}
-                        onCheckedChange={(checked) => onVatRefundIncludedChange(product.id, checked as boolean)}
-                        disabled={!isVatRefundEligible}
-                      />
-                      <label
-                        htmlFor={`vat-refund-included-${product.id}`}
-                        className={`text-xs font-medium leading-none ${
-                          !isVatRefundEligible 
-                            ? 'text-muted-foreground cursor-not-allowed' 
-                            : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-                        }`}
-                      >
-                        VAT Refund Included
-                        {!isVatRefundEligible && (
-                          <span className="text-xs text-muted-foreground block">
-                            (Seller must be VAT registered)
-                          </span>
-                        )}
-                      </label>
+                  {vatTreatments[product.id] !== 'margin' && (
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`vat-refund-included-${product.id}`}
+                          checked={vatRefundIncluded[product.id] || false}
+                          onCheckedChange={(checked) => onVatRefundIncludedChange(product.id, checked as boolean)}
+                          disabled={!isVatRefundEligible}
+                        />
+                        <label
+                          htmlFor={`vat-refund-included-${product.id}`}
+                          className={`text-xs font-medium leading-none ${
+                            !isVatRefundEligible 
+                              ? 'text-muted-foreground cursor-not-allowed' 
+                              : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                          }`}
+                        >
+                          VAT Refund Included
+                          {!isVatRefundEligible && (
+                            <span className="text-xs text-muted-foreground block">
+                              (Seller must be VAT registered)
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground">
+                        Net amount the seller receives
+                      </div>
                     </div>
-                    
-                    <div className="text-xs text-muted-foreground">
-                      Net amount the seller receives
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
