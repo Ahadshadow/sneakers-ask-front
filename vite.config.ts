@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
   preview: {
     port: 8080,
     host: "::",
+    allowedHosts: ["sell.sneakerask.com"],
   },
   build: {
     outDir: 'dist',
