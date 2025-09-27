@@ -56,6 +56,7 @@ export interface OrderItem {
   gift_card: boolean;
   fulfillment_status: string | null;
   fulfillment_service: string;
+  status: string;
   customer_email: string;
   customer_name: string;
   customer_details: any;
