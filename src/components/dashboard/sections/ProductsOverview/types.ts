@@ -42,7 +42,7 @@ export interface Product {
   category: string;
   price: string;
   stock: number;
-  status: "open" | "fliproom_sale" | "sneakerask" | "bought";
+  status: "open" | "sourcing" | "stock" | "fliproom_sale" | "sneakerask" | "bought";
   seller: string;
   shopifyId: string;
   orders: OrderReference[];

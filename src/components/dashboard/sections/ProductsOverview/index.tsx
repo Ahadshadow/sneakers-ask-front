@@ -114,7 +114,7 @@ export function ProductsOverview() {
         category: orderItem.variant.variant || 'N/A',
         price: `${orderItem.currency} ${orderItem.price.toFixed(2)}`,
         stock: orderItem.quantity,
-        status: 'open' as const,
+        status: (orderItem as any).status || 'open' as 'open' | 'sourcing' | 'stock' | 'fliproom_sale' | 'sneakerask' | 'bought',
         seller: orderItem.vendor,
         shopifyId: orderItem.order_id.toString(),
         orderUrl: orderItem.order_url, // Use the order_url from API
@@ -174,7 +174,7 @@ export function ProductsOverview() {
         category: wtbItem.variant.variant || 'N/A',
         price: `${wtbItem.currency} ${wtbItem.price.toFixed(2)}`,
         stock: wtbItem.quantity,
-        status: 'bought' as const, // Mark as bought
+        status: (wtbItem.status || 'open') as 'open' | 'sourcing' | 'stock' | 'fliproom_sale' | 'sneakerask' | 'bought', // Use actual status from API
         seller: wtbItem.vendor,
         shopifyId: wtbItem.order_id.toString(),
         orderUrl: wtbItem.order_url,
