@@ -65,6 +65,10 @@ export function ProductsTable({
     switch (status) {
       case "open": 
         return "bg-green-500/15 text-green-600 border-green-500/30 hover:bg-green-500/25 px-3 py-1 rounded-full";
+      case "sourcing": 
+        return "bg-yellow-500/15 text-yellow-600 border-yellow-500/30 hover:bg-yellow-500/25 px-3 py-1 rounded-full";
+      case "stock": 
+        return "bg-blue-500/15 text-blue-600 border-blue-500/30 hover:bg-blue-500/25 px-3 py-1 rounded-full";
       case "fliproom_sale": 
         return "bg-blue-500/15 text-blue-600 border-blue-500/30 hover:bg-blue-500/25 px-3 py-1 rounded-full";
       case "sneakerask": 
@@ -200,51 +204,28 @@ export function ProductsTable({
               {showActions && (
                 <TableCell className="py-3 sm:py-4">
                   <div className="flex gap-2 justify-end min-w-[120px]">
-                    {product.status === "open" && onAddToCart && (
+                    {onAddToCart && (
                       <>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => onAddToCart(product)}
-                          className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/30 hover:border-primary text-primary hover:bg-primary/10"
-                        >
-                          <ShoppingCart className="h-3.5 w-3.5" />
-                          <span className="text-xs font-medium hidden sm:inline">Cart</span>
-                        </Button>
-                        <Button 
-                          variant="secondary" 
-                          size="sm"
-                          onClick={() => handleWTBClick(product)}
-                          className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          <span className="text-xs font-medium hidden sm:inline">WTB</span>
-                        </Button>
-                      </>
-                    )}
-                    {product.status !== "open" && (
-                      <>
-                        {isWTBLocked(product) ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleUnlockWTB(product.id)}
-                            className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:border-amber-500"
-                          >
-                            <Lock className="h-3.5 w-3.5" />
-                            <span className="text-xs font-medium">Unlock WTB</span>
-                          </Button>
-                        ) : (
-                          <Button 
-                            variant="secondary" 
-                            size="sm"
-                            onClick={() => handleWTBClick(product)}
-                            className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                            <span className="text-xs font-medium">WTB</span>
-                          </Button>
-                        )}
+                         <Button 
+                           variant="outline" 
+                           size="sm"
+                           onClick={() => product.status === "sourcing" && onAddToCart(product)}
+                           disabled={product.status !== "sourcing"}
+                           className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 transition-all duration-200"
+                         >
+                           <ShoppingCart className="h-3.5 w-3.5" />
+                           <span className="text-xs font-medium hidden sm:inline">Cart</span>
+                         </Button>
+                         <Button 
+                           variant="secondary" 
+                           size="sm"
+                           onClick={() => product.status === "sourcing" && handleWTBClick(product)}
+                           disabled={product.status !== "sourcing"}
+                           className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 transition-all duration-200"
+                         >
+                           <Plus className="h-3.5 w-3.5" />
+                           <span className="text-xs font-medium hidden sm:inline">WTB</span>
+                         </Button>
                       </>
                     )}
                   </div>
