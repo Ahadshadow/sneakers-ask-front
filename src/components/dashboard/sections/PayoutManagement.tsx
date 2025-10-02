@@ -3,8 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { 
   Table,
@@ -15,10 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PaginationControls } from "@/components/dashboard/PaginationControls";
-import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, CalendarIcon, Filter } from "lucide-react";
+import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 
 interface SellerPayout {
   id: string;
@@ -40,8 +36,6 @@ export function PayoutManagement() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<Date>();
-  const [dateTo, setDateTo] = useState<Date>();
   const [pendingFilter, setPendingFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -182,11 +176,6 @@ export function PayoutManagement() {
       // Status filter
       const matchesStatus = statusFilter === "all" || payout.status === statusFilter;
       
-      // Date filter
-      const latestItemDate = new Date(Math.max(...payout.items.map(item => new Date(item.purchaseDate).getTime())));
-      const matchesDateFrom = !dateFrom || latestItemDate >= dateFrom;
-      const matchesDateTo = !dateTo || latestItemDate <= dateTo;
-      
       // Pending/Unpaid filter based on 5 days after arrival
       const matchesPendingFilter = (() => {
         if (pendingFilter === "all") return true;
@@ -216,9 +205,9 @@ export function PayoutManagement() {
         return true;
       })();
       
-      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo && matchesPendingFilter;
+      return matchesSearch && matchesStatus && matchesPendingFilter;
     });
-  }, [payouts, searchTerm, statusFilter, dateFrom, dateTo, pendingFilter]);
+  }, [payouts, searchTerm, statusFilter, pendingFilter]);
 
   const totalPages = Math.ceil(filteredPayouts.length / itemsPerPage);
   const paginatedPayouts = useMemo(() => {
@@ -284,7 +273,7 @@ export function PayoutManagement() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search by seller name, email, or product..."
+                  placeholder="Search sellers, products, SKUs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -327,62 +316,6 @@ export function PayoutManagement() {
               </select>
             </div>
 
-            {/* Date From */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">From Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[140px] justify-start text-left font-normal",
-                      !dateFrom && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFrom ? format(dateFrom, "MMM dd") : "From"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateFrom}
-                    onSelect={setDateFrom}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Date To */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">To Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[140px] justify-start text-left font-normal",
-                      !dateTo && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateTo ? format(dateTo, "MMM dd") : "To"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateTo}
-                    onSelect={setDateTo}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
             {/* Clear Filters */}
             <div className="flex items-end">
               <Button
@@ -391,8 +324,6 @@ export function PayoutManagement() {
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
-                  setDateFrom(undefined);
-                  setDateTo(undefined);
                   setPendingFilter("all");
                   setCurrentPage(1);
                 }}
@@ -410,7 +341,7 @@ export function PayoutManagement() {
         <span>
           Showing {filteredPayouts.length} of {payouts.length} sellers
         </span>
-        {(searchTerm || statusFilter !== "all" || dateFrom || dateTo || pendingFilter !== "all") && (
+        {(searchTerm || statusFilter !== "all" || pendingFilter !== "all") && (
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filters active</span>
@@ -430,19 +361,19 @@ export function PayoutManagement() {
           <div className="rounded-lg border border-border overflow-hidden hide-scrollbar">
             <Table>
               <TableHeader>
-                <TableRow className="border-border hover:bg-muted/5">
-                  <TableHead className="font-semibold text-foreground">Seller</TableHead>
-                  <TableHead className="font-semibold text-foreground">Items</TableHead>
-                  <TableHead className="font-semibold text-foreground">Amount</TableHead>
-                  <TableHead className="font-semibold text-foreground">Status</TableHead>
-                  <TableHead className="font-semibold text-foreground text-right">Actions</TableHead>
+                <TableRow>
+                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground">Seller</TableHead>
+                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground">Items</TableHead>
+                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground">Amount</TableHead>
+                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground">Status</TableHead>
+                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedPayouts.map((payout, index) => (
                   <TableRow 
                     key={payout.id} 
-                    className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
+                    className="hover:bg-muted/5 transition-colors duration-200 border-b animate-fade-in"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <TableCell className="py-4">
