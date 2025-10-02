@@ -217,52 +217,49 @@ export function ProductsOverview() {
             </CardContent>
           </Card>
 
-          {/* Results Summary */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              Showing {filteredProducts.length} of {mockProducts.length} products
-            </span>
-            {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
-              <div className="flex items-center gap-1">
-                <Filter className="h-4 w-4" />
-                <span>Filters active</span>
-              </div>
-            )}
+      {/* Results Summary */}
+      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+        <span>
+          Showing {filteredProducts.length} of {mockProducts.length} products
+        </span>
+        {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
+          <div className="flex items-center gap-1">
+            <Filter className="h-4 w-4" />
+            <span>Filters active</span>
           </div>
+        )}
+      </div>
 
+      {/* Products Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Package className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Shopify Products Overview</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Browse and purchase shoes from sellers
+            </p>
+          </div>
+        </div>
+      </div>
 
-          {/* Main Content */}
-          <Card className="bg-gradient-card border-border shadow-soft animate-scale-in">
-            <CardHeader className="pb-4 sm:pb-6">
-              <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
-                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
-                  <Package className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                </div>
-                <div>
-                  <span className="text-foreground">Shopify Products Overview</span>
-                  <p className="text-xs sm:text-sm font-normal text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
-                    Browse and purchase shoes from sellers
-                  </p>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ProductsTable
-                products={filteredProducts}
-                onAddToCart={handleAddToCart}
-              />
-              
-              {/* Products Summary */}
-              <div className="mt-6 pt-4 border-t border-border">
-                <p className="text-sm text-muted-foreground">
-                  Total products displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
-                  {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
-                    <span className="ml-2 text-primary">(filtered from {mockProducts.length})</span>
-                  )}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+      {/* Products Table */}
+      <ProductsTable
+        products={filteredProducts}
+        onAddToCart={handleAddToCart}
+      />
+      
+      {/* Products Summary */}
+      <div className="mt-6 pt-4 border-t border-border">
+        <p className="text-sm text-muted-foreground">
+          Total products displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
+          {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
+            <span className="ml-2 text-primary">(filtered from {mockProducts.length})</span>
+          )}
+        </p>
+      </div>
 
       {/* Floating Cart Summary */}
       {cart.length > 0 && (
