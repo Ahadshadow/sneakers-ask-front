@@ -115,19 +115,16 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               </TableCell>
               <TableCell className="py-3 sm:py-4 hidden md:table-cell">
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   size="sm" 
                   onClick={() => handleShopifyOrdersClick(product)}
-                  className="h-7 sm:h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/20 hover:border-primary/40"
+                  className="h-8 w-8 p-0 hover-scale transition-all duration-200 hover:bg-primary/10"
+                  title={product.orders.length > 0 ? 
+                    `${product.orders.reduce((total, order) => total + order.products.length, 0)} products in ${product.orders.length} order${product.orders.length > 1 ? 's' : ''}` : 
+                    'View orders in Shopify'
+                  }
                 >
-                  <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
-                  <span className="text-xs sm:text-sm font-medium">
-                    {product.orders.length > 0 ? 
-                      `${product.orders.reduce((total, order) => total + order.products.length, 0)} products in ${product.orders.length} order${product.orders.length > 1 ? 's' : ''}` : 
-                      'View orders'
-                    }
-                  </span>
-                  <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-60" />
+                  <ShoppingBag className="h-4 w-4 text-primary" />
                 </Button>
               </TableCell>
               <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
