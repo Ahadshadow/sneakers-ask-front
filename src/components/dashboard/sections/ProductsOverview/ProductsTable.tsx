@@ -86,6 +86,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
           <TableRow className="border-border hover:bg-muted/5">
             <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
             <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
+            <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Order #</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Shopify</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
             <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
@@ -112,6 +113,19 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               </TableCell>
               <TableCell className="py-3 sm:py-4">
                 <span className="font-semibold text-foreground text-base sm:text-lg">{product.price}</span>
+              </TableCell>
+              <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
+                {product.orders.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {product.orders.map((order) => (
+                      <span key={order.orderId} className="text-xs font-medium text-muted-foreground">
+                        {order.orderNumber}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">No orders</span>
+                )}
               </TableCell>
               <TableCell className="py-3 sm:py-4 hidden md:table-cell">
                 <Button 
@@ -190,7 +204,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
           ))}
           {displayCount < products.length && (
             <TableRow ref={ref}>
-              <TableCell colSpan={5} className="h-24 text-center">
+              <TableCell colSpan={6} className="h-24 text-center">
                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <span className="text-sm">Loading more products...</span>
