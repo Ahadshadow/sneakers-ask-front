@@ -107,6 +107,233 @@ export function PayoutManagement() {
           purchaseDate: "2024-01-12"
         }
       ]
+    },
+    {
+      id: "5",
+      sellerName: "Elite Sneakers Co",
+      email: "billing@elitesneakers.com",
+      totalAmount: 320,
+      itemCount: 2,
+      status: "pending",
+      items: [
+        {
+          productName: "Jordan 4 Retro Military Black",
+          sku: "DH6927-111",
+          amount: 175,
+          purchaseDate: "2024-01-16"
+        },
+        {
+          productName: "Nike SB Dunk Low Pro",
+          sku: "BQ6817-008",
+          amount: 145,
+          purchaseDate: "2024-01-16"
+        }
+      ]
+    },
+    {
+      id: "6",
+      sellerName: "Street Style Kicks",
+      email: "payments@streetstyle.com",
+      totalAmount: 210,
+      itemCount: 1,
+      status: "processing",
+      items: [
+        {
+          productName: "Off-White x Nike Air Force 1",
+          sku: "AO4297-100",
+          amount: 210,
+          purchaseDate: "2024-01-11"
+        }
+      ]
+    },
+    {
+      id: "7",
+      sellerName: "Retro Sneaker Hub",
+      email: "finance@retrosneakerhub.com",
+      totalAmount: 165,
+      itemCount: 1,
+      status: "completed",
+      lastPayoutDate: "2024-01-09",
+      items: [
+        {
+          productName: "Air Max 1 Anniversary",
+          sku: "908375-104",
+          amount: 165,
+          purchaseDate: "2024-01-08"
+        }
+      ]
+    },
+    {
+      id: "8",
+      sellerName: "Kicks Warehouse",
+      email: "admin@kickswarehouse.com",
+      totalAmount: 280,
+      itemCount: 2,
+      status: "pending",
+      items: [
+        {
+          productName: "Travis Scott x Air Jordan 1 Low",
+          sku: "DM7866-162",
+          amount: 155,
+          purchaseDate: "2024-01-17"
+        },
+        {
+          productName: "Sacai x Nike LDWaffle",
+          sku: "BV0073-101",
+          amount: 125,
+          purchaseDate: "2024-01-17"
+        }
+      ]
+    },
+    {
+      id: "9",
+      sellerName: "Sole Traders",
+      email: "payouts@soletraders.com",
+      totalAmount: 190,
+      itemCount: 1,
+      status: "pending",
+      items: [
+        {
+          productName: "Yeezy 700 V3 Azael",
+          sku: "FW4980",
+          amount: 190,
+          purchaseDate: "2024-01-15"
+        }
+      ]
+    },
+    {
+      id: "10",
+      sellerName: "Premium Footwear Ltd",
+      email: "billing@premiumfootwear.com",
+      totalAmount: 395,
+      itemCount: 3,
+      status: "completed",
+      lastPayoutDate: "2024-01-08",
+      items: [
+        {
+          productName: "Union x Air Jordan 4",
+          sku: "DJ5718-001",
+          amount: 165,
+          purchaseDate: "2024-01-07"
+        },
+        {
+          productName: "Nike Air Max 97 Silver Bullet",
+          sku: "884421-001",
+          amount: 135,
+          purchaseDate: "2024-01-07"
+        },
+        {
+          productName: "Converse Chuck 70 High",
+          sku: "162050C",
+          amount: 95,
+          purchaseDate: "2024-01-07"
+        }
+      ]
+    },
+    {
+      id: "11",
+      sellerName: "Fresh Kicks Market",
+      email: "payments@freshkicks.com",
+      totalAmount: 175,
+      itemCount: 1,
+      status: "processing",
+      items: [
+        {
+          productName: "New Balance 992 Grey",
+          sku: "M992GR",
+          amount: 175,
+          purchaseDate: "2024-01-12"
+        }
+      ]
+    },
+    {
+      id: "12",
+      sellerName: "Sneaker Vault",
+      email: "finance@sneakervault.com",
+      totalAmount: 245,
+      itemCount: 2,
+      status: "pending",
+      items: [
+        {
+          productName: "Air Jordan 11 Retro Cool Grey",
+          sku: "378037-001",
+          amount: 155,
+          purchaseDate: "2024-01-18"
+        },
+        {
+          productName: "Puma RS-X3",
+          sku: "372849-01",
+          amount: 90,
+          purchaseDate: "2024-01-18"
+        }
+      ]
+    },
+    {
+      id: "13",
+      sellerName: "Urban Sole Collection",
+      email: "admin@urbansolecollection.com",
+      totalAmount: 310,
+      itemCount: 2,
+      status: "pending",
+      items: [
+        {
+          productName: "Balenciaga Triple S",
+          sku: "524039-W09E1-9000",
+          amount: 210,
+          purchaseDate: "2024-01-16"
+        },
+        {
+          productName: "Common Projects Achilles Low",
+          sku: "1528-0506",
+          amount: 100,
+          purchaseDate: "2024-01-16"
+        }
+      ]
+    },
+    {
+      id: "14",
+      sellerName: "Hype Sneakers Pro",
+      email: "billing@hypesneakerspro.com",
+      totalAmount: 140,
+      itemCount: 1,
+      status: "completed",
+      lastPayoutDate: "2024-01-11",
+      items: [
+        {
+          productName: "Vans Old Skool Black White",
+          sku: "VN000D3HY28",
+          amount: 140,
+          purchaseDate: "2024-01-10"
+        }
+      ]
+    },
+    {
+      id: "15",
+      sellerName: "Authentic Kicks Store",
+      email: "payments@authentickicks.com",
+      totalAmount: 425,
+      itemCount: 3,
+      status: "pending",
+      items: [
+        {
+          productName: "Dior x Air Jordan 1 High",
+          sku: "CN8607-002",
+          amount: 185,
+          purchaseDate: "2024-01-19"
+        },
+        {
+          productName: "Yeezy Slide Bone",
+          sku: "FZ5897",
+          amount: 120,
+          purchaseDate: "2024-01-19"
+        },
+        {
+          productName: "Nike Blazer Mid 77 Vintage",
+          sku: "BQ6806-100",
+          amount: 120,
+          purchaseDate: "2024-01-19"
+        }
+      ]
     }
   ]);
 
