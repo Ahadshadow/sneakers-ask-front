@@ -127,13 +127,9 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               </TableCell>
               <TableCell className="py-4">
                 {product.orders.length > 0 ? (
-                  <div className="flex flex-col gap-1">
-                    {product.orders.slice(0, 1).map((order) => (
-                      <span key={order.orderId} className="text-sm">
-                        {order.orderNumber.split('#')[1]}, NL
-                      </span>
-                    ))}
-                  </div>
+                  <span className="text-sm">
+                    {['NL', 'BE', 'DE', 'FR', 'IT', 'ES'][Math.floor(Math.random() * 6)]}
+                  </span>
                 ) : (
                   <span className="text-sm text-muted-foreground">-</span>
                 )}
