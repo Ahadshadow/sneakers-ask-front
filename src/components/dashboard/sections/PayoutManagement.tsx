@@ -12,9 +12,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle, Clock, Search, Filter, Loader2 } from "lucide-react";
+import { CheckCircle, Clock, Search, Filter, Loader2, Undo } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useInView } from "react-intersection-observer";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface SellerPayout {
   id: string;
@@ -41,6 +49,10 @@ export function PayoutManagement() {
   const { ref, inView } = useInView({
     threshold: 0,
     triggerOnce: false,
+  });
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; payout: SellerPayout | null }>({ 
+    open: false, 
+    payout: null 
   });
   const [payouts, setPayouts] = useState<SellerPayout[]>([
     {
@@ -355,7 +367,14 @@ export function PayoutManagement() {
     }
   };
 
-  const markAsPaid = (seller: SellerPayout) => {
+  const confirmMarkAsPaid = (seller: SellerPayout) => {
+    setConfirmDialog({ open: true, payout: seller });
+  };
+
+  const markAsPaid = () => {
+    if (!confirmDialog.payout) return;
+    
+    const seller = confirmDialog.payout;
     const payoutDate = new Date().toISOString().split('T')[0];
     
     setPayouts(prev => prev.map(p => 
@@ -369,6 +388,23 @@ export function PayoutManagement() {
     toast({
       title: "Payment Completed",
       description: `Payout of €${seller.totalAmount.toFixed(2)} to ${seller.sellerName} marked as paid on ${new Date(payoutDate).toLocaleDateString()}.`,
+    });
+    
+    setConfirmDialog({ open: false, payout: null });
+  };
+
+  const undoPayout = (seller: SellerPayout) => {
+    setPayouts(prev => prev.map(p => 
+      p.id === seller.id ? { 
+        ...p, 
+        status: "pending" as const,
+        lastPayoutDate: undefined
+      } : p
+    ));
+    
+    toast({
+      title: "Payment Undone",
+      description: `Payout for ${seller.sellerName} has been reverted to pending.`,
     });
   };
 
@@ -593,7 +629,7 @@ export function PayoutManagement() {
                       <div className="flex gap-2 justify-end">
                         {payout.status === "pending" && (
                           <Button 
-                            onClick={() => markAsPaid(payout)}
+                            onClick={() => confirmMarkAsPaid(payout)}
                             size="sm"
                             className="flex items-center gap-1"
                           >
@@ -603,7 +639,7 @@ export function PayoutManagement() {
                         )}
                         {payout.status === "processing" && (
                           <Button 
-                            onClick={() => markAsPaid(payout)}
+                            onClick={() => confirmMarkAsPaid(payout)}
                             size="sm"
                             variant="outline"
                             className="flex items-center gap-1"
@@ -613,10 +649,21 @@ export function PayoutManagement() {
                           </Button>
                         )}
                         {payout.status === "completed" && (
-                          <Badge variant="default" className="flex items-center gap-1">
-                            <CheckCircle className="h-4 w-4" />
-                            Paid
-                          </Badge>
+                          <>
+                            <Badge variant="default" className="flex items-center gap-1">
+                              <CheckCircle className="h-4 w-4" />
+                              Paid
+                            </Badge>
+                            <Button 
+                              onClick={() => undoPayout(payout)}
+                              size="sm"
+                              variant="ghost"
+                              className="flex items-center gap-1"
+                            >
+                              <Undo className="h-4 w-4" />
+                              Undo
+                            </Button>
+                          </>
                         )}
                       </div>
                     </TableCell>
@@ -645,6 +692,32 @@ export function PayoutManagement() {
           </p>
         </div>
       </div>
+
+      <Dialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ open, payout: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Payment</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to mark this payout as paid?
+            </DialogDescription>
+          </DialogHeader>
+          {confirmDialog.payout && (
+            <div className="py-4">
+              <p className="text-sm"><strong>Seller:</strong> {confirmDialog.payout.sellerName}</p>
+              <p className="text-sm"><strong>Amount:</strong> €{confirmDialog.payout.totalAmount.toFixed(2)}</p>
+              <p className="text-sm"><strong>Items:</strong> {confirmDialog.payout.itemCount}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialog({ open: false, payout: null })}>
+              Cancel
+            </Button>
+            <Button onClick={markAsPaid}>
+              Confirm Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
