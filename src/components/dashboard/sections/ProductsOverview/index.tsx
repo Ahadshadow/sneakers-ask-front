@@ -13,15 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sellerFilter, setSellerFilter] = useState<string>("all");
   const [cart, setCart] = useState<Product[]>([]);
   
   const { toast } = useToast();
 
-  // Get unique values for filter dropdowns
-  const availableSellers = useMemo(() => {
-    return Array.from(new Set(mockProducts.map(product => product.seller))).sort();
-  }, []);
 
   const filteredProducts = useMemo(() => {
     return mockProducts.filter(product => {
@@ -38,12 +33,9 @@ export function ProductsOverview() {
       // Status filter
       const matchesStatus = statusFilter === "all" || product.status === statusFilter;
 
-      // Seller filter
-      const matchesSeller = sellerFilter === "all" || product.seller === sellerFilter;
-
-      return matchesSearch && matchesStatus && matchesSeller;
+      return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, statusFilter, sellerFilter]);
+  }, [searchTerm, statusFilter]);
 
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
@@ -115,24 +107,6 @@ export function ProductsOverview() {
                   </select>
                 </div>
 
-                {/* Seller Filter */}
-                <div>
-                  <Label htmlFor="seller" className="text-sm font-medium mb-2 block">
-                    Seller
-                  </Label>
-                  <select
-                    id="seller"
-                    value={sellerFilter}
-                    onChange={(e) => setSellerFilter(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    <option value="all">All Sellers</option>
-                    {availableSellers.map(seller => (
-                      <option key={seller} value={seller}>{seller}</option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* Clear Filters */}
                 <div className="flex items-end">
                   <Button
@@ -141,7 +115,6 @@ export function ProductsOverview() {
                     onClick={() => {
                       setSearchTerm("");
                       setStatusFilter("all");
-                      setSellerFilter("all");
                     }}
                     className="text-muted-foreground hover:text-foreground"
                   >
@@ -157,7 +130,7 @@ export function ProductsOverview() {
         <span>
           Showing {filteredProducts.length} of {mockProducts.length} products
         </span>
-        {(searchTerm || statusFilter !== "all" || sellerFilter !== "all") && (
+        {(searchTerm || statusFilter !== "all") && (
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filters active</span>
@@ -175,7 +148,7 @@ export function ProductsOverview() {
       <div className="mt-4 text-sm text-muted-foreground">
         <p>
           Total products displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
-          {(searchTerm || statusFilter !== "all" || sellerFilter !== "all") && (
+          {(searchTerm || statusFilter !== "all") && (
             <span className="ml-2 text-primary">(filtered from {mockProducts.length})</span>
           )}
         </p>
