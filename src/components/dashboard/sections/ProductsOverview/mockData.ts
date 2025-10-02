@@ -15,7 +15,7 @@ export const mockProducts: Product[] = [
     orders: [
       {
         orderId: "1",
-        orderNumber: "#SP001",
+        orderNumber: "81951",
         quantity: 3,
         orderDate: "2024-08-15",
         customerName: "John Smith",
@@ -41,7 +41,7 @@ export const mockProducts: Product[] = [
     orders: [
       {
         orderId: "1",
-        orderNumber: "#SP001",
+        orderNumber: "81950",
         quantity: 3,
         orderDate: "2024-08-15",
         customerName: "John Smith",
@@ -67,7 +67,7 @@ export const mockProducts: Product[] = [
     orders: [
       {
         orderId: "2",
-        orderNumber: "#SP002",
+        orderNumber: "81949",
         quantity: 1,
         orderDate: "2024-08-15",
         customerName: "Sarah Johnson",
@@ -78,7 +78,7 @@ export const mockProducts: Product[] = [
       },
       {
         orderId: "3",
-        orderNumber: "#SP003",
+        orderNumber: "81948",
         quantity: 1,
         orderDate: "2024-08-14",
         customerName: "Emily Davis",
@@ -89,7 +89,7 @@ export const mockProducts: Product[] = [
       },
       {
         orderId: "4",
-        orderNumber: "#SP004",
+        orderNumber: "81947",
         quantity: 2,
         orderDate: "2024-08-13",
         customerName: "Michael Brown",
@@ -128,7 +128,7 @@ export const mockProducts: Product[] = [
     orders: [
       {
         orderId: "4",
-        orderNumber: "#SP004",
+        orderNumber: "81946",
         quantity: 2,
         orderDate: "2024-08-13",
         customerName: "Michael Brown",
@@ -165,7 +165,7 @@ export const mockProducts: Product[] = [
     orders: [
       {
         orderId: "5",
-        orderNumber: "#SP005",
+        orderNumber: "81945",
         quantity: 1,
         orderDate: "2024-08-12",
         customerName: "David Wilson",
@@ -201,7 +201,7 @@ export const mockProducts: Product[] = [
     orders: [
       {
         orderId: "6",
-        orderNumber: "#SP006",
+        orderNumber: "81944",
         quantity: 2,
         orderDate: "2024-08-11",
         customerName: "Lisa Taylor",
@@ -237,7 +237,7 @@ export const mockProducts: Product[] = [
     orders: [
       {
         orderId: "7",
-        orderNumber: "#SP007",
+        orderNumber: "81943",
         quantity: 1,
         orderDate: "2024-08-10",
         customerName: "Alex Miller",
@@ -273,7 +273,7 @@ export const mockProducts: Product[] = [
     orders: [
       {
         orderId: "8",
-        orderNumber: "#SP008",
+        orderNumber: "81942",
         quantity: 1,
         orderDate: "2024-08-09",
         customerName: "Chris Taylor",
@@ -309,7 +309,7 @@ export const mockProducts: Product[] = [
     orders: [
       {
         orderId: "9",
-        orderNumber: "#SP009",
+        orderNumber: "81941",
         quantity: 2,
         orderDate: "2024-08-08",
         customerName: "Emma White",
