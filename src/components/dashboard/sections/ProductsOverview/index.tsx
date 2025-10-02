@@ -230,21 +230,6 @@ export function ProductsOverview() {
         )}
       </div>
 
-      {/* Products Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Package className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Shopify Products Overview</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Browse and purchase shoes from sellers
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Products Table */}
       <ProductsTable
         products={filteredProducts}
@@ -252,8 +237,8 @@ export function ProductsOverview() {
       />
       
       {/* Products Summary */}
-      <div className="mt-6 pt-4 border-t border-border">
-        <p className="text-sm text-muted-foreground">
+      <div className="mt-4 text-sm text-muted-foreground">
+        <p>
           Total products displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
           {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
             <span className="ml-2 text-primary">(filtered from {mockProducts.length})</span>

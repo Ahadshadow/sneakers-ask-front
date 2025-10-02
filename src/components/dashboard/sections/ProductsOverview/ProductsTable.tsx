@@ -78,7 +78,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
   };
 
   return (
-    <div className="rounded-lg border border-border bg-gradient-card shadow-soft overflow-hidden">
+    <div className="w-full">
       <div className="overflow-x-auto custom-scrollbar">
         <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
       <Table>
@@ -207,7 +207,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
       </div>
       
       {/* Status Indicator */}
-      <div className="px-4 py-3 bg-muted/30 border-t border-border">
+      <div className="px-4 py-3 bg-muted/10 mt-2">
         <p className="text-xs text-muted-foreground text-center">
           Showing <span className="font-medium text-foreground">{displayedProducts.length}</span> of <span className="font-medium text-foreground">{products.length}</span> products
           {displayCount < products.length && <span className="ml-1">(scroll for more)</span>}
