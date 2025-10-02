@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,9 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationControls } from "@/components/dashboard/PaginationControls";
-import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, Filter } from "lucide-react";
+import { ExternalLink, CheckCircle, Clock, Search, Filter, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useInView } from "react-intersection-observer";
 
 interface SellerPayout {
   id: string;
@@ -37,8 +37,11 @@ export function PayoutManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [pendingFilter, setPendingFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [displayCount, setDisplayCount] = useState(20);
+  const { ref, inView } = useInView({
+    threshold: 0,
+    triggerOnce: false,
+  });
   const [payouts, setPayouts] = useState<SellerPayout[]>([
     {
       id: "1",
@@ -110,7 +113,7 @@ export function PayoutManagement() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "pending": return <Clock className="h-4 w-4" />;
-      case "processing": return <CreditCard className="h-4 w-4" />;
+      case "processing": return <ExternalLink className="h-4 w-4" />;
       case "completed": return <CheckCircle className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
@@ -209,56 +212,26 @@ export function PayoutManagement() {
     });
   }, [payouts, searchTerm, statusFilter, pendingFilter]);
 
-  const totalPages = Math.ceil(filteredPayouts.length / itemsPerPage);
-  const paginatedPayouts = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredPayouts.slice(startIndex, endIndex);
-  }, [filteredPayouts, currentPage, itemsPerPage]);
+  // Load more items when scrolling
+  useEffect(() => {
+    if (inView && displayCount < filteredPayouts.length) {
+      setTimeout(() => {
+        setDisplayCount(prev => Math.min(prev + 20, filteredPayouts.length));
+      }, 100);
+    }
+  }, [inView, displayCount, filteredPayouts.length]);
 
-  const pendingPayouts = payouts.filter(p => p.status === "pending");
-  const totalPendingAmount = pendingPayouts.reduce((sum, p) => sum + p.totalAmount, 0);
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(20);
+  }, [searchTerm, statusFilter, pendingFilter]);
+
+  const displayedPayouts = useMemo(() => {
+    return filteredPayouts.slice(0, displayCount);
+  }, [filteredPayouts, displayCount]);
 
   return (
-    <div className="space-y-6">
-      {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Pending</p>
-                <p className="text-2xl font-bold text-primary">€{totalPendingAmount.toFixed(2)}</p>
-              </div>
-              <Euro className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pending Sellers</p>
-                <p className="text-2xl font-bold text-primary">{pendingPayouts.length}</p>
-              </div>
-              <Clock className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Items</p>
-                <p className="text-2xl font-bold text-primary">{payouts.reduce((sum, p) => sum + p.itemCount, 0)}</p>
-              </div>
-              <CreditCard className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
 
       {/* Filters */}
       <Card className="bg-gradient-card border-border shadow-soft">
@@ -325,7 +298,6 @@ export function PayoutManagement() {
                   setSearchTerm("");
                   setStatusFilter("all");
                   setPendingFilter("all");
-                  setCurrentPage(1);
                 }}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -337,7 +309,7 @@ export function PayoutManagement() {
       </Card>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
         <span>
           Showing {filteredPayouts.length} of {payouts.length} sellers
         </span>
@@ -350,30 +322,24 @@ export function PayoutManagement() {
       </div>
 
       {/* Payouts Table */}
-      <Card className="bg-gradient-card border-border shadow-soft">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-primary" />
-            Seller Payouts
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-border overflow-hidden hide-scrollbar">
+      <div className="w-full">
+        <div className="overflow-x-auto custom-scrollbar">
+          <div className="max-h-[75vh] overflow-y-auto custom-scrollbar">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground">Seller</TableHead>
-                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground">Items</TableHead>
-                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground">Amount</TableHead>
-                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground">Status</TableHead>
-                  <TableHead className="sticky top-0 z-10 bg-background border-b font-semibold text-foreground text-right">Actions</TableHead>
+              <TableHeader className="sticky top-0 z-10 bg-background border-b">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4">Seller</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4">Items</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4">Amount</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4">Status</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedPayouts.map((payout, index) => (
+                {displayedPayouts.map((payout, index) => (
                   <TableRow 
                     key={payout.id} 
-                    className="hover:bg-muted/5 transition-colors duration-200 border-b animate-fade-in"
+                    className="hover:bg-muted/5 transition-colors duration-200 border-b"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <TableCell className="py-4">
@@ -450,20 +416,29 @@ export function PayoutManagement() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {displayCount < filteredPayouts.length && (
+                  <TableRow ref={ref}>
+                    <TableCell colSpan={5} className="h-24 text-center border-b">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span className="text-sm">Loading more sellers...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Pagination */}
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        totalItems={filteredPayouts.length}
-      />
+        </div>
+        
+        {/* Status Indicator */}
+        <div className="px-4 py-3 bg-muted/10 mt-2">
+          <p className="text-xs text-muted-foreground text-center">
+            Showing <span className="font-medium text-foreground">{displayedPayouts.length}</span> of <span className="font-medium text-foreground">{filteredPayouts.length}</span> sellers
+            {displayCount < filteredPayouts.length && <span className="ml-1">(scroll for more)</span>}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
