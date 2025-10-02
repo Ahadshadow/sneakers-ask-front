@@ -1,13 +1,9 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Package, Search, CalendarIcon, Filter } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { Package, Search, Filter } from "lucide-react";
 
 import { ProductsTable } from "./ProductsTable";
 import { mockProducts } from "./mockData";
@@ -18,8 +14,6 @@ export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sellerFilter, setSellerFilter] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<Date>();
-  const [dateTo, setDateTo] = useState<Date>();
   const [cart, setCart] = useState<Product[]>([]);
   
   const { toast } = useToast();
@@ -47,14 +41,9 @@ export function ProductsOverview() {
       // Seller filter
       const matchesSeller = sellerFilter === "all" || product.seller === sellerFilter;
 
-      // Date filter (if product has a date field)
-      const productDate = new Date(); // Assuming current date for products
-      const matchesDateFrom = !dateFrom || productDate >= dateFrom;
-      const matchesDateTo = !dateTo || productDate <= dateTo;
-
-      return matchesSearch && matchesStatus && matchesSeller && matchesDateFrom && matchesDateTo;
+      return matchesSearch && matchesStatus && matchesSeller;
     });
-  }, [searchTerm, statusFilter, sellerFilter, dateFrom, dateTo]);
+  }, [searchTerm, statusFilter, sellerFilter]);
 
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
@@ -144,62 +133,6 @@ export function ProductsOverview() {
                   </select>
                 </div>
 
-                {/* Date From */}
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">From Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[140px] justify-start text-left font-normal",
-                          !dateFrom && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateFrom ? format(dateFrom, "MMM dd") : "From"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateFrom}
-                        onSelect={setDateFrom}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Date To */}
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">To Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[140px] justify-start text-left font-normal",
-                          !dateTo && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateTo ? format(dateTo, "MMM dd") : "To"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateTo}
-                        onSelect={setDateTo}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
                 {/* Clear Filters */}
                 <div className="flex items-end">
                   <Button
@@ -209,8 +142,6 @@ export function ProductsOverview() {
                       setSearchTerm("");
                       setStatusFilter("all");
                       setSellerFilter("all");
-                      setDateFrom(undefined);
-                      setDateTo(undefined);
                     }}
                     className="text-muted-foreground hover:text-foreground"
                   >
@@ -226,7 +157,7 @@ export function ProductsOverview() {
         <span>
           Showing {filteredProducts.length} of {mockProducts.length} products
         </span>
-        {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
+        {(searchTerm || statusFilter !== "all" || sellerFilter !== "all") && (
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filters active</span>
@@ -244,7 +175,7 @@ export function ProductsOverview() {
       <div className="mt-4 text-sm text-muted-foreground">
         <p>
           Total products displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
-          {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
+          {(searchTerm || statusFilter !== "all" || sellerFilter !== "all") && (
             <span className="ml-2 text-primary">(filtered from {mockProducts.length})</span>
           )}
         </p>
