@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, ShoppingBag, ShoppingCart, Plus, Lock, Loader2 } from "lucide-react";
+import { ExternalLink, ShoppingBag, ShoppingCart, Plus, Lock, Loader2, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
@@ -80,54 +80,96 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
   return (
     <div className="w-full">
       <div className="overflow-x-auto custom-scrollbar">
-        <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="max-h-[75vh] overflow-y-auto custom-scrollbar">
       <Table>
-        <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <TableRow className="border-border hover:bg-muted/5">
-            <TableHead className="font-semibold text-foreground text-sm">Order #</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Shopify</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
+        <TableHeader className="sticky top-0 z-10 bg-background border-b">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Order</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Product</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Destination</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">
+              <div className="flex items-center gap-1">
+                Date <ArrowDown className="h-3 w-3" />
+              </div>
+            </TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Customer</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4 hidden md:table-cell">Shopify</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4 hidden lg:table-cell">Status</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4 text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {displayedProducts.map((product, index) => (
             <TableRow 
               key={product.id} 
-              className="border-border hover:bg-muted/10 transition-colors duration-200 animate-fade-in"
+              className="hover:bg-muted/5 transition-colors duration-200 border-b"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <TableCell className="py-3 sm:py-4">
+              <TableCell className="py-4 font-medium">
                 {product.orders.length > 0 ? (
                   <div className="flex flex-col gap-1">
-                    {product.orders.map((order) => (
-                      <span key={order.orderId} className="text-xs font-medium text-muted-foreground">
+                    {product.orders.slice(0, 1).map((order) => (
+                      <span key={order.orderId} className="text-sm">
                         {order.orderNumber}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <span className="text-xs text-muted-foreground">-</span>
+                  <span className="text-sm text-muted-foreground">-</span>
                 )}
               </TableCell>
-              <TableCell className="py-3 sm:py-4">
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground leading-none text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{product.name}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">SKU: {product.sku}</p>
-                  <Badge 
-                    variant="outline"
-                    className={`lg:hidden mt-1 text-xs font-medium border-0 ${getStatusBadgeClass(product.status)}`}
-                  >
-                    {product.status.replace('_', ' ')}
-                  </Badge>
+              <TableCell className="py-4">
+                <div className="space-y-0.5">
+                  <p className="font-medium text-foreground text-sm">{product.name}</p>
+                  <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
+                  <p className="text-sm font-semibold text-foreground">{product.price}</p>
                 </div>
               </TableCell>
-              <TableCell className="py-3 sm:py-4">
-                <span className="font-semibold text-foreground text-base sm:text-lg">{product.price}</span>
+              <TableCell className="py-4">
+                {product.orders.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {product.orders.slice(0, 1).map((order) => (
+                      <span key={order.orderId} className="text-sm">
+                        {order.orderNumber.split('#')[1]}, NL
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
               </TableCell>
-              <TableCell className="py-3 sm:py-4 hidden md:table-cell">
+              <TableCell className="py-4">
+                {product.orders.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {product.orders.slice(0, 1).map((order) => (
+                      <span key={order.orderId} className="text-sm">
+                        {new Date(order.orderDate).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              <TableCell className="py-4">
+                {product.orders.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {product.orders.slice(0, 1).map((order) => (
+                      <span key={order.orderId} className="text-sm">
+                        {order.customerName}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              <TableCell className="py-4 hidden md:table-cell">
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -141,7 +183,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
                   <ShoppingBag className="h-4 w-4 text-primary" />
                 </Button>
               </TableCell>
-              <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
+              <TableCell className="py-4 hidden lg:table-cell">
                 <Badge 
                   variant="outline" 
                   className={`font-medium border-0 ${getStatusBadgeClass(product.status)}`}
@@ -149,7 +191,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
                   {product.status.replace('_', ' ')}
                 </Badge>
               </TableCell>
-              <TableCell className="py-3 sm:py-4">
+              <TableCell className="py-4">
                 <div className="flex gap-2 justify-end min-w-[120px]">
                   {product.status === "open" && onAddToCart && (
                     <>
@@ -204,7 +246,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
           ))}
           {displayCount < products.length && (
             <TableRow ref={ref}>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={8} className="h-24 text-center border-b">
                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <span className="text-sm">Loading more products...</span>
