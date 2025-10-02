@@ -5,15 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart, Search, CalendarIcon, Filter } from "lucide-react";
+import { Package, Search, CalendarIcon, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import { ProductsTable } from "./ProductsTable";
-import { BoughtItemsGrid } from "./BoughtItemsGrid";
 import { mockProducts } from "./mockData";
-import { Product, WTBPurchase } from "./types";
+import { Product } from "./types";
 import { useToast } from "@/hooks/use-toast";
 
 export function ProductsOverview() {
@@ -22,8 +20,6 @@ export function ProductsOverview() {
   const [sellerFilter, setSellerFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
-  const [purchases, setPurchases] = useState<WTBPurchase[]>([]);
-  const [activeTab, setActiveTab] = useState("products");
   const [cart, setCart] = useState<Product[]>([]);
   
   const { toast } = useToast();
@@ -87,20 +83,7 @@ export function ProductsOverview() {
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="products" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            Products ({filteredProducts.length})
-          </TabsTrigger>
-          <TabsTrigger value="bought" className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            Bought Items ({purchases.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="products" className="space-y-4 sm:space-y-6">
-          {/* Filters */}
+      {/* Filters */}
           <Card className="bg-gradient-card border-border shadow-soft">
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -280,12 +263,6 @@ export function ProductsOverview() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="bought" className="space-y-4 sm:space-y-6">
-          <BoughtItemsGrid purchases={purchases} />
-        </TabsContent>
-      </Tabs>
 
       {/* Floating Cart Summary */}
       {cart.length > 0 && (
