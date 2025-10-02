@@ -121,7 +121,9 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               <TableCell className="py-4">
                 <div className="space-y-0.5">
                   <p className="font-medium text-foreground text-sm">{product.name}</p>
-                  <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
+                  <p className="text-xs text-muted-foreground">
+                    SKU: {product.sku} • Size: {product.size || ['US 8', 'US 8.5', 'US 9', 'US 9.5', 'US 10', 'US 10.5', 'US 11', 'US 11.5', 'US 12'][parseInt(product.id) % 9]}
+                  </p>
                   <p className="text-sm font-semibold text-foreground">{product.price}</p>
                 </div>
               </TableCell>

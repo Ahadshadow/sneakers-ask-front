@@ -23,6 +23,7 @@ export interface Product {
   seller: string;
   shopifyId: string;
   orders: OrderReference[];
+  size?: string;
 }
 
 export interface WTBPurchase {

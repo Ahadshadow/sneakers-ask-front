@@ -11,6 +11,7 @@ export const mockProducts: Product[] = [
     status: "open",
     seller: "Premium Sneakers Co",
     shopifyId: "gid://shopify/Product/6789123456",
+    size: "US 10",
     orders: [
       {
         orderId: "1",
@@ -36,6 +37,7 @@ export const mockProducts: Product[] = [
     status: "fliproom_sale",
     seller: "Street Style Store",
     shopifyId: "gid://shopify/Product/6789123457",
+    size: "US 9",
     orders: [
       {
         orderId: "1",
@@ -61,6 +63,7 @@ export const mockProducts: Product[] = [
     status: "sneakerask",
     seller: "Rare Kicks Boutique",
     shopifyId: "gid://shopify/Product/6789123458",
+    size: "US 11",
     orders: [
       {
         orderId: "2",
@@ -108,6 +111,7 @@ export const mockProducts: Product[] = [
     status: "open",
     seller: "Urban Footwear",
     shopifyId: "gid://shopify/Product/6789123459",
+    size: "US 9.5",
     orders: []
   },
   {
@@ -120,6 +124,7 @@ export const mockProducts: Product[] = [
     status: "sneakerask",
     seller: "Street Style Store",
     shopifyId: "gid://shopify/Product/6789123460",
+    size: "US 8",
     orders: [
       {
         orderId: "4",
