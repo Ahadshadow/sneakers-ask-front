@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ExternalLink, CheckCircle, Clock, Search, Filter, Loader2 } from "lucide-react";
+import { CheckCircle, Clock, Search, Filter, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useInView } from "react-intersection-observer";
 
@@ -340,7 +340,7 @@ export function PayoutManagement() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "pending": return <Clock className="h-4 w-4" />;
-      case "processing": return <ExternalLink className="h-4 w-4" />;
+      case "processing": return <Clock className="h-4 w-4" />;
       case "completed": return <CheckCircle className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
@@ -355,41 +355,20 @@ export function PayoutManagement() {
     }
   };
 
-  const handlePayWithRevolut = (seller: SellerPayout) => {
-    // Create Revolut payment link
-    const amount = seller.totalAmount.toFixed(2);
-    const recipient = encodeURIComponent(seller.email);
-    const reference = encodeURIComponent(`Payout for ${seller.itemCount} items`);
+  const markAsPaid = (seller: SellerPayout) => {
+    const payoutDate = new Date().toISOString().split('T')[0];
     
-    // Revolut Pay link format
-    const revolutUrl = `https://revolut.me/pay?amount=${amount}&currency=EUR&recipient=${recipient}&reference=${reference}`;
-    
-    // Update status to processing
     setPayouts(prev => prev.map(p => 
-      p.id === seller.id ? { ...p, status: "processing" as const } : p
-    ));
-    
-    // Open Revolut in new tab
-    window.open(revolutUrl, '_blank');
-    
-    toast({
-      title: "Revolut Payment Initiated",
-      description: `Payment of €${amount} to ${seller.sellerName} has been initiated via Revolut.`,
-    });
-  };
-
-  const markAsCompleted = (sellerId: string) => {
-    setPayouts(prev => prev.map(p => 
-      p.id === sellerId ? { 
+      p.id === seller.id ? { 
         ...p, 
         status: "completed" as const,
-        lastPayoutDate: new Date().toISOString().split('T')[0]
+        lastPayoutDate: payoutDate
       } : p
     ));
     
     toast({
       title: "Payment Completed",
-      description: "Payout has been marked as completed.",
+      description: `Payout of €${seller.totalAmount.toFixed(2)} to ${seller.sellerName} marked as paid on ${new Date(payoutDate).toLocaleDateString()}.`,
     });
   };
 
@@ -614,29 +593,29 @@ export function PayoutManagement() {
                       <div className="flex gap-2 justify-end">
                         {payout.status === "pending" && (
                           <Button 
-                            onClick={() => handlePayWithRevolut(payout)}
+                            onClick={() => markAsPaid(payout)}
                             size="sm"
                             className="flex items-center gap-1"
                           >
-                            <ExternalLink className="h-4 w-4" />
-                            Pay via Revolut
+                            <CheckCircle className="h-4 w-4" />
+                            Mark as Paid
                           </Button>
                         )}
                         {payout.status === "processing" && (
                           <Button 
-                            onClick={() => markAsCompleted(payout.id)}
+                            onClick={() => markAsPaid(payout)}
                             size="sm"
                             variant="outline"
                             className="flex items-center gap-1"
                           >
                             <CheckCircle className="h-4 w-4" />
-                            Mark Complete
+                            Mark as Paid
                           </Button>
                         )}
                         {payout.status === "completed" && (
                           <Badge variant="default" className="flex items-center gap-1">
                             <CheckCircle className="h-4 w-4" />
-                            Completed
+                            Paid
                           </Badge>
                         )}
                       </div>
