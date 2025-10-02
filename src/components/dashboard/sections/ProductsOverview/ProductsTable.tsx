@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Package, ShoppingCart, Plus, Lock } from "lucide-react";
+import { ExternalLink, Package, ShoppingCart, Plus, Lock, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import {
   Table,
   TableBody,
@@ -11,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { Product } from "./types";
 
 interface ProductsTableProps {
@@ -22,15 +22,29 @@ interface ProductsTableProps {
 export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
   const navigate = useNavigate();
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [displayCount, setDisplayCount] = useState(20);
+  const { ref, inView } = useInView({
+    threshold: 0,
+    triggerOnce: false,
+  });
 
-  const totalPages = Math.ceil(products.length / itemsPerPage);
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return products.slice(startIndex, endIndex);
-  }, [products, currentPage, itemsPerPage]);
+  // Load more items when scrolling
+  useEffect(() => {
+    if (inView && displayCount < products.length) {
+      setTimeout(() => {
+        setDisplayCount(prev => Math.min(prev + 20, products.length));
+      }, 100);
+    }
+  }, [inView, displayCount, products.length]);
+
+  // Reset display count when products change
+  useEffect(() => {
+    setDisplayCount(20);
+  }, [products]);
+
+  const displayedProducts = useMemo(() => {
+    return products.slice(0, displayCount);
+  }, [products, displayCount]);
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "open": 
@@ -65,10 +79,10 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
 
   return (
     <div className="rounded-lg border border-border bg-gradient-card shadow-soft overflow-hidden">
-      <div className="overflow-x-auto hide-scrollbar">
-        <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto hide-scrollbar">
+      <div className="overflow-x-auto custom-scrollbar">
+        <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
       <Table>
-        <TableHeader>
+        <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <TableRow className="border-border hover:bg-muted/5">
             <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
             <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
@@ -78,7 +92,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedProducts.map((product, index) => (
+          {displayedProducts.map((product, index) => (
             <TableRow 
               key={product.id} 
               className="border-border hover:bg-muted/10 transition-colors duration-200 animate-fade-in"
@@ -177,20 +191,27 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               </TableCell>
             </TableRow>
           ))}
+          {displayCount < products.length && (
+            <TableRow ref={ref}>
+              <TableCell colSpan={5} className="h-24 text-center">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="text-sm">Loading more products...</span>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
         </div>
       </div>
       
-      {/* Pagination */}
-      <div className="mt-4">
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={products.length}
-        />
+      {/* Status Indicator */}
+      <div className="px-4 py-3 bg-muted/30 border-t border-border">
+        <p className="text-xs text-muted-foreground text-center">
+          Showing <span className="font-medium text-foreground">{displayedProducts.length}</span> of <span className="font-medium text-foreground">{products.length}</span> products
+          {displayCount < products.length && <span className="ml-1">(scroll for more)</span>}
+        </p>
       </div>
     </div>
   );
