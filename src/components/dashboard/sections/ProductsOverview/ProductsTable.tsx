@@ -84,9 +84,9 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <TableRow className="border-border hover:bg-muted/5">
+            <TableHead className="font-semibold text-foreground text-sm">Order #</TableHead>
             <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
             <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Order #</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Shopify</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
             <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
@@ -99,6 +99,19 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               className="border-border hover:bg-muted/10 transition-colors duration-200 animate-fade-in"
               style={{ animationDelay: `${index * 50}ms` }}
             >
+              <TableCell className="py-3 sm:py-4">
+                {product.orders.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {product.orders.map((order) => (
+                      <span key={order.orderId} className="text-xs font-medium text-muted-foreground">
+                        {order.orderNumber}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">-</span>
+                )}
+              </TableCell>
               <TableCell className="py-3 sm:py-4">
                 <div className="space-y-1">
                   <p className="font-medium text-foreground leading-none text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{product.name}</p>
@@ -113,19 +126,6 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               </TableCell>
               <TableCell className="py-3 sm:py-4">
                 <span className="font-semibold text-foreground text-base sm:text-lg">{product.price}</span>
-              </TableCell>
-              <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
-                {product.orders.length > 0 ? (
-                  <div className="flex flex-col gap-1">
-                    {product.orders.map((order) => (
-                      <span key={order.orderId} className="text-xs font-medium text-muted-foreground">
-                        {order.orderNumber}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground">No orders</span>
-                )}
               </TableCell>
               <TableCell className="py-3 sm:py-4 hidden md:table-cell">
                 <Button 
