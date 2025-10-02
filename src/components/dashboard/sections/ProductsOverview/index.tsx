@@ -31,11 +31,15 @@ export function ProductsOverview() {
 
   const filteredProducts = useMemo(() => {
     return mockProducts.filter(product => {
-      // Search filter
+      // Search filter - search across order ID, SKU, customer name, product name
       const matchesSearch = searchTerm === "" || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.seller.toLowerCase().includes(searchTerm.toLowerCase());
+        product.orders.some(order => 
+          order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+        ) ||
+        product.status.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Status filter
       const matchesStatus = statusFilter === "all" || product.status === statusFilter;
@@ -94,13 +98,13 @@ export function ProductsOverview() {
                   </Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="search"
-                      placeholder="Search by product name, SKU, or seller..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+                  <Input
+                    id="search"
+                    placeholder="Search by order ID, SKU, customer, or status..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                   </div>
                 </div>
 
