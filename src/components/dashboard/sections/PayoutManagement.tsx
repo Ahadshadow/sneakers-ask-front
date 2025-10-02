@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle, Clock, Search, Filter, Loader2, Undo } from "lucide-react";
+import { CheckCircle, Clock, Search, Filter, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useInView } from "react-intersection-observer";
 import {
@@ -393,20 +393,6 @@ export function PayoutManagement() {
     setConfirmDialog({ open: false, payout: null });
   };
 
-  const undoPayout = (seller: SellerPayout) => {
-    setPayouts(prev => prev.map(p => 
-      p.id === seller.id ? { 
-        ...p, 
-        status: "pending" as const,
-        lastPayoutDate: undefined
-      } : p
-    ));
-    
-    toast({
-      title: "Payment Undone",
-      description: `Payout for ${seller.sellerName} has been reverted to pending.`,
-    });
-  };
 
   const filteredPayouts = useMemo(() => {
     return payouts.filter(payout => {
@@ -649,21 +635,10 @@ export function PayoutManagement() {
                           </Button>
                         )}
                         {payout.status === "completed" && (
-                          <>
-                            <Badge variant="default" className="flex items-center gap-1">
-                              <CheckCircle className="h-4 w-4" />
-                              Paid
-                            </Badge>
-                            <Button 
-                              onClick={() => undoPayout(payout)}
-                              size="sm"
-                              variant="ghost"
-                              className="flex items-center gap-1"
-                            >
-                              <Undo className="h-4 w-4" />
-                              Undo
-                            </Button>
-                          </>
+                          <Badge variant="default" className="flex items-center gap-1">
+                            <CheckCircle className="h-4 w-4" />
+                            Paid
+                          </Badge>
                         )}
                       </div>
                     </TableCell>
