@@ -1,32 +1,19 @@
-import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart, Search, CalendarIcon, Filter, Loader2, AlertCircle, Wifi, WifiOff } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { Package, Search, Filter } from "lucide-react";
 
 import { ProductsTable } from "./ProductsTable";
-import { BoughtItemsGrid } from "./BoughtItemsGrid";
-import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { mockProducts } from "./mockData";
-import { Product, WTBPurchase } from "./types";
+import { Product } from "./types";
 import { useToast } from "@/hooks/use-toast";
 import { productsApi, OrderItem, WTBItem } from "@/lib/api";
 
 export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sellerFilter, setSellerFilter] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<Date>();
-  const [dateTo, setDateTo] = useState<Date>();
-  const [purchases, setPurchases] = useState<WTBPurchase[]>([]);
-  const [activeTab, setActiveTab] = useState("products");
   const [cart, setCart] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [boughtItemsPage, setBoughtItemsPage] = useState(1);
@@ -202,33 +189,25 @@ export function ProductsOverview() {
     }
   }, [useOrderItems, apiOrderItems, apiProducts]);
 
-  // Get unique values for filter dropdowns
-  const availableSellers = useMemo(() => {
-    return Array.from(new Set(allProducts.map(product => product.seller))).sort();
-  }, [allProducts]);
 
   const filteredProducts = useMemo(() => {
-    return allProducts.filter(product => {
-      // Search filter
+    return mockProducts.filter(product => {
+      // Search filter - search across order ID, SKU, customer name, product name
       const matchesSearch = searchTerm === "" || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.seller.toLowerCase().includes(searchTerm.toLowerCase());
+        product.orders.some(order => 
+          order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+        ) ||
+        product.status.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Status filter
       const matchesStatus = statusFilter === "all" || product.status === statusFilter;
 
-      // Seller filter
-      const matchesSeller = sellerFilter === "all" || product.seller === sellerFilter;
-
-      // Date filter
-      const productDate = new Date();
-      const matchesDateFrom = !dateFrom || productDate >= dateFrom;
-      const matchesDateTo = !dateTo || productDate <= dateTo;
-
-      return matchesSearch && matchesStatus && matchesSeller && matchesDateFrom && matchesDateTo;
+      return matchesSearch && matchesStatus;
     });
-  }, [allProducts, searchTerm, statusFilter, sellerFilter, dateFrom, dateTo]);
+  }, [searchTerm, statusFilter]);
 
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
@@ -281,24 +260,7 @@ export function ProductsOverview() {
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="products" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            {useOrderItems ? 'Order Items' : 'Products'} (
-              {useOrderItems 
-                ? (orderItemsResponse?.data?.pagination?.total || filteredProducts.length)
-                : (productsResponse?.data?.pagination?.total || filteredProducts.length)
-              })
-          </TabsTrigger>
-          <TabsTrigger value="bought" className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            Bought Items ({wtbItemsResponse?.data?.pagination?.total || 0})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="products" className="space-y-4 sm:space-y-6">
-          {/* Filter System */}
+      {/* Filters */}
           <Card className="bg-gradient-card border-border shadow-soft">
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -309,108 +271,32 @@ export function ProductsOverview() {
                   </Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="search"
-                      placeholder={`Search by ${useOrderItems ? 'product name, SKU, or vendor' : 'product name, SKU, or seller'}...`}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+                  <Input
+                    id="search"
+                    placeholder="Search by order ID, SKU, customer, or status..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                   </div>
                 </div>
 
-                {/* Status Filter - Only show for Products API */}
-                {!useOrderItems && (
-                  <div>
-                    <Label htmlFor="status" className="text-sm font-medium mb-2 block">
-                      Status
-                    </Label>
-                    <select
-                      id="status"
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="available">Available</option>
-                      <option value="sold">Sold</option>
-                      <option value="pending">Pending</option>
-                    </select>
-                  </div>
-                )}
-
-                {/* Seller/Vendor Filter */}
+                {/* Status Filter */}
                 <div>
-                  <Label htmlFor="seller" className="text-sm font-medium mb-2 block">
-                    {useOrderItems ? 'Vendor' : 'Seller'}
+                  <Label htmlFor="status" className="text-sm font-medium mb-2 block">
+                    Status
                   </Label>
                   <select
-                    id="seller"
-                    value={sellerFilter}
-                    onChange={(e) => setSellerFilter(e.target.value)}
+                    id="status"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   >
-                    <option value="all">All {useOrderItems ? 'Vendors' : 'Sellers'}</option>
-                    {availableSellers.map(seller => (
-                      <option key={seller} value={seller}>{seller}</option>
-                    ))}
+                    <option value="all">All Status</option>
+                    <option value="available">Available</option>
+                    <option value="sold">Sold</option>
+                    <option value="pending">Pending</option>
                   </select>
-                </div>
-
-                {/* Date From */}
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">From Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[140px] justify-start text-left font-normal",
-                          !dateFrom && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateFrom ? format(dateFrom, "MMM dd") : "From"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateFrom}
-                        onSelect={setDateFrom}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Date To */}
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">To Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[140px] justify-start text-left font-normal",
-                          !dateTo && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateTo ? format(dateTo, "MMM dd") : "To"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateTo}
-                        onSelect={setDateTo}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
                 </div>
 
                 {/* Clear Filters */}
@@ -421,9 +307,6 @@ export function ProductsOverview() {
                     onClick={() => {
                       setSearchTerm("");
                       setStatusFilter("all");
-                      setSellerFilter("all");
-                      setDateFrom(undefined);
-                      setDateTo(undefined);
                     }}
                     className="text-muted-foreground hover:text-foreground"
                   >
@@ -434,293 +317,34 @@ export function ProductsOverview() {
             </CardContent>
           </Card>
 
-          {/* Results Summary */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              Showing {filteredProducts.length} of {
-                useOrderItems 
-                  ? (orderItemsResponse?.data?.pagination?.total || allProducts.length)
-                  : (productsResponse?.data?.pagination?.total || allProducts.length)
-              } {useOrderItems ? 'order items' : 'products'}
-              {isLoading && (
-                <span className="ml-2 flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Loading...
-                </span>
-              )}
-            </span>
-            {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
-              <div className="flex items-center gap-1">
-                <Filter className="h-4 w-4" />
-                <span>Filters active</span>
-              </div>
-            )}
+      {/* Results Summary */}
+      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+        <span>
+          Showing {filteredProducts.length} of {mockProducts.length} products
+        </span>
+        {(searchTerm || statusFilter !== "all") && (
+          <div className="flex items-center gap-1">
+            <Filter className="h-4 w-4" />
+            <span>Filters active</span>
           </div>
+        )}
+      </div>
 
-          {/* No Records State */}
-          {!isLoading && filteredProducts.length === 0 && (
-            <Card className="bg-muted/20 border-border">
-              <CardContent className="p-8">
-                <div className="text-center space-y-3">
-                  <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <h3 className="text-lg font-semibold text-foreground">No Records Found</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo
-                      ? `No ${useOrderItems ? 'order items' : 'products'} match your current filters.`
-                      : `No ${useOrderItems ? 'order items' : 'products'} available at the moment.`
-                    }
-                  </p>
-                  {(searchTerm || statusFilter !== "all" || sellerFilter !== "all" || dateFrom || dateTo) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setStatusFilter("all");
-                        setSellerFilter("all");
-                        setDateFrom(undefined);
-                        setDateTo(undefined);
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+      {/* Products Table */}
+      <ProductsTable
+        products={filteredProducts}
+        onAddToCart={handleAddToCart}
+      />
+      
+      {/* Products Summary */}
+      <div className="mt-4 text-sm text-muted-foreground">
+        <p>
+          Total products displayed: <span className="font-medium text-foreground">{filteredProducts.length}</span>
+          {(searchTerm || statusFilter !== "all") && (
+            <span className="ml-2 text-primary">(filtered from {mockProducts.length})</span>
           )}
-
-          {/* Main Content */}
-          {!isLoading && filteredProducts.length > 0 && (
-            <Card className="bg-gradient-card border-border shadow-soft animate-scale-in">
-              <CardHeader className="pb-4 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
-                    <Package className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                  </div>
-                  <div>
-                    <span className="text-foreground">
-                      {useOrderItems ? 'Order Items Overview' : 'Shopify Products Overview'}
-                    </span>
-                    <p className="text-xs sm:text-sm font-normal text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
-                      {useOrderItems 
-                        ? 'Browse and manage order items from vendors'
-                        : 'Browse and purchase shoes from sellers'
-                      }
-                    </p>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <ProductsTable
-                  products={filteredProducts as Product[]}
-                  onAddToCart={handleAddToCart}
-                  isLoading={isLoading}
-                />
-                
-                {/* Pagination */}
-                <div className="mt-6 pt-4 border-t border-border">
-                  <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={useOrderItems ? 
-                      (orderItemsResponse?.data?.pagination?.last_page || 1) : 
-                      (productsResponse?.data?.pagination?.last_page || 1)
-                    }
-                    onPageChange={setCurrentPage}
-                    totalItems={useOrderItems ? 
-                      (orderItemsResponse?.data?.pagination?.total || 0) : 
-                      (productsResponse?.data?.pagination?.total || 0)
-                    }
-                    itemsPerPage={useOrderItems ? 
-                      (orderItemsResponse?.data?.pagination?.per_page || 10) : 
-                      (productsResponse?.data?.pagination?.per_page || 10)
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-
-          {/* Loading State */}
-          {isLoading && (
-            <Card className="bg-gradient-card border-border shadow-soft">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">
-                      Loading {useOrderItems ? 'order items' : 'products'}...
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="bought" className="space-y-4 sm:space-y-6">
-          {/* Filter System for Bought Items */}
-          <Card className="bg-gradient-card border-border shadow-soft">
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                {/* Search */}
-                <div className="flex-1">
-                  <Label htmlFor="search-bought" className="text-sm font-medium mb-2 block">
-                    Search Bought Items
-                  </Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="search-bought"
-                      placeholder="Search by product name, SKU, or vendor..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                {/* Vendor Filter */}
-                <div>
-                  <Label htmlFor="vendor-bought" className="text-sm font-medium mb-2 block">
-                    Vendor
-                  </Label>
-                  <select
-                    id="vendor-bought"
-                    value={sellerFilter}
-                    onChange={(e) => setSellerFilter(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    <option value="all">All Vendors</option>
-                    {Array.from(new Set(apiWTBItems.map(item => item.seller))).sort().map(vendor => (
-                      <option key={vendor} value={vendor}>{vendor}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Clear Filters */}
-                <div className="flex items-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSellerFilter("all");
-                    }}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Clear
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Results Summary */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              Showing {apiWTBItems.length} of {wtbItemsResponse?.data?.pagination?.total || 0} bought items
-              {isLoadingWTBItems && (
-                <span className="ml-2 flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Loading...
-                </span>
-              )}
-            </span>
-            {(searchTerm || sellerFilter !== "all") && (
-              <div className="flex items-center gap-1">
-                <Filter className="h-4 w-4" />
-                <span>Filters active</span>
-              </div>
-            )}
-          </div>
-
-          {/* No Records State */}
-          {!isLoadingWTBItems && apiWTBItems.length === 0 && (
-            <Card className="bg-muted/20 border-border">
-              <CardContent className="p-8">
-                <div className="text-center space-y-3">
-                  <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <h3 className="text-lg font-semibold text-foreground">No Bought Items Found</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {searchTerm || sellerFilter !== "all"
-                      ? "No bought items match your current filters."
-                      : "No bought items available at the moment."
-                    }
-                  </p>
-                  {(searchTerm || sellerFilter !== "all") && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSellerFilter("all");
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Main Content - Same design as order items but without actions */}
-          {!isLoadingWTBItems && apiWTBItems.length > 0 && (
-            <Card className="bg-gradient-card border-border shadow-soft animate-scale-in">
-              <CardHeader className="pb-4 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
-                    <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                  </div>
-                  <div>
-                    <span className="text-foreground">Bought Items Overview</span>
-                    <p className="text-xs sm:text-sm font-normal text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
-                      View all items you have bought through WTB orders
-                    </p>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <ProductsTable
-                  products={apiWTBItems as Product[]}
-                  onAddToCart={() => {}} // No actions for bought items
-                  isLoading={isLoadingWTBItems}
-                  showActions={false} // Hide all actions
-                />
-                
-                {/* Pagination */}
-                <div className="mt-6 pt-4 border-t border-border">
-                  <PaginationControls
-                    currentPage={boughtItemsPage}
-                    totalPages={wtbItemsResponse?.data?.pagination?.last_page || 1}
-                    onPageChange={setBoughtItemsPage}
-                    totalItems={wtbItemsResponse?.data?.pagination?.total || 0}
-                    itemsPerPage={wtbItemsResponse?.data?.pagination?.per_page || 10}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Loading State */}
-          {isLoadingWTBItems && (
-            <Card className="bg-gradient-card border-border shadow-soft">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">
-                      Loading bought items...
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+        </p>
+      </div>
 
       {/* Floating Cart Summary */}
       {cart.length > 0 && (

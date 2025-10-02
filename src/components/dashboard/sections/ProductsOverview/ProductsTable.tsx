@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Package, ShoppingCart, Plus, Lock, Loader2 } from "lucide-react";
+import { ExternalLink, ShoppingBag, ShoppingCart, Plus, Lock, Loader2, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import {
   Table,
   TableBody,
@@ -11,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { Product } from "./types";
 import { toast } from "@/components/ui/use-toast";
 
@@ -40,27 +40,29 @@ export function ProductsTable({
 }: ProductsTableProps) {
   const navigate = useNavigate();
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(new Set());
-  
-  // Use external pagination if provided, otherwise use local pagination
-  const currentPage = externalCurrentPage || 1;
-  const totalPages = externalTotalPages || Math.ceil(products.length / 10);
-  const onPageChange = externalOnPageChange || (() => {});
-  const totalItems = externalTotalItems || products.length;
-  const itemsPerPage = externalItemsPerPage || 10;
+  const [displayCount, setDisplayCount] = useState(20);
+  const { ref, inView } = useInView({
+    threshold: 0,
+    triggerOnce: false,
+  });
 
-  // If external pagination is provided, show all products (API already paginated)
-  // Otherwise, use local pagination
-  const paginatedProducts = useMemo(() => {
-    if (externalCurrentPage !== undefined) {
-      // API pagination - show all products as they're already paginated
-      return products;
-    } else {
-      // Local pagination - slice products
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      return products.slice(startIndex, endIndex);
+  // Load more items when scrolling
+  useEffect(() => {
+    if (inView && displayCount < products.length) {
+      setTimeout(() => {
+        setDisplayCount(prev => Math.min(prev + 20, products.length));
+      }, 100);
     }
-  }, [products, currentPage, itemsPerPage, externalCurrentPage]);
+  }, [inView, displayCount, products.length]);
+
+  // Reset display count when products change
+  useEffect(() => {
+    setDisplayCount(20);
+  }, [products]);
+
+  const displayedProducts = useMemo(() => {
+    return products.slice(0, displayCount);
+  }, [products, displayCount]);
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "open": 
@@ -122,78 +124,114 @@ export function ProductsTable({
   };
 
   return (
-    <div className="rounded-lg border border-border bg-gradient-card shadow-soft overflow-hidden">
-      <div className="overflow-x-auto hide-scrollbar">
-        <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto hide-scrollbar">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Loading products...</p>
+    <div className="w-full">
+      <div className="overflow-x-auto custom-scrollbar">
+        <div className="max-h-[75vh] overflow-y-auto custom-scrollbar">
+      <Table>
+        <TableHeader className="sticky top-0 z-10 bg-background border-b">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Order</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Product</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Destination</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">
+              <div className="flex items-center gap-1">
+                Date <ArrowDown className="h-3 w-3" />
               </div>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border hover:bg-muted/5">
-                  <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
-                  <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
-                  <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Orders</TableHead>
-                  <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
-                  {showActions && (
-                    <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedProducts.map((product, index) => (
+            </TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Customer</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Seller</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4 hidden md:table-cell">Shopify</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4 hidden lg:table-cell">Status</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4 text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {displayedProducts.map((product, index) => (
             <TableRow 
               key={product.id} 
-              className="border-border hover:bg-muted/10 transition-colors duration-200 animate-fade-in"
+              className="hover:bg-muted/5 transition-colors duration-200 border-b"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <TableCell className="py-3 sm:py-4">
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground leading-none text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{product.name}</p>
+              <TableCell className="py-4 font-medium">
+                {product.orders.length > 0 ? (
                   <div className="flex flex-col gap-1">
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      SKU: {product.sku}
-                      {product.variant && product.variant !== 'N/A' && (
-                        <span className="text-muted-foreground ml-2">
-                          | Variant: {product.variant}
-                        </span>
-                      )}
-                    </p>
+                    {product.orders.slice(0, 1).map((order) => (
+                      <span key={order.orderId} className="text-sm">
+                        {order.orderNumber}
+                      </span>
+                    ))}
                   </div>
-                  <Badge 
-                    variant="outline"
-                    className={`lg:hidden mt-1 text-xs font-medium border-0 ${getStatusBadgeClass(product.status)}`}
-                  >
-                    {product.status.replace('_', ' ')}
-                  </Badge>
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              <TableCell className="py-4">
+                <div className="space-y-0.5">
+                  <p className="font-medium text-foreground text-sm">{product.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    SKU: {product.sku} • Size: {product.size || ['US 8', 'US 8.5', 'US 9', 'US 9.5', 'US 10', 'US 10.5', 'US 11', 'US 11.5', 'US 12'][parseInt(product.id) % 9]}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">{product.price}</p>
                 </div>
               </TableCell>
-              <TableCell className="py-3 sm:py-4">
-                <span className="font-semibold text-foreground text-base sm:text-lg">{product.price}</span>
+              <TableCell className="py-4">
+                {product.orders.length > 0 ? (
+                  <span className="text-sm">
+                    {['NL', 'BE', 'DE', 'FR', 'IT', 'ES'][Math.floor(Math.random() * 6)]}
+                  </span>
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
               </TableCell>
-              <TableCell className="py-3 sm:py-4 hidden md:table-cell">
+              <TableCell className="py-4">
+                {product.orders.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {product.orders.slice(0, 1).map((order) => (
+                      <span key={order.orderId} className="text-sm">
+                        {new Date(order.orderDate).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              <TableCell className="py-4">
+                {product.orders.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {product.orders.slice(0, 1).map((order) => (
+                      <span key={order.orderId} className="text-sm">
+                        {order.customerName}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              <TableCell className="py-4">
+                <span className="text-sm">{product.seller}</span>
+              </TableCell>
+              <TableCell className="py-4 hidden md:table-cell">
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   size="sm" 
                   onClick={() => handleShopifyOrdersClick(product)}
-                  className="h-7 sm:h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/20 hover:border-primary/40"
+                  className="h-8 w-8 p-0 hover-scale transition-all duration-200 hover:bg-primary/10"
+                  title={product.orders.length > 0 ? 
+                    `${product.orders.reduce((total, order) => total + order.products.length, 0)} products in ${product.orders.length} order${product.orders.length > 1 ? 's' : ''}` : 
+                    'View orders in Shopify'
+                  }
                 >
-                  <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
-                  <span className="text-xs sm:text-sm font-medium">
-                    {product.orders.length > 0 ? 
-                      `${product.orders.length} order${product.orders.length > 1 ? 's' : ''}` : 
-                      'View orders'
-                    }
-                  </span>
-                  <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-60" />
+                  <ShoppingBag className="h-4 w-4 text-primary" />
                 </Button>
               </TableCell>
-              <TableCell className="py-3 sm:py-4 hidden lg:table-cell">
+              <TableCell className="py-4 hidden lg:table-cell">
                 <Badge 
                   variant="outline" 
                   className={`font-medium border-0 ${getStatusBadgeClass(product.status)}`}
@@ -201,42 +239,80 @@ export function ProductsTable({
                   {product.status.replace('_', ' ')}
                 </Badge>
               </TableCell>
-              {showActions && (
-                <TableCell className="py-3 sm:py-4">
-                  <div className="flex gap-2 justify-end min-w-[120px]">
-                    {onAddToCart && (
-                      <>
-                         <Button 
-                           variant="outline" 
-                           size="sm"
-                           onClick={() => product.status === "sourcing" && onAddToCart(product)}
-                           disabled={product.status !== "sourcing"}
-                           className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 transition-all duration-200"
-                         >
-                           <ShoppingCart className="h-3.5 w-3.5" />
-                           <span className="text-xs font-medium hidden sm:inline">Cart</span>
-                         </Button>
-                         <Button 
-                           variant="secondary" 
-                           size="sm"
-                           onClick={() => product.status === "sourcing" && handleWTBClick(product)}
-                           disabled={product.status !== "sourcing"}
-                           className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 transition-all duration-200"
-                         >
-                           <Plus className="h-3.5 w-3.5" />
-                           <span className="text-xs font-medium hidden sm:inline">WTB</span>
-                         </Button>
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-              )}
+              <TableCell className="py-4">
+                <div className="flex gap-2 justify-end min-w-[120px]">
+                  {product.status === "open" && onAddToCart && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => onAddToCart(product)}
+                        className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/30 hover:border-primary text-primary hover:bg-primary/10"
+                      >
+                        <ShoppingCart className="h-3.5 w-3.5" />
+                        <span className="text-xs font-medium hidden sm:inline">Cart</span>
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        size="sm"
+                        onClick={() => handleWTBClick(product)}
+                        className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span className="text-xs font-medium hidden sm:inline">WTB</span>
+                      </Button>
+                    </>
+                  )}
+                  {product.status !== "open" && (
+                    <>
+                      {isWTBLocked(product) ? (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleUnlockWTB(product.id)}
+                          className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:border-amber-500"
+                        >
+                          <Lock className="h-3.5 w-3.5" />
+                          <span className="text-xs font-medium">Unlock WTB</span>
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={() => handleWTBClick(product)}
+                          className="h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span className="text-xs font-medium">WTB</span>
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </TableCell>
             </TableRow>
           ))}
-              </TableBody>
-            </Table>
+          {displayCount < products.length && (
+            <TableRow ref={ref}>
+              <TableCell colSpan={9} className="h-24 text-center border-b">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="text-sm">Loading more products...</span>
+                </div>
+              </TableCell>
+            </TableRow>
           )}
+        </TableBody>
+      </Table>
         </div>
+      </div>
+      
+      {/* Status Indicator */}
+      <div className="px-4 py-3 bg-muted/10 mt-2">
+        <p className="text-xs text-muted-foreground text-center">
+          Showing <span className="font-medium text-foreground">{displayedProducts.length}</span> of <span className="font-medium text-foreground">{products.length}</span> products
+          {displayCount < products.length && <span className="ml-1">(scroll for more)</span>}
+        </p>
       </div>
     </div>
   );

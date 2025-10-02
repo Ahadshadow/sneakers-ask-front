@@ -1,11 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { 
   Table,
@@ -15,44 +12,347 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationControls } from "@/components/dashboard/PaginationControls";
-import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, CalendarIcon, Filter, Loader2 } from "lucide-react";
+import { CheckCircle, Clock, Search, Filter, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { sellersApi, SellerPayout } from "@/lib/api/sellers";
+import { useInView } from "react-intersection-observer";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface SellerPayout {
+  id: string;
+  sellerName: string;
+  email: string;
+  totalAmount: number;
+  itemCount: number;
+  status: "pending" | "processing" | "completed";
+  lastPayoutDate?: string;
+  items: {
+    productName: string;
+    sku: string;
+    amount: number;
+    purchaseDate: string;
+  }[];
+}
 
 export function PayoutManagement() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<Date>();
-  const [dateTo, setDateTo] = useState<Date>();
   const [pendingFilter, setPendingFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-
-  // Fetch seller payouts from API
-  const {
-    data: payoutsResponse,
-    isLoading: isLoadingPayouts,
-    error: payoutsError,
-    refetch: refetchPayouts,
-  } = useQuery({
-    queryKey: ['seller-payouts', currentPage, itemsPerPage],
-    queryFn: () => sellersApi.getSellerPayouts(currentPage, itemsPerPage),
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache data
-    refetchOnMount: true, // Always refetch when component mounts
-    refetchOnWindowFocus: true, // Refetch when window gains focus
+  const [displayCount, setDisplayCount] = useState(20);
+  const { ref, inView } = useInView({
+    threshold: 0,
+    triggerOnce: false,
   });
-
-  const payouts = payoutsResponse?.data?.payouts || [];
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; payout: SellerPayout | null }>({ 
+    open: false, 
+    payout: null 
+  });
+  const [payouts, setPayouts] = useState<SellerPayout[]>([
+    {
+      id: "1",
+      sellerName: "Premium Kicks Store",
+      email: "payments@premiumkicks.com",
+      totalAmount: 145,
+      itemCount: 1,
+      status: "pending",
+      items: [
+        {
+          productName: "Nike Air Jordan 1 Retro High OG",
+          sku: "555088-134",
+          amount: 145,
+          purchaseDate: "2024-01-15"
+        }
+      ]
+    },
+    {
+      id: "2",
+      sellerName: "Sneaker World",
+      email: "finance@sneakerworld.com",
+      totalAmount: 195,
+      itemCount: 1,
+      status: "pending",
+      items: [
+        {
+          productName: "Adidas Yeezy Boost 350 V2",
+          sku: "GZ5541",
+          amount: 195,
+          purchaseDate: "2024-01-14"
+        }
+      ]
+    },
+    {
+      id: "3",
+      sellerName: "Urban Footwear",
+      email: "payouts@urbanfootwear.com",
+      totalAmount: 85,
+      itemCount: 1,
+      status: "pending",
+      items: [
+        {
+          productName: "Nike Dunk Low Retro",
+          sku: "DD1391-100",
+          amount: 85,
+          purchaseDate: "2024-01-13"
+        }
+      ]
+    },
+    {
+      id: "4",
+      sellerName: "Classic Runners",
+      email: "admin@classicrunners.com",
+      totalAmount: 95,
+      itemCount: 1,
+      status: "completed",
+      lastPayoutDate: "2024-01-10",
+      items: [
+        {
+          productName: "New Balance 550 White Green",
+          sku: "BB550WTG",
+          amount: 95,
+          purchaseDate: "2024-01-12"
+        }
+      ]
+    },
+    {
+      id: "5",
+      sellerName: "Elite Sneakers Co",
+      email: "billing@elitesneakers.com",
+      totalAmount: 320,
+      itemCount: 2,
+      status: "pending",
+      items: [
+        {
+          productName: "Jordan 4 Retro Military Black",
+          sku: "DH6927-111",
+          amount: 175,
+          purchaseDate: "2024-01-16"
+        },
+        {
+          productName: "Nike SB Dunk Low Pro",
+          sku: "BQ6817-008",
+          amount: 145,
+          purchaseDate: "2024-01-16"
+        }
+      ]
+    },
+    {
+      id: "6",
+      sellerName: "Street Style Kicks",
+      email: "payments@streetstyle.com",
+      totalAmount: 210,
+      itemCount: 1,
+      status: "processing",
+      items: [
+        {
+          productName: "Off-White x Nike Air Force 1",
+          sku: "AO4297-100",
+          amount: 210,
+          purchaseDate: "2024-01-11"
+        }
+      ]
+    },
+    {
+      id: "7",
+      sellerName: "Retro Sneaker Hub",
+      email: "finance@retrosneakerhub.com",
+      totalAmount: 165,
+      itemCount: 1,
+      status: "completed",
+      lastPayoutDate: "2024-01-09",
+      items: [
+        {
+          productName: "Air Max 1 Anniversary",
+          sku: "908375-104",
+          amount: 165,
+          purchaseDate: "2024-01-08"
+        }
+      ]
+    },
+    {
+      id: "8",
+      sellerName: "Kicks Warehouse",
+      email: "admin@kickswarehouse.com",
+      totalAmount: 280,
+      itemCount: 2,
+      status: "pending",
+      items: [
+        {
+          productName: "Travis Scott x Air Jordan 1 Low",
+          sku: "DM7866-162",
+          amount: 155,
+          purchaseDate: "2024-01-17"
+        },
+        {
+          productName: "Sacai x Nike LDWaffle",
+          sku: "BV0073-101",
+          amount: 125,
+          purchaseDate: "2024-01-17"
+        }
+      ]
+    },
+    {
+      id: "9",
+      sellerName: "Sole Traders",
+      email: "payouts@soletraders.com",
+      totalAmount: 190,
+      itemCount: 1,
+      status: "pending",
+      items: [
+        {
+          productName: "Yeezy 700 V3 Azael",
+          sku: "FW4980",
+          amount: 190,
+          purchaseDate: "2024-01-15"
+        }
+      ]
+    },
+    {
+      id: "10",
+      sellerName: "Premium Footwear Ltd",
+      email: "billing@premiumfootwear.com",
+      totalAmount: 395,
+      itemCount: 3,
+      status: "completed",
+      lastPayoutDate: "2024-01-08",
+      items: [
+        {
+          productName: "Union x Air Jordan 4",
+          sku: "DJ5718-001",
+          amount: 165,
+          purchaseDate: "2024-01-07"
+        },
+        {
+          productName: "Nike Air Max 97 Silver Bullet",
+          sku: "884421-001",
+          amount: 135,
+          purchaseDate: "2024-01-07"
+        },
+        {
+          productName: "Converse Chuck 70 High",
+          sku: "162050C",
+          amount: 95,
+          purchaseDate: "2024-01-07"
+        }
+      ]
+    },
+    {
+      id: "11",
+      sellerName: "Fresh Kicks Market",
+      email: "payments@freshkicks.com",
+      totalAmount: 175,
+      itemCount: 1,
+      status: "processing",
+      items: [
+        {
+          productName: "New Balance 992 Grey",
+          sku: "M992GR",
+          amount: 175,
+          purchaseDate: "2024-01-12"
+        }
+      ]
+    },
+    {
+      id: "12",
+      sellerName: "Sneaker Vault",
+      email: "finance@sneakervault.com",
+      totalAmount: 245,
+      itemCount: 2,
+      status: "pending",
+      items: [
+        {
+          productName: "Air Jordan 11 Retro Cool Grey",
+          sku: "378037-001",
+          amount: 155,
+          purchaseDate: "2024-01-18"
+        },
+        {
+          productName: "Puma RS-X3",
+          sku: "372849-01",
+          amount: 90,
+          purchaseDate: "2024-01-18"
+        }
+      ]
+    },
+    {
+      id: "13",
+      sellerName: "Urban Sole Collection",
+      email: "admin@urbansolecollection.com",
+      totalAmount: 310,
+      itemCount: 2,
+      status: "pending",
+      items: [
+        {
+          productName: "Balenciaga Triple S",
+          sku: "524039-W09E1-9000",
+          amount: 210,
+          purchaseDate: "2024-01-16"
+        },
+        {
+          productName: "Common Projects Achilles Low",
+          sku: "1528-0506",
+          amount: 100,
+          purchaseDate: "2024-01-16"
+        }
+      ]
+    },
+    {
+      id: "14",
+      sellerName: "Hype Sneakers Pro",
+      email: "billing@hypesneakerspro.com",
+      totalAmount: 140,
+      itemCount: 1,
+      status: "completed",
+      lastPayoutDate: "2024-01-11",
+      items: [
+        {
+          productName: "Vans Old Skool Black White",
+          sku: "VN000D3HY28",
+          amount: 140,
+          purchaseDate: "2024-01-10"
+        }
+      ]
+    },
+    {
+      id: "15",
+      sellerName: "Authentic Kicks Store",
+      email: "payments@authentickicks.com",
+      totalAmount: 425,
+      itemCount: 3,
+      status: "pending",
+      items: [
+        {
+          productName: "Dior x Air Jordan 1 High",
+          sku: "CN8607-002",
+          amount: 185,
+          purchaseDate: "2024-01-19"
+        },
+        {
+          productName: "Yeezy Slide Bone",
+          sku: "FZ5897",
+          amount: 120,
+          purchaseDate: "2024-01-19"
+        },
+        {
+          productName: "Nike Blazer Mid 77 Vintage",
+          sku: "BQ6806-100",
+          amount: 120,
+          purchaseDate: "2024-01-19"
+        }
+      ]
+    }
+  ]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "pending": return <Clock className="h-4 w-4" />;
-      case "processing": return <CreditCard className="h-4 w-4" />;
+      case "processing": return <Clock className="h-4 w-4" />;
       case "completed": return <CheckCircle className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
@@ -67,57 +367,32 @@ export function PayoutManagement() {
     }
   };
 
-  const handlePayWithRevolut = async (seller: SellerPayout) => {
-    try {
-      // Create Revolut payment link
-      const amount = parseFloat(seller.seller_payout_amount).toFixed(2);
-      const recipient = encodeURIComponent(seller.seller_email);
-      const reference = encodeURIComponent(`Payout for ${seller.item_name}`);
-      
-      // Revolut Pay link format
-      const revolutUrl = `https://revolut.me/pay?amount=${amount}&currency=EUR&recipient=${recipient}&reference=${reference}`;
-      
-      // Update status to processing via API
-      await sellersApi.updatePayoutStatus(seller.id.toString(), "processing");
-      
-      // Refetch data to get updated status
-      refetchPayouts();
-      
-      // Open Revolut in new tab
-      window.open(revolutUrl, '_blank');
-      
-      toast({
-        title: "Revolut Payment Initiated",
-        description: `Payment of EUR${amount} to ${seller.seller_store} has been initiated via Revolut.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update payout status",
-        variant: "destructive",
-      });
-    }
+  const confirmMarkAsPaid = (seller: SellerPayout) => {
+    setConfirmDialog({ open: true, payout: seller });
   };
 
-  const markAsCompleted = async (sellerId: number) => {
-    try {
-      await sellersApi.markPayoutCompleted(sellerId.toString());
-      
-      // Refetch data to get updated status
-      refetchPayouts();
-      
-      toast({
-        title: "Payment Completed",
-        description: "Payout has been marked as completed.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to mark payout as completed",
-        variant: "destructive",
-      });
-    }
+  const markAsPaid = () => {
+    if (!confirmDialog.payout) return;
+    
+    const seller = confirmDialog.payout;
+    const payoutDate = new Date().toISOString().split('T')[0];
+    
+    setPayouts(prev => prev.map(p => 
+      p.id === seller.id ? { 
+        ...p, 
+        status: "completed" as const,
+        lastPayoutDate: payoutDate
+      } : p
+    ));
+    
+    toast({
+      title: "Payment Completed",
+      description: `Payout of €${seller.totalAmount.toFixed(2)} to ${seller.sellerName} marked as paid on ${new Date(payoutDate).toLocaleDateString()}.`,
+    });
+    
+    setConfirmDialog({ open: false, payout: null });
   };
+
 
   const filteredPayouts = useMemo(() => {
     return payouts.filter(payout => {
@@ -129,11 +404,6 @@ export function PayoutManagement() {
       
       // Status filter
       const matchesStatus = statusFilter === "all" || payout.status === statusFilter;
-      
-      // Date filter
-      const payoutDate = new Date(payout.payment_date);
-      const matchesDateFrom = !dateFrom || payoutDate >= dateFrom;
-      const matchesDateTo = !dateTo || payoutDate <= dateTo;
       
       // Pending/Unpaid filter based on 5 days after payment date
       const matchesPendingFilter = (() => {
@@ -164,94 +434,30 @@ export function PayoutManagement() {
         return true;
       })();
       
-      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo && matchesPendingFilter;
+      return matchesSearch && matchesStatus && matchesPendingFilter;
     });
-  }, [payouts, searchTerm, statusFilter, dateFrom, dateTo, pendingFilter]);
+  }, [payouts, searchTerm, statusFilter, pendingFilter]);
 
-  // Use API pagination instead of client-side pagination
-  const totalPages = payoutsResponse?.data?.pagination?.last_page || 1;
-  const paginatedPayouts = filteredPayouts; // API already handles pagination
+  // Load more items when scrolling
+  useEffect(() => {
+    if (inView && displayCount < filteredPayouts.length) {
+      setTimeout(() => {
+        setDisplayCount(prev => Math.min(prev + 20, filteredPayouts.length));
+      }, 100);
+    }
+  }, [inView, displayCount, filteredPayouts.length]);
 
-  const pendingPayouts = payouts.filter(p => p.status === "pending");
-  const totalPendingAmount = pendingPayouts.reduce((sum, p) => sum + parseFloat(p.seller_payout_amount), 0);
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(20);
+  }, [searchTerm, statusFilter, pendingFilter]);
 
-  // Show error state only if there's an error
-  if (payoutsError) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <p className="text-destructive mb-4">Failed to load payouts</p>
-            <Button onClick={() => refetchPayouts()} variant="outline">
-              Try Again
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const displayedPayouts = useMemo(() => {
+    return filteredPayouts.slice(0, displayCount);
+  }, [filteredPayouts, displayCount]);
 
   return (
-    <div className="space-y-6">
-      {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Pending</p>
-                {isLoadingPayouts ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-2xl font-bold text-primary">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-primary">€{totalPendingAmount.toFixed(2)}</p>
-                )}
-              </div>
-              <Euro className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pending Sellers</p>
-                {isLoadingPayouts ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-2xl font-bold text-primary">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-primary">{pendingPayouts.length}</p>
-                )}
-              </div>
-              <Clock className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Items</p>
-                {isLoadingPayouts ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-2xl font-bold text-primary">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-primary">{payouts.length}</p>
-                )}
-              </div>
-              <CreditCard className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
 
       {/* Filters */}
       <Card className="bg-gradient-card border-border shadow-soft">
@@ -266,7 +472,7 @@ export function PayoutManagement() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search by seller name, email, or product..."
+                  placeholder="Search sellers, products, SKUs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -309,62 +515,6 @@ export function PayoutManagement() {
               </select>
             </div>
 
-            {/* Date From */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">From Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[140px] justify-start text-left font-normal",
-                      !dateFrom && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFrom ? format(dateFrom, "MMM dd") : "From"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateFrom}
-                    onSelect={setDateFrom}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Date To */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">To Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[140px] justify-start text-left font-normal",
-                      !dateTo && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateTo ? format(dateTo, "MMM dd") : "To"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateTo}
-                    onSelect={setDateTo}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
             {/* Clear Filters */}
             <div className="flex items-end">
               <Button
@@ -373,10 +523,7 @@ export function PayoutManagement() {
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
-                  setDateFrom(undefined);
-                  setDateTo(undefined);
                   setPendingFilter("all");
-                  setCurrentPage(1);
                 }}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -388,7 +535,7 @@ export function PayoutManagement() {
       </Card>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
         <span>
           {isLoadingPayouts ? (
             <div className="flex items-center gap-2">
@@ -399,7 +546,7 @@ export function PayoutManagement() {
             `Showing ${filteredPayouts.length} of ${payoutsResponse?.data?.pagination?.total || 0} payouts`
           )}
         </span>
-        {(searchTerm || statusFilter !== "all" || dateFrom || dateTo || pendingFilter !== "all") && (
+        {(searchTerm || statusFilter !== "all" || pendingFilter !== "all") && (
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filters active</span>
@@ -408,66 +555,37 @@ export function PayoutManagement() {
       </div>
 
       {/* Payouts Table */}
-      <Card className="bg-gradient-card border-border shadow-soft">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-primary" />
-            Seller Payouts
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-border overflow-hidden hide-scrollbar">
+      <div className="w-full">
+        <div className="overflow-x-auto custom-scrollbar">
+          <div className="max-h-[75vh] overflow-y-auto custom-scrollbar">
             <Table>
-              <TableHeader>
-                <TableRow className="border-border hover:bg-muted/5">
-                  <TableHead className="font-semibold text-foreground">Seller</TableHead>
-                  <TableHead className="font-semibold text-foreground">Items</TableHead>
-                  <TableHead className="font-semibold text-foreground">Amount</TableHead>
-                  <TableHead className="font-semibold text-foreground">Status</TableHead>
-                  <TableHead className="font-semibold text-foreground text-right">Actions</TableHead>
+              <TableHeader className="sticky top-0 z-10 bg-background border-b">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4">Seller</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4">Items</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4">Amount</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4">Status</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground text-sm py-4 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoadingPayouts ? (
-                  // Loading skeleton rows
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <TableRow key={`skeleton-${index}`} className="border-border">
-                      <TableCell className="py-4">
-                        <div className="space-y-2">
-                          <div className="h-3 bg-muted rounded animate-pulse w-32"></div>
-                          <div className="h-2 bg-muted rounded animate-pulse w-48"></div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="space-y-2">
-                          <div className="h-3 bg-muted rounded animate-pulse w-16"></div>
-                          <div className="h-2 bg-muted rounded animate-pulse w-40"></div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="h-6 bg-muted rounded animate-pulse w-24 ml-auto"></div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  paginatedPayouts.map((payout, index) => (
-                    <TableRow 
-                      key={payout.id} 
-                      className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <TableCell className="py-4">
-                        <div className="space-y-1">
-                          <h3 className="font-medium text-foreground">{payout.seller_store}</h3>
-                          <p className="text-xs text-muted-foreground">{payout.seller_email}</p>
-                        </div>
-                      </TableCell>
+                {displayedPayouts.map((payout, index) => (
+                  <TableRow 
+                    key={payout.id} 
+                    className="hover:bg-muted/5 transition-colors duration-200 border-b"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <TableCell className="py-4">
+                      <div className="space-y-1">
+                        <h3 className="font-medium text-foreground">{payout.sellerName}</h3>
+                        <p className="text-xs text-muted-foreground">{payout.email}</p>
+                        {payout.lastPayoutDate && (
+                          <p className="text-xs text-muted-foreground">
+                            Last: {new Date(payout.lastPayoutDate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
 
                       <TableCell className="py-4">
                         <div>
@@ -496,63 +614,74 @@ export function PayoutManagement() {
                         </Badge>
                       </TableCell>
 
-                      <TableCell className="text-right py-4">
-                        <div className="flex gap-2 justify-end">
-                          {payout.status === "pending" && (
-                            <Button 
-                              onClick={() => handlePayWithRevolut(payout)}
-                              size="sm"
-                              className="flex items-center gap-1"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                              Pay via Revolut
-                            </Button>
-                          )}
-                          {payout.status === "processing" && (
-                            <Button 
-                              onClick={() => markAsCompleted(payout.id)}
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                              Mark Complete
-                            </Button>
-                          )}
-                          {payout.status === "completed" && (
-                            <Badge variant="default" className="flex items-center gap-1">
-                              <CheckCircle className="h-4 w-4" />
-                              Completed
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                    <TableCell className="text-right py-4">
+                      {payout.status === "completed" ? (
+                        <Badge variant="default" className="flex items-center gap-1 w-fit ml-auto">
+                          <CheckCircle className="h-4 w-4" />
+                          Paid
+                        </Badge>
+                      ) : (
+                        <Button 
+                          onClick={() => confirmMarkAsPaid(payout)}
+                          size="sm"
+                          className="flex items-center gap-1"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Mark as Paid
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {displayCount < filteredPayouts.length && (
+                  <TableRow ref={ref}>
+                    <TableCell colSpan={5} className="h-24 text-center border-b">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span className="text-sm">Loading more sellers...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Pagination */}
-      {isLoadingPayouts ? (
-        <div className="flex items-center justify-center py-4">
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            <span className="text-sm text-muted-foreground">Loading pagination...</span>
-          </div>
         </div>
-      ) : (
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={payoutsResponse?.data?.pagination?.total || 0}
-        />
-      )}
+        
+        {/* Status Indicator */}
+        <div className="px-4 py-3 bg-muted/10 mt-2">
+          <p className="text-xs text-muted-foreground text-center">
+            Showing <span className="font-medium text-foreground">{displayedPayouts.length}</span> of <span className="font-medium text-foreground">{filteredPayouts.length}</span> sellers
+            {displayCount < filteredPayouts.length && <span className="ml-1">(scroll for more)</span>}
+          </p>
+        </div>
+      </div>
+
+      <Dialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ open, payout: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Payment</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to mark this payout as paid?
+            </DialogDescription>
+          </DialogHeader>
+          {confirmDialog.payout && (
+            <div className="py-4">
+              <p className="text-sm"><strong>Seller:</strong> {confirmDialog.payout.sellerName}</p>
+              <p className="text-sm"><strong>Amount:</strong> €{confirmDialog.payout.totalAmount.toFixed(2)}</p>
+              <p className="text-sm"><strong>Items:</strong> {confirmDialog.payout.itemCount}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialog({ open: false, payout: null })}>
+              Cancel
+            </Button>
+            <Button onClick={markAsPaid}>
+              Confirm Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

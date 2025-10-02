@@ -46,37 +46,7 @@ export interface Product {
   seller: string;
   shopifyId: string;
   orders: OrderReference[];
-  orderUrl?: string; // Add order URL support for the product
-  variant?: string; // Add variant support
-  // Additional fields for bulk WTB order
-  orderId?: number;
-  orderNumber?: string;
-  orderCreatedAt?: string;
-  currency?: string;
-  totalPrice?: number;
-  netPrice?: number;
-  totalDiscount?: number;
-  customerName?: string;
-  customerEmail?: string;
-  customerAddress?: {
-    address1: string;
-    address2: string;
-    city: string;
-    province: string;
-    country: string;
-    country_code: string;
-    zip: string;
-    phone: string;
-  };
-  productType?: string;
-  vendor?: string;
-  quantity?: number;
-  weight?: number;
-  weightUnit?: string;
-  taxable?: boolean;
-  requiresShipping?: boolean;
-  fulfillmentStatus?: string;
-  taxLines?: any[];
+  size?: string;
 }
 
 export interface WTBPurchase {
