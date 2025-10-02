@@ -93,6 +93,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
               </div>
             </TableHead>
             <TableHead className="font-semibold text-muted-foreground text-sm py-4">Customer</TableHead>
+            <TableHead className="font-semibold text-muted-foreground text-sm py-4">Seller</TableHead>
             <TableHead className="font-semibold text-muted-foreground text-sm py-4 hidden md:table-cell">Shopify</TableHead>
             <TableHead className="font-semibold text-muted-foreground text-sm py-4 hidden lg:table-cell">Status</TableHead>
             <TableHead className="font-semibold text-muted-foreground text-sm py-4 text-right">Actions</TableHead>
@@ -166,6 +167,9 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
                 ) : (
                   <span className="text-sm text-muted-foreground">-</span>
                 )}
+              </TableCell>
+              <TableCell className="py-4">
+                <span className="text-sm">{product.seller}</span>
               </TableCell>
               <TableCell className="py-4 hidden md:table-cell">
                 <Button 
@@ -244,7 +248,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
           ))}
           {displayCount < products.length && (
             <TableRow ref={ref}>
-              <TableCell colSpan={8} className="h-24 text-center border-b">
+              <TableCell colSpan={9} className="h-24 text-center border-b">
                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <span className="text-sm">Loading more products...</span>
