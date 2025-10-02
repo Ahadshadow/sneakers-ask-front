@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Package, ShoppingCart, Plus, Lock, Loader2 } from "lucide-react";
+import { ExternalLink, ShoppingBag, ShoppingCart, Plus, Lock, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
@@ -86,7 +86,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
           <TableRow className="border-border hover:bg-muted/5">
             <TableHead className="font-semibold text-foreground text-sm">Product</TableHead>
             <TableHead className="font-semibold text-foreground text-sm">Price</TableHead>
-            <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Orders</TableHead>
+            <TableHead className="font-semibold text-foreground text-sm hidden md:table-cell">Shopify</TableHead>
             <TableHead className="font-semibold text-foreground text-sm hidden lg:table-cell">Status</TableHead>
             <TableHead className="font-semibold text-foreground text-sm text-right">Actions</TableHead>
           </TableRow>
@@ -120,7 +120,7 @@ export function ProductsTable({ products, onAddToCart }: ProductsTableProps) {
                   onClick={() => handleShopifyOrdersClick(product)}
                   className="h-7 sm:h-8 px-2 sm:px-3 gap-1 sm:gap-2 hover-scale transition-all duration-200 border-primary/20 hover:border-primary/40"
                 >
-                  <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+                  <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
                   <span className="text-xs sm:text-sm font-medium">
                     {product.orders.length > 0 ? 
                       `${product.orders.reduce((total, order) => total + order.products.length, 0)} products in ${product.orders.length} order${product.orders.length > 1 ? 's' : ''}` : 
