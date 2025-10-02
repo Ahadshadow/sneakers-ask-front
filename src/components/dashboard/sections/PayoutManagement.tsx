@@ -612,35 +612,21 @@ export function PayoutManagement() {
                     </TableCell>
 
                     <TableCell className="text-right py-4">
-                      <div className="flex gap-2 justify-end">
-                        {payout.status === "pending" && (
-                          <Button 
-                            onClick={() => confirmMarkAsPaid(payout)}
-                            size="sm"
-                            className="flex items-center gap-1"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                            Mark as Paid
-                          </Button>
-                        )}
-                        {payout.status === "processing" && (
-                          <Button 
-                            onClick={() => confirmMarkAsPaid(payout)}
-                            size="sm"
-                            variant="outline"
-                            className="flex items-center gap-1"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                            Mark as Paid
-                          </Button>
-                        )}
-                        {payout.status === "completed" && (
-                          <Badge variant="default" className="flex items-center gap-1">
-                            <CheckCircle className="h-4 w-4" />
-                            Paid
-                          </Badge>
-                        )}
-                      </div>
+                      {payout.status === "completed" ? (
+                        <Badge variant="default" className="flex items-center gap-1 w-fit ml-auto">
+                          <CheckCircle className="h-4 w-4" />
+                          Paid
+                        </Badge>
+                      ) : (
+                        <Button 
+                          onClick={() => confirmMarkAsPaid(payout)}
+                          size="sm"
+                          className="flex items-center gap-1"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Mark as Paid
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
