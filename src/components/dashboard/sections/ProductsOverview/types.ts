@@ -6,7 +6,7 @@ export interface OrderReference {
   customerName: string;
   orderTotal: string;
   orderUrl?: string; // Add order URL support
-  products: Array<{
+  products?: Array<{
     productId: string;
     productName: string;
     quantity: number;
@@ -32,6 +32,28 @@ export interface ApiProduct {
   order_item_ids: number[];
   created_at: string;
   updated_at: string;
+}
+
+// New Order Item interface (from new API response)
+export interface OrderItem {
+  id: number;
+  order_id: number;
+  order_number: string;
+  product_name: string;
+  sku: string;
+  variant: {
+    variant: string;
+  };
+  price: number;
+  currency: string;
+  vendor: string;
+  order_url: string;
+  quantity: number;
+  status: string;
+  manual_status: string;
+  destination: string;
+  customer: string;
+  processed_at: string;
 }
 
 // UI Product interface (for existing design compatibility)
@@ -77,6 +99,10 @@ export interface Product {
   requiresShipping?: boolean;
   fulfillmentStatus?: string;
   taxLines?: any[];
+  // New fields from API response
+  destination?: string;
+  manualStatus?: string;
+  processedAt?: string;
 }
 
 export interface WTBPurchase {

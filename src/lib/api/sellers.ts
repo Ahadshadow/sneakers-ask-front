@@ -131,8 +131,12 @@ export interface SellerPayout {
   item_name: string;
   seller_payout_amount: string;
   status: "pending" | "processing" | "completed";
-  payment_date: string;
+  payment_date: string | null;
   created_at: string;
+  account_holder?: string;
+  iban?: string;
+  bank_name?: string;
+  payment_schedule?: string;
 }
 
 export interface SellerPayoutsResponse {
@@ -316,7 +320,7 @@ export const sellersApi = {
   // Update seller payout status
   async updatePayoutStatus(id: string, status: "pending" | "processing" | "completed"): Promise<{ success: boolean; data: SellerPayout; message: string }> {
     return apiRequest<{ success: boolean; data: SellerPayout; message: string }>(`/seller-payouts/${id}/status`, {
-      method: 'PATCH',
+      method: 'PUT',
       body: JSON.stringify({ status }),
     });
   },
