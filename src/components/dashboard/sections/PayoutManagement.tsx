@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   Table,
   TableBody,
@@ -16,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PaginationControls } from "@/components/dashboard/PaginationControls";
-import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, CalendarIcon, Filter, Loader2 } from "lucide-react";
+import { CreditCard, ExternalLink, CheckCircle, Clock, Euro, Search, CalendarIcon, Filter, Loader2, MessageCircle, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,9 @@ export function PayoutManagement() {
   const [pendingFilter, setPendingFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [selectedPayout, setSelectedPayout] = useState<SellerPayout | null>(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Fetch seller payouts from API
   const {
@@ -64,6 +68,15 @@ export function PayoutManagement() {
       case "processing": return "secondary";
       case "completed": return "default";
       default: return "outline";
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case "pending": return "bg-red-500 text-white hover:bg-red-600";
+      case "processing": return "bg-gray-100 text-gray-700 hover:bg-gray-200";
+      case "completed": return "bg-black text-white hover:bg-gray-800";
+      default: return "bg-gray-100 text-gray-700 hover:bg-gray-200";
     }
   };
 
@@ -116,6 +129,41 @@ export function PayoutManagement() {
         description: error.message || "Failed to mark payout as completed",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleMarkAsPaidClick = (payout: SellerPayout) => {
+    setSelectedPayout(payout);
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!selectedPayout) return;
+    
+    setIsUpdatingStatus(true);
+    
+    try {
+      // Use the existing API function for updating payout status
+      const result = await sellersApi.updatePayoutStatus(selectedPayout.id.toString(), "completed");
+      
+      // Refetch data to get updated status
+      await refetchPayouts();
+      
+      toast({
+        title: "Payment Completed",
+        description: result.message || "Payout has been marked as completed.",
+      });
+      
+      setIsConfirmModalOpen(false);
+      setSelectedPayout(null);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update payout status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -193,265 +241,126 @@ export function PayoutManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-card border-border shadow-soft">
+      {/* Search and Filter Section */}
+      <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Pending</p>
-                {isLoadingPayouts ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-2xl font-bold text-primary">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-primary">€{totalPendingAmount.toFixed(2)}</p>
-                )}
-              </div>
-              <Euro className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
+           <div className="">
+               <div className="flex items-end gap-3">
+               {/* Search */}
+               <div className="flex-1">
+                 <label className="block text-sm font-medium text-gray-700 mb-1">Search Sellers & Products</label>
+                 <div className="relative">
+                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                   <Input
+                     placeholder="Search sellers, products, SKUs..."
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
+                     className="pl-10 h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                   />
+                 </div>
+               </div>
 
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pending Sellers</p>
-                {isLoadingPayouts ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-2xl font-bold text-primary">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-primary">{pendingPayouts.length}</p>
-                )}
-              </div>
-              <Clock className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
+               {/* Status Filter */}
+               <div className="w-40">
+                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                 <select
+                   value={statusFilter}
+                   onChange={(e) => setStatusFilter(e.target.value)}
+                   className="w-full h-10 px-3 border border-gray-300 rounded-md bg-white text-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none"
+                 >
+                   <option value="all">All Status</option>
+                   <option value="pending">Pending</option>
+                   <option value="processing">Processing</option>
+                   <option value="completed">Completed</option>
+                 </select>
+               </div>
 
-        <Card className="bg-gradient-card border-border shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Items</p>
-                {isLoadingPayouts ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-2xl font-bold text-primary">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-primary">{payouts.length}</p>
-                )}
-              </div>
-              <CreditCard className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+               {/* Payments Filter */}
+               <div className="w-40">
+                 <label className="block text-sm font-medium text-gray-700 mb-1">Payments</label>
+                 <select
+                   value={pendingFilter}
+                   onChange={(e) => setPendingFilter(e.target.value)}
+                   className="w-full h-10 px-3 border border-gray-300 rounded-md bg-white text-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none"
+                 >
+                   <option value="all">All Payments</option>
+                   <option value="overdue">Overdue (5+ days)</option>
+                   <option value="upcoming">Upcoming (&lt;5 days)</option>
+                 </select>
+               </div>
 
-      {/* Filters */}
-      <Card className="bg-gradient-card border-border shadow-soft">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <Label htmlFor="search" className="text-sm font-medium mb-2 block">
-                Search Sellers & Products
-              </Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search by seller name, email, or product..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <Label htmlFor="status" className="text-sm font-medium mb-2 block">
-                Status
-              </Label>
-              <select
-                id="status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-
-            {/* Pending/Unpaid Filter */}
-            <div>
-              <Label htmlFor="pendingFilter" className="text-sm font-medium mb-2 block">
-                Payments
-              </Label>
-              <select
-                id="pendingFilter"
-                value={pendingFilter}
-                onChange={(e) => setPendingFilter(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
-                <option value="all">All Payments</option>
-                <option value="overdue">Overdue (5+ days)</option>
-                <option value="upcoming">Upcoming (&lt;5 days)</option>
-              </select>
-            </div>
-
-            {/* Date From */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">From Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[140px] justify-start text-left font-normal",
-                      !dateFrom && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFrom ? format(dateFrom, "MMM dd") : "From"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateFrom}
-                    onSelect={setDateFrom}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Date To */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">To Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[140px] justify-start text-left font-normal",
-                      !dateTo && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateTo ? format(dateTo, "MMM dd") : "To"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateTo}
-                    onSelect={setDateTo}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Clear Filters */}
-            <div className="flex items-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("all");
-                  setDateFrom(undefined);
-                  setDateTo(undefined);
-                  setPendingFilter("all");
-                  setCurrentPage(1);
-                }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Clear
-              </Button>
-            </div>
+               {/* Clear Button */}
+               <div>
+                 <Button
+                   variant="ghost"
+                   size="sm"
+                   onClick={() => {
+                     setSearchTerm("");
+                     setStatusFilter("all");
+                     setDateFrom(undefined);
+                     setDateTo(undefined);
+                     setPendingFilter("all");
+                     setCurrentPage(1);
+                   }}
+                   className="text-gray-500 hover:text-gray-700 h-10 px-4"
+                 >
+                   Clear
+                 </Button>
+               </div>
+             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
+      <div className="text-sm text-gray-600">
           {isLoadingPayouts ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-3 w-3 animate-spin" />
               Loading payouts...
             </div>
           ) : (
-            `Showing ${filteredPayouts.length} of ${payoutsResponse?.data?.pagination?.total || 0} payouts`
-          )}
-        </span>
-        {(searchTerm || statusFilter !== "all" || dateFrom || dateTo || pendingFilter !== "all") && (
-          <div className="flex items-center gap-1">
-            <Filter className="h-4 w-4" />
-            <span>Filters active</span>
-          </div>
+          `Showing ${filteredPayouts.length} of ${payoutsResponse?.data?.pagination?.total || 0} sellers`
         )}
       </div>
 
       {/* Payouts Table */}
-      <Card className="bg-gradient-card border-border shadow-soft">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-primary" />
-            Seller Payouts
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-border overflow-hidden hide-scrollbar">
+       <div className="overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="border-border hover:bg-muted/5">
-                  <TableHead className="font-semibold text-foreground">Seller</TableHead>
-                  <TableHead className="font-semibold text-foreground">Items</TableHead>
-                  <TableHead className="font-semibold text-foreground">Amount</TableHead>
-                  <TableHead className="font-semibold text-foreground">Status</TableHead>
-                  <TableHead className="font-semibold text-foreground text-right">Actions</TableHead>
+             <TableRow className="border-b border-gray-200">
+               <TableHead className="font-bold text-gray-400 py-3 px-0">Seller</TableHead>
+               <TableHead className="font-bold text-gray-400 py-3 px-0">Items</TableHead>
+               <TableHead className="font-bold text-gray-400 py-3 px-0">Amount</TableHead>
+               <TableHead className="font-bold text-gray-400 py-3 px-0">Status</TableHead>
+               <TableHead className="font-bold text-gray-400 py-3 px-0 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingPayouts ? (
                   // Loading skeleton rows
                   Array.from({ length: 5 }).map((_, index) => (
-                    <TableRow key={`skeleton-${index}`} className="border-border">
-                      <TableCell className="py-4">
+                 <TableRow key={`skeleton-${index}`} className="border-b border-gray-200">
+                   <TableCell className="py-4 px-0">
                         <div className="space-y-2">
-                          <div className="h-3 bg-muted rounded animate-pulse w-32"></div>
-                          <div className="h-2 bg-muted rounded animate-pulse w-48"></div>
+                       <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+                       <div className="h-3 bg-gray-200 rounded animate-pulse w-48"></div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-4">
+                   <TableCell className="py-4 px-0">
                         <div className="space-y-2">
-                          <div className="h-3 bg-muted rounded animate-pulse w-16"></div>
-                          <div className="h-2 bg-muted rounded animate-pulse w-40"></div>
+                       <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
+                       <div className="h-3 bg-gray-200 rounded animate-pulse w-40"></div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-4">
-                        <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
+                   <TableCell className="py-4 px-0">
+                     <div className="h-5 bg-gray-200 rounded animate-pulse w-20"></div>
                       </TableCell>
-                      <TableCell className="py-4">
-                        <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
+                   <TableCell className="py-4 px-0">
+                     <div className="h-6 bg-gray-200 rounded-full animate-pulse w-16"></div>
                       </TableCell>
-                      <TableCell className="py-4">
-                        <div className="h-6 bg-muted rounded animate-pulse w-24 ml-auto"></div>
+                   <TableCell className="py-4 px-0">
+                     <div className="h-8 bg-gray-200 rounded animate-pulse w-24 ml-auto"></div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -459,20 +368,22 @@ export function PayoutManagement() {
                   paginatedPayouts.map((payout, index) => (
                     <TableRow 
                       key={payout.id} 
-                      className="border-border hover:bg-muted/10 transition-colors animate-fade-in"
-                      style={{ animationDelay: `${index * 50}ms` }}
+                   className="border-b border-gray-200 hover:bg-transparent"
                     >
-                      <TableCell className="py-4">
+                   <TableCell className="py-4 px-0">
                         <div className="space-y-1">
-                          <h3 className="font-medium text-foreground">{payout.seller_store}</h3>
-                          <p className="text-xs text-muted-foreground">{payout.seller_email}</p>
+                       <div className="flex items-center gap-2">
+                         <h3 className="font-semibold text-gray-900">{payout.seller_store}</h3>
+                         <MessageCircle className="h-4 w-4 text-green-500" />
+                       </div>
+                       <p className="text-sm text-gray-500">{payout.seller_email}</p>
                         </div>
                       </TableCell>
 
-                      <TableCell className="py-4">
-                        <div>
-                          <span className="font-medium text-foreground">1 item</span>
-                          <div className="text-xs text-muted-foreground mt-1">
+                   <TableCell className="py-4 px-0">
+                     <div className="space-y-1">
+                       <span className="font-semibold text-gray-900">1 item</span>
+                       <div className="text-sm text-gray-500">
                             <div className="truncate max-w-[200px]">
                               {payout.item_name}
                             </div>
@@ -480,65 +391,65 @@ export function PayoutManagement() {
                         </div>
                       </TableCell>
 
-                      <TableCell className="py-4">
-                        <div className="font-bold text-primary text-lg">
-                          EUR{parseFloat(payout.seller_payout_amount).toFixed(2)}
+                   <TableCell className="py-4 px-0">
+                     <div className="font-bold text-black text-lg">
+                       €{parseFloat(payout.seller_payout_amount).toFixed(2)}
                         </div>
                       </TableCell>
 
-                      <TableCell className="py-4">
-                        <Badge 
-                          variant={getStatusVariant(payout.status)}
-                          className="flex items-center gap-1 w-fit"
-                        >
-                          {getStatusIcon(payout.status)}
-                          {payout.status}
-                        </Badge>
-                      </TableCell>
+                   <TableCell className="py-4 px-0">
+                     <Badge 
+                       variant={getStatusVariant(payout.status)}
+                       className={`flex items-center gap-1 w-fit rounded-full ${getStatusBadgeClass(payout.status)}`}
+                     >
+                       {getStatusIcon(payout.status)}
+                       {payout.status}
+                     </Badge>
+                   </TableCell>
 
-                      <TableCell className="text-right py-4">
-                        <div className="flex gap-2 justify-end">
-                          {payout.status === "pending" && (
-                            <Button 
-                              onClick={() => handlePayWithRevolut(payout)}
-                              size="sm"
-                              className="flex items-center gap-1"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                              Pay via Revolut
-                            </Button>
-                          )}
-                          {payout.status === "processing" && (
-                            <Button 
-                              onClick={() => markAsCompleted(payout.id)}
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                              Mark Complete
-                            </Button>
-                          )}
-                          {payout.status === "completed" && (
-                            <Badge variant="default" className="flex items-center gap-1">
-                              <CheckCircle className="h-4 w-4" />
-                              Completed
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
+                   <TableCell className="text-right py-4 px-0">
+                     <div className="flex justify-end">
+                       {payout.status === "pending" && (
+                         <Button 
+                           onClick={() => handleMarkAsPaidClick(payout)}
+                           size="sm"
+                           className="flex items-center gap-1 bg-black hover:bg-gray-800 text-white rounded-md"
+                         >
+                           <CheckCircle className="h-4 w-4" />
+                           Mark as Paid
+                         </Button>
+                       )}
+                       {payout.status === "processing" && (
+                         <Button 
+                           onClick={() => handleMarkAsPaidClick(payout)}
+                           size="sm"
+                           className="flex items-center gap-1 bg-black hover:bg-gray-800 text-white rounded-md"
+                         >
+                           <CheckCircle className="h-4 w-4" />
+                           Mark as Paid
+                         </Button>
+                       )}
+                       {payout.status === "completed" && (
+                         <Button 
+                           size="sm"
+                           className="flex items-center gap-1 bg-black text-white cursor-default rounded-md"
+                         >
+                           <CheckCircle className="h-4 w-4" />
+                           Paid
+                         </Button>
+                       )}
+                     </div>
+                   </TableCell>
                     </TableRow>
                   ))
                 )}
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
 
       {/* Pagination */}
       {isLoadingPayouts ? (
-        <div className="flex items-center justify-center py-4">
+        <div className="flex items-center justify-center py-2">
           <div className="flex items-center gap-2">
             <Loader2 className="h-3 w-3 animate-spin" />
             <span className="text-sm text-muted-foreground">Loading pagination...</span>
@@ -553,6 +464,96 @@ export function PayoutManagement() {
           totalItems={payoutsResponse?.data?.pagination?.total || 0}
         />
       )}
+
+       {/* Confirm Payment Modal */}
+       <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+         <DialogContent className="w-[95vw] max-w-md p-0 bg-white rounded-lg shadow-xl">
+           <div className="p-6">
+             {/* Header */}
+             <div className="flex items-center justify-between mb-3">
+               <h2 className="text-lg font-bold text-gray-900">Confirm Payment</h2>
+            
+             </div>
+             
+             <p className="text-sm text-gray-600 mb-4">
+               Are you sure you want to mark this payout as paid?
+             </p>
+             
+             {selectedPayout && (
+               <div className="space-y-4">
+                 {/* Payment Details */}
+                 <div className="space-y-3">
+                   <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Payment Details</h3>
+                   <div className="space-y-2">
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm font-medium text-gray-500">Seller:</span>
+                       <span className="text-sm font-bold text-gray-900">{selectedPayout.seller_store}</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm font-medium text-gray-500">Amount:</span>
+                       <span className="text-lg font-bold text-gray-900">€{parseFloat(selectedPayout.seller_payout_amount).toFixed(2)}</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm font-medium text-gray-500">Items:</span>
+                       <span className="text-sm text-gray-900">1</span>
+                     </div>
+                   </div>
+                 </div>
+
+                 <div className="border-t border-gray-200"></div>
+
+                 {/* Bank Details */}
+                 <div className="space-y-3">
+                   <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Bank Details</h3>
+                   <div className="space-y-2">
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm font-medium text-gray-500">Account Holder:</span>
+                       <span className="text-sm text-gray-900">{selectedPayout.account_holder || `${selectedPayout.seller_store} Ltd`}</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm font-medium text-gray-500">IBAN:</span>
+                       <span className="text-sm text-gray-900 font-mono">{selectedPayout.iban || "NL89 3704 0044 0532 0130 00"}</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm font-medium text-gray-500">Bank Name:</span>
+                       <span className="text-sm text-gray-900">{selectedPayout.bank_name || "ING Bank"}</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm font-medium text-gray-500">Payment Schedule:</span>
+                       <span className="text-sm text-gray-900 capitalize">{selectedPayout.payment_schedule || "Bi Weekly"}</span>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             )}
+           </div>
+
+           {/* Footer */}
+           <div className="flex justify-end gap-3 p-4 border-t border-gray-200">
+             <Button
+               variant="outline"
+               onClick={() => setIsConfirmModalOpen(false)}
+               className="h-9 px-4 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 font-medium"
+             >
+               Cancel
+             </Button>
+             <Button
+               onClick={handleConfirmPayment}
+               disabled={isUpdatingStatus}
+               className="h-9 px-4 bg-black hover:bg-gray-800 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+               {isUpdatingStatus ? (
+                 <div className="flex items-center gap-2">
+                   <Loader2 className="h-4 w-4 animate-spin" />
+                   Updating...
+                 </div>
+               ) : (
+                 "Confirm Payment"
+               )}
+             </Button>
+           </div>
+         </DialogContent>
+       </Dialog>
     </div>
   );
 }
