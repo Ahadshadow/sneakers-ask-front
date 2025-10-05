@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ArrowLeft, Store, Mail, Globe, Upload, Building } from "lucide-react";
+import { ArrowLeft, Store, Mail, Phone, Globe, Upload, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { sellersApi } from "@/lib/api/sellers";
@@ -35,6 +38,193 @@ const paymentSchedules = [
   "monthly"
 ];
 
+const countryCodes = [
+  { code: "+1", country: "US/Canada" },
+  { code: "+44", country: "UK" },
+  { code: "+49", country: "Germany" },
+  { code: "+33", country: "France" },
+  { code: "+39", country: "Italy" },
+  { code: "+34", country: "Spain" },
+  { code: "+31", country: "Netherlands" },
+  { code: "+32", country: "Belgium" },
+  { code: "+41", country: "Switzerland" },
+  { code: "+43", country: "Austria" },
+  { code: "+45", country: "Denmark" },
+  { code: "+46", country: "Sweden" },
+  { code: "+47", country: "Norway" },
+  { code: "+358", country: "Finland" },
+  { code: "+61", country: "Australia" },
+  { code: "+64", country: "New Zealand" },
+  { code: "+81", country: "Japan" },
+  { code: "+82", country: "South Korea" },
+  { code: "+86", country: "China" },
+  { code: "+91", country: "India" },
+  { code: "+92", country: "Pakistan" },
+  { code: "+93", country: "Afghanistan" },
+  { code: "+94", country: "Sri Lanka" },
+  { code: "+95", country: "Myanmar" },
+  { code: "+98", country: "Iran" },
+  { code: "+212", country: "Morocco" },
+  { code: "+213", country: "Algeria" },
+  { code: "+216", country: "Tunisia" },
+  { code: "+218", country: "Libya" },
+  { code: "+220", country: "Gambia" },
+  { code: "+221", country: "Senegal" },
+  { code: "+222", country: "Mauritania" },
+  { code: "+223", country: "Mali" },
+  { code: "+224", country: "Guinea" },
+  { code: "+225", country: "Ivory Coast" },
+  { code: "+226", country: "Burkina Faso" },
+  { code: "+227", country: "Niger" },
+  { code: "+228", country: "Togo" },
+  { code: "+229", country: "Benin" },
+  { code: "+230", country: "Mauritius" },
+  { code: "+231", country: "Liberia" },
+  { code: "+232", country: "Sierra Leone" },
+  { code: "+233", country: "Ghana" },
+  { code: "+234", country: "Nigeria" },
+  { code: "+235", country: "Chad" },
+  { code: "+236", country: "Central African Republic" },
+  { code: "+237", country: "Cameroon" },
+  { code: "+238", country: "Cape Verde" },
+  { code: "+239", country: "São Tomé and Príncipe" },
+  { code: "+240", country: "Equatorial Guinea" },
+  { code: "+241", country: "Gabon" },
+  { code: "+242", country: "Republic of the Congo" },
+  { code: "+243", country: "Democratic Republic of the Congo" },
+  { code: "+244", country: "Angola" },
+  { code: "+245", country: "Guinea-Bissau" },
+  { code: "+246", country: "British Indian Ocean Territory" },
+  { code: "+248", country: "Seychelles" },
+  { code: "+249", country: "Sudan" },
+  { code: "+250", country: "Rwanda" },
+  { code: "+251", country: "Ethiopia" },
+  { code: "+252", country: "Somalia" },
+  { code: "+253", country: "Djibouti" },
+  { code: "+254", country: "Kenya" },
+  { code: "+255", country: "Tanzania" },
+  { code: "+256", country: "Uganda" },
+  { code: "+257", country: "Burundi" },
+  { code: "+258", country: "Mozambique" },
+  { code: "+260", country: "Zambia" },
+  { code: "+261", country: "Madagascar" },
+  { code: "+262", country: "Réunion" },
+  { code: "+263", country: "Zimbabwe" },
+  { code: "+264", country: "Namibia" },
+  { code: "+265", country: "Malawi" },
+  { code: "+266", country: "Lesotho" },
+  { code: "+267", country: "Botswana" },
+  { code: "+268", country: "Swaziland" },
+  { code: "+269", country: "Comoros" },
+  { code: "+290", country: "Saint Helena" },
+  { code: "+291", country: "Eritrea" },
+  { code: "+297", country: "Aruba" },
+  { code: "+298", country: "Faroe Islands" },
+  { code: "+299", country: "Greenland" },
+  { code: "+350", country: "Gibraltar" },
+  { code: "+351", country: "Portugal" },
+  { code: "+352", country: "Luxembourg" },
+  { code: "+353", country: "Ireland" },
+  { code: "+354", country: "Iceland" },
+  { code: "+355", country: "Albania" },
+  { code: "+356", country: "Malta" },
+  { code: "+357", country: "Cyprus" },
+  { code: "+358", country: "Finland" },
+  { code: "+359", country: "Bulgaria" },
+  { code: "+370", country: "Lithuania" },
+  { code: "+371", country: "Latvia" },
+  { code: "+372", country: "Estonia" },
+  { code: "+373", country: "Moldova" },
+  { code: "+374", country: "Armenia" },
+  { code: "+375", country: "Belarus" },
+  { code: "+376", country: "Andorra" },
+  { code: "+377", country: "Monaco" },
+  { code: "+378", country: "San Marino" },
+  { code: "+380", country: "Ukraine" },
+  { code: "+381", country: "Serbia" },
+  { code: "+382", country: "Montenegro" },
+  { code: "+383", country: "Kosovo" },
+  { code: "+385", country: "Croatia" },
+  { code: "+386", country: "Slovenia" },
+  { code: "+387", country: "Bosnia and Herzegovina" },
+  { code: "+389", country: "North Macedonia" },
+  { code: "+420", country: "Czech Republic" },
+  { code: "+421", country: "Slovakia" },
+  { code: "+423", country: "Liechtenstein" },
+  { code: "+500", country: "Falkland Islands" },
+  { code: "+501", country: "Belize" },
+  { code: "+502", country: "Guatemala" },
+  { code: "+503", country: "El Salvador" },
+  { code: "+504", country: "Honduras" },
+  { code: "+505", country: "Nicaragua" },
+  { code: "+506", country: "Costa Rica" },
+  { code: "+507", country: "Panama" },
+  { code: "+508", country: "Saint Pierre and Miquelon" },
+  { code: "+509", country: "Haiti" },
+  { code: "+590", country: "Guadeloupe" },
+  { code: "+591", country: "Bolivia" },
+  { code: "+592", country: "Guyana" },
+  { code: "+593", country: "Ecuador" },
+  { code: "+594", country: "French Guiana" },
+  { code: "+595", country: "Paraguay" },
+  { code: "+596", country: "Martinique" },
+  { code: "+597", country: "Suriname" },
+  { code: "+598", country: "Uruguay" },
+  { code: "+599", country: "Netherlands Antilles" },
+  { code: "+670", country: "East Timor" },
+  { code: "+672", country: "Australian External Territories" },
+  { code: "+673", country: "Brunei" },
+  { code: "+674", country: "Nauru" },
+  { code: "+675", country: "Papua New Guinea" },
+  { code: "+676", country: "Tonga" },
+  { code: "+677", country: "Solomon Islands" },
+  { code: "+678", country: "Vanuatu" },
+  { code: "+679", country: "Fiji" },
+  { code: "+680", country: "Palau" },
+  { code: "+681", country: "Wallis and Futuna" },
+  { code: "+682", country: "Cook Islands" },
+  { code: "+683", country: "Niue" },
+  { code: "+684", country: "American Samoa" },
+  { code: "+685", country: "Samoa" },
+  { code: "+686", country: "Kiribati" },
+  { code: "+687", country: "New Caledonia" },
+  { code: "+688", country: "Tuvalu" },
+  { code: "+689", country: "French Polynesia" },
+  { code: "+690", country: "Tokelau" },
+  { code: "+691", country: "Micronesia" },
+  { code: "+692", country: "Marshall Islands" },
+  { code: "+850", country: "North Korea" },
+  { code: "+852", country: "Hong Kong" },
+  { code: "+853", country: "Macau" },
+  { code: "+855", country: "Cambodia" },
+  { code: "+856", country: "Laos" },
+  { code: "+880", country: "Bangladesh" },
+  { code: "+886", country: "Taiwan" },
+  { code: "+960", country: "Maldives" },
+  { code: "+961", country: "Lebanon" },
+  { code: "+962", country: "Jordan" },
+  { code: "+963", country: "Syria" },
+  { code: "+964", country: "Iraq" },
+  { code: "+965", country: "Kuwait" },
+  { code: "+966", country: "Saudi Arabia" },
+  { code: "+967", country: "Yemen" },
+  { code: "+968", country: "Oman" },
+  { code: "+970", country: "Palestine" },
+  { code: "+971", country: "United Arab Emirates" },
+  { code: "+972", country: "Israel" },
+  { code: "+973", country: "Bahrain" },
+  { code: "+974", country: "Qatar" },
+  { code: "+975", country: "Bhutan" },
+  { code: "+976", country: "Mongolia" },
+  { code: "+977", country: "Nepal" },
+  { code: "+992", country: "Tajikistan" },
+  { code: "+993", country: "Turkmenistan" },
+  { code: "+994", country: "Azerbaijan" },
+  { code: "+995", country: "Georgia" },
+  { code: "+996", country: "Kyrgyzstan" },
+  { code: "+998", country: "Uzbekistan" }
+];
+
 
 export default function EditSeller() {
   const navigate = useNavigate();
@@ -47,6 +237,7 @@ export default function EditSeller() {
   const [hasChanges, setHasChanges] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [ibanError, setIbanError] = useState(false);
+  const [whatsappCountryOpen, setWhatsappCountryOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     // Basic Info
@@ -58,6 +249,10 @@ export default function EditSeller() {
     businessType: "",
     country: "",
     businessDescription: "",
+    
+    // WhatsApp Info
+    whatsappCountryCode: "+1",
+    whatsappNumber: "",
     
     // Tax Info
     tinNumber: "",
@@ -81,6 +276,7 @@ export default function EditSeller() {
     
     if (sellerData) {
       // Use data from navigation state (fast)
+      
       setFormData({
         storeName: sellerData.store_name || "",
         ownerName: sellerData.owner_name || "",
@@ -98,7 +294,71 @@ export default function EditSeller() {
         iban: sellerData.iban || "",
         bankName: sellerData.bank_name || "",
         paymentSchedule: sellerData.payment_schedule || "",
-        status: sellerData.status || "pending"
+        status: sellerData.status || "pending",
+        whatsappCountryCode: sellerData.whatsapp_number ? 
+          (sellerData.whatsapp_number.startsWith('+92') ? '+92' : 
+           sellerData.whatsapp_number.startsWith('+1') ? '+1' : 
+           sellerData.whatsapp_number.startsWith('+44') ? '+44' : 
+           sellerData.whatsapp_number.startsWith('+49') ? '+49' : 
+           sellerData.whatsapp_number.startsWith('+33') ? '+33' : 
+           sellerData.whatsapp_number.startsWith('+39') ? '+39' : 
+           sellerData.whatsapp_number.startsWith('+34') ? '+34' : 
+           sellerData.whatsapp_number.startsWith('+31') ? '+31' : 
+           sellerData.whatsapp_number.startsWith('+32') ? '+32' : 
+           sellerData.whatsapp_number.startsWith('+41') ? '+41' : 
+           sellerData.whatsapp_number.startsWith('+43') ? '+43' : 
+           sellerData.whatsapp_number.startsWith('+45') ? '+45' : 
+           sellerData.whatsapp_number.startsWith('+46') ? '+46' : 
+           sellerData.whatsapp_number.startsWith('+47') ? '+47' : 
+           sellerData.whatsapp_number.startsWith('+358') ? '+358' : 
+           sellerData.whatsapp_number.startsWith('+61') ? '+61' : 
+           sellerData.whatsapp_number.startsWith('+64') ? '+64' : 
+           sellerData.whatsapp_number.startsWith('+81') ? '+81' : 
+           sellerData.whatsapp_number.startsWith('+82') ? '+82' : 
+           sellerData.whatsapp_number.startsWith('+86') ? '+86' : 
+           sellerData.whatsapp_number.startsWith('+91') ? '+91' : 
+           sellerData.whatsapp_number.startsWith('+93') ? '+93' : 
+           sellerData.whatsapp_number.startsWith('+94') ? '+94' : 
+           sellerData.whatsapp_number.startsWith('+95') ? '+95' : 
+           sellerData.whatsapp_number.startsWith('+98') ? '+98' : '+1') : "+1",
+        whatsappNumber: sellerData.whatsapp_number ? 
+          (sellerData.whatsapp_number.startsWith('+92') ? sellerData.whatsapp_number.replace('+92', '') :
+           sellerData.whatsapp_number.startsWith('+1') ? sellerData.whatsapp_number.replace('+1', '') :
+           sellerData.whatsapp_number.startsWith('+44') ? sellerData.whatsapp_number.replace('+44', '') :
+           sellerData.whatsapp_number.startsWith('+49') ? sellerData.whatsapp_number.replace('+49', '') :
+           sellerData.whatsapp_number.startsWith('+33') ? sellerData.whatsapp_number.replace('+33', '') :
+           sellerData.whatsapp_number.startsWith('+39') ? sellerData.whatsapp_number.replace('+39', '') :
+           sellerData.whatsapp_number.startsWith('+34') ? sellerData.whatsapp_number.replace('+34', '') :
+           sellerData.whatsapp_number.startsWith('+31') ? sellerData.whatsapp_number.replace('+31', '') :
+           sellerData.whatsapp_number.startsWith('+32') ? sellerData.whatsapp_number.replace('+32', '') :
+           sellerData.whatsapp_number.startsWith('+41') ? sellerData.whatsapp_number.replace('+41', '') :
+           sellerData.whatsapp_number.startsWith('+43') ? sellerData.whatsapp_number.replace('+43', '') :
+           sellerData.whatsapp_number.startsWith('+45') ? sellerData.whatsapp_number.replace('+45', '') :
+           sellerData.whatsapp_number.startsWith('+46') ? sellerData.whatsapp_number.replace('+46', '') :
+           sellerData.whatsapp_number.startsWith('+47') ? sellerData.whatsapp_number.replace('+47', '') :
+           sellerData.whatsapp_number.startsWith('+358') ? sellerData.whatsapp_number.replace('+358', '') :
+           sellerData.whatsapp_number.startsWith('+61') ? sellerData.whatsapp_number.replace('+61', '') :
+           sellerData.whatsapp_number.startsWith('+64') ? sellerData.whatsapp_number.replace('+64', '') :
+           sellerData.whatsapp_number.startsWith('+81') ? sellerData.whatsapp_number.replace('+81', '') :
+           sellerData.whatsapp_number.startsWith('+82') ? sellerData.whatsapp_number.replace('+82', '') :
+           sellerData.whatsapp_number.startsWith('+86') ? sellerData.whatsapp_number.replace('+86', '') :
+           sellerData.whatsapp_number.startsWith('+91') ? sellerData.whatsapp_number.replace('+91', '') :
+           sellerData.whatsapp_number.startsWith('+93') ? sellerData.whatsapp_number.replace('+93', '') :
+           sellerData.whatsapp_number.startsWith('+94') ? sellerData.whatsapp_number.replace('+94', '') :
+           sellerData.whatsapp_number.startsWith('+95') ? sellerData.whatsapp_number.replace('+95', '') :
+           sellerData.whatsapp_number.startsWith('+98') ? sellerData.whatsapp_number.replace('+98', '') :
+           sellerData.whatsapp_number.replace(/^\+\d+/, '')) : ""
+      });
+      console.log('Form data set with WhatsApp:', {
+        whatsappCountryCode: sellerData.whatsapp_number ? 
+          (sellerData.whatsapp_number.startsWith('+92') ? '+92' : 
+           sellerData.whatsapp_number.startsWith('+1') ? '+1' : 
+           sellerData.whatsapp_number.startsWith('+44') ? '+44' : '+1') : "+1",
+        whatsappNumber: sellerData.whatsapp_number ? 
+          (sellerData.whatsapp_number.startsWith('+92') ? sellerData.whatsapp_number.replace('+92', '') :
+           sellerData.whatsapp_number.startsWith('+1') ? sellerData.whatsapp_number.replace('+1', '') :
+           sellerData.whatsapp_number.startsWith('+44') ? sellerData.whatsapp_number.replace('+44', '') :
+           sellerData.whatsapp_number.replace(/^\+\d+/, '')) : ""
       });
       setIsLoading(false);
     } else {
@@ -131,7 +391,66 @@ export default function EditSeller() {
             iban: seller.iban || "",
             bankName: seller.bank_name || "",
             paymentSchedule: seller.payment_schedule || "",
-            status: seller.status || "pending"
+            status: seller.status || "pending",
+            whatsappCountryCode: seller.whatsapp_number ? 
+              (seller.whatsapp_number.startsWith('+92') ? '+92' : 
+               seller.whatsapp_number.startsWith('+1') ? '+1' : 
+               seller.whatsapp_number.startsWith('+44') ? '+44' : 
+               seller.whatsapp_number.startsWith('+49') ? '+49' : 
+               seller.whatsapp_number.startsWith('+33') ? '+33' : 
+               seller.whatsapp_number.startsWith('+39') ? '+39' : 
+               seller.whatsapp_number.startsWith('+34') ? '+34' : 
+               seller.whatsapp_number.startsWith('+31') ? '+31' : 
+               seller.whatsapp_number.startsWith('+32') ? '+32' : 
+               seller.whatsapp_number.startsWith('+41') ? '+41' : 
+               seller.whatsapp_number.startsWith('+43') ? '+43' : 
+               seller.whatsapp_number.startsWith('+45') ? '+45' : 
+               seller.whatsapp_number.startsWith('+46') ? '+46' : 
+               seller.whatsapp_number.startsWith('+47') ? '+47' : 
+               seller.whatsapp_number.startsWith('+358') ? '+358' : 
+               seller.whatsapp_number.startsWith('+61') ? '+61' : 
+               seller.whatsapp_number.startsWith('+64') ? '+64' : 
+               seller.whatsapp_number.startsWith('+81') ? '+81' : 
+               seller.whatsapp_number.startsWith('+82') ? '+82' : 
+               seller.whatsapp_number.startsWith('+86') ? '+86' : 
+               seller.whatsapp_number.startsWith('+91') ? '+91' : 
+               seller.whatsapp_number.startsWith('+93') ? '+93' : 
+               seller.whatsapp_number.startsWith('+94') ? '+94' : 
+               seller.whatsapp_number.startsWith('+95') ? '+95' : 
+               seller.whatsapp_number.startsWith('+98') ? '+98' : '+1') : "+1",
+            whatsappNumber: seller.whatsapp_number ? 
+              (seller.whatsapp_number.startsWith('+92') ? seller.whatsapp_number.replace('+92', '') :
+               seller.whatsapp_number.startsWith('+1') ? seller.whatsapp_number.replace('+1', '') :
+               seller.whatsapp_number.startsWith('+44') ? seller.whatsapp_number.replace('+44', '') :
+               seller.whatsapp_number.startsWith('+49') ? seller.whatsapp_number.replace('+49', '') :
+               seller.whatsapp_number.startsWith('+33') ? seller.whatsapp_number.replace('+33', '') :
+               seller.whatsapp_number.startsWith('+39') ? seller.whatsapp_number.replace('+39', '') :
+               seller.whatsapp_number.startsWith('+34') ? seller.whatsapp_number.replace('+34', '') :
+               seller.whatsapp_number.startsWith('+31') ? seller.whatsapp_number.replace('+31', '') :
+               seller.whatsapp_number.startsWith('+32') ? seller.whatsapp_number.replace('+32', '') :
+               seller.whatsapp_number.startsWith('+41') ? seller.whatsapp_number.replace('+41', '') :
+               seller.whatsapp_number.startsWith('+43') ? seller.whatsapp_number.replace('+43', '') :
+               seller.whatsapp_number.startsWith('+45') ? seller.whatsapp_number.replace('+45', '') :
+               seller.whatsapp_number.startsWith('+46') ? seller.whatsapp_number.replace('+46', '') :
+               seller.whatsapp_number.startsWith('+47') ? seller.whatsapp_number.replace('+47', '') :
+               seller.whatsapp_number.startsWith('+358') ? seller.whatsapp_number.replace('+358', '') :
+               seller.whatsapp_number.startsWith('+61') ? seller.whatsapp_number.replace('+61', '') :
+               seller.whatsapp_number.startsWith('+64') ? seller.whatsapp_number.replace('+64', '') :
+               seller.whatsapp_number.startsWith('+81') ? seller.whatsapp_number.replace('+81', '') :
+               seller.whatsapp_number.startsWith('+82') ? seller.whatsapp_number.replace('+82', '') :
+               seller.whatsapp_number.startsWith('+86') ? seller.whatsapp_number.replace('+86', '') :
+               seller.whatsapp_number.startsWith('+91') ? seller.whatsapp_number.replace('+91', '') :
+               seller.whatsapp_number.startsWith('+93') ? seller.whatsapp_number.replace('+93', '') :
+               seller.whatsapp_number.startsWith('+94') ? seller.whatsapp_number.replace('+94', '') :
+               seller.whatsapp_number.startsWith('+95') ? seller.whatsapp_number.replace('+95', '') :
+               seller.whatsapp_number.startsWith('+98') ? seller.whatsapp_number.replace('+98', '') :
+               seller.whatsapp_number.replace(/^\+\d+/, '')) : ""
+          });
+          console.log('Form data set with WhatsApp from API:', {
+            whatsappCountryCode: seller.whatsapp_number ? 
+              (seller.whatsapp_number.match(/^\+\d+/)?.[0] || "+1") : "+1",
+            whatsappNumber: seller.whatsapp_number ? 
+              seller.whatsapp_number.replace(/^\+\d+/, '') : ""
           });
         } catch (error) {
           console.error('Error loading seller:', error);
@@ -157,6 +476,12 @@ export default function EditSeller() {
     if (field === 'iban') {
       setIbanError(false);
     }
+  };
+
+  const handleWhatsAppNumberChange = (value: string) => {
+    // Only allow numbers
+    const numericValue = value.replace(/[^0-9]/g, '');
+    handleInputChange("whatsappNumber", numericValue);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -189,7 +514,10 @@ export default function EditSeller() {
         status: formData.status as "active" | "pending" | "suspended",
         vat_number: formData.vatNumber,
         vat_rate: parseFloat(formData.vatRate) || 0,
-        vat_registered: formData.vatRegistered
+        vat_registered: formData.vatRegistered,
+        whatsapp_number: formData.whatsappCountryCode && formData.whatsappNumber 
+          ? `${formData.whatsappCountryCode}${formData.whatsappNumber}` 
+          : ""
       };
 
       // Only add bank details if they are provided
@@ -461,6 +789,75 @@ export default function EditSeller() {
                     />
                   </div>
                 </div>
+                
+                {/* WhatsApp Number Field */}
+                <div className="space-y-2">
+                   <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                   <div className="flex gap-2">
+                     <div className="w-40">
+                       <Popover open={whatsappCountryOpen} onOpenChange={setWhatsappCountryOpen}>
+                         <PopoverTrigger asChild>
+                           <Button
+                             variant="outline"
+                             role="combobox"
+                             aria-expanded={whatsappCountryOpen}
+                             className="w-full justify-between transition-all duration-200 focus:scale-[1.02]"
+                           >
+                             {formData.whatsappCountryCode
+                               ? `${countryCodes.find((country) => country.code === formData.whatsappCountryCode)?.code} ${countryCodes.find((country) => country.code === formData.whatsappCountryCode)?.country}`
+                               : "Select country code"}
+                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent className="w-80 p-0">
+                           <Command>
+                             <CommandInput placeholder="Search country code..." />
+                             <CommandList>
+                               <CommandEmpty>No country code found.</CommandEmpty>
+                               <CommandGroup>
+                                 {countryCodes.map((country) => (
+                                   <CommandItem
+                                     key={country.code}
+                                     value={`${country.code} ${country.country}`}
+                                     onSelect={() => {
+                                       handleInputChange("whatsappCountryCode", country.code);
+                                       setWhatsappCountryOpen(false);
+                                     }}
+                                   >
+                                     <Check
+                                       className={cn(
+                                         "mr-2 h-4 w-4",
+                                         formData.whatsappCountryCode === country.code ? "opacity-100" : "opacity-0"
+                                       )}
+                                     />
+                                     <div className="flex items-center gap-2">
+                                       <span className="font-mono text-sm">{country.code}</span>
+                                       <span className="text-muted-foreground">{country.country}</span>
+                                     </div>
+                                   </CommandItem>
+                                 ))}
+                               </CommandGroup>
+                             </CommandList>
+                           </Command>
+                         </PopoverContent>
+                       </Popover>
+                     </div>
+                     <div className="flex-1">
+                       <div className="relative">
+                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                         <Input
+                           id="whatsappNumber"
+                           value={formData.whatsappNumber}
+                           onChange={(e) => handleWhatsAppNumberChange(e.target.value)}
+                           placeholder="1234567890"
+                           className="pl-10 transition-all duration-200 focus:scale-[1.02]"
+                         />
+                       </div>
+                     </div>
+                   </div>
+                   <p className="text-xs text-muted-foreground">WhatsApp number only</p>
+                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="businessType">Business Type *</Label>
                   <Select 
