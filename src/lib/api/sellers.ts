@@ -38,6 +38,7 @@ export interface Seller {
   iban: string;
   bank_name: string;
   payment_schedule: "weekly" | "bi-weekly" | "monthly";
+  whatsapp_number?: string;
   created_at: string;
   updated_at: string;
   vat_settings: {
@@ -95,6 +96,7 @@ export interface CreateSellerRequest {
   iban: string;
   bank_name: string;
   payment_schedule: "weekly" | "bi-weekly" | "monthly";
+  whatsapp_number?: string;
 }
 
 export interface UpdateSellerRequest {
@@ -114,6 +116,7 @@ export interface UpdateSellerRequest {
   iban?: string;
   bank_name?: string;
   payment_schedule?: "weekly" | "bi-weekly" | "monthly";
+  whatsapp_number?: string;
 }
 
 export interface ApiError {
@@ -133,6 +136,7 @@ export interface SellerPayout {
   status: "pending" | "processing" | "completed";
   payment_date: string | null;
   created_at: string;
+  whatsapp_number?: string; // Add WhatsApp number field
   account_holder?: string;
   iban?: string;
   bank_name?: string;

@@ -150,6 +150,8 @@ export function ProductsTable({
         return "bg-gray-100 text-gray-800 border-0 px-2 py-1 rounded-full text-xs";
       case "bought": 
         return "bg-purple-100 text-purple-800 border-0 px-2 py-1 rounded-full text-xs";
+      case "wtb": 
+        return "bg-red-500 text-white border-0 px-2 py-1 rounded-full text-xs";
       default: 
         return "bg-gray-100 text-gray-800 border-0 px-2 py-1 rounded-full text-xs";
     }
@@ -264,7 +266,11 @@ export function ProductsTable({
                 {paginatedProducts.map((product, index) => (
                   <TableRow 
                     key={product.id} 
-                    className="border-b hover:bg-muted/10 transition-colors duration-200"
+                    className={`border-b transition-colors duration-200 ${
+                      product.status === "wtb" 
+                        ? "bg-gray-100 hover:bg-gray-200" 
+                        : "hover:bg-muted/10"
+                    }`}
                   >
                     {/* Order Column */}
                     <TableCell className="py-3 min-w-[80px]">
@@ -306,9 +312,9 @@ export function ProductsTable({
                     <TableCell className="py-3">
                       <div className="flex items-center justify-between w-full">
                         <span className="text-sm text-foreground flex-1">{product.seller}</span>
-                        <button className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 cursor-pointer">
+                        {/* <button className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 cursor-pointer">
                           <MessageCircle className="h-4 w-4 text-green-500" />
-                        </button>
+                        </button> */}
                       </div>
                     </TableCell>
                     

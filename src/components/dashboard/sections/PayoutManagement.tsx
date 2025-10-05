@@ -132,6 +132,24 @@ export function PayoutManagement() {
     }
   };
 
+  const handleWhatsAppClick = (whatsappNumber: string) => {
+    if (!whatsappNumber) {
+      toast({
+        title: "No WhatsApp Number",
+        description: "This seller doesn't have a WhatsApp number registered.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Clean the number (remove any spaces or special characters except +)
+    const cleanNumber = whatsappNumber.replace(/[^\d+]/g, '');
+    
+    // Open WhatsApp chat
+    const whatsappUrl = `https://wa.me/${cleanNumber}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handleMarkAsPaidClick = (payout: SellerPayout) => {
     setSelectedPayout(payout);
     setIsConfirmModalOpen(true);
@@ -374,7 +392,13 @@ export function PayoutManagement() {
                         <div className="space-y-1">
                        <div className="flex items-center gap-2">
                          <h3 className="font-semibold text-gray-900">{payout.seller_store}</h3>
-                         <MessageCircle className="h-4 w-4 text-green-500" />
+                         <button
+                           onClick={() => handleWhatsAppClick(payout.whatsapp_number || '')}
+                           className="hover:bg-green-50 p-1 rounded-full transition-colors"
+                           title="Open WhatsApp chat"
+                         >
+                           <MessageCircle className="h-4 w-4 text-green-500 hover:text-green-600" />
+                         </button>
                        </div>
                        <p className="text-sm text-gray-500">{payout.seller_email}</p>
                         </div>
