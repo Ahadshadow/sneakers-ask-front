@@ -51,6 +51,7 @@ interface Seller {
   totalSales: string;
   rating: number;
   joinDate: string;
+  whatsappNumber?: string; // Add WhatsApp number field
   vatNumber?: string;
   vatRate?: string;
   vatRegistered?: boolean;
@@ -90,6 +91,7 @@ const convertApiSellerToUISeller = (apiSeller: ApiSeller) => ({
   totalSales: `€${apiSeller.total_sales}`,
   rating: parseFloat(apiSeller.rating),
   joinDate: apiSeller.join_date,
+  whatsappNumber: apiSeller.whatsapp_number, // Add WhatsApp number field
   vatNumber: apiSeller.vat_number,
   vatRate: apiSeller.vat_rate,
   vatRegistered: apiSeller.vat_registered,
@@ -185,6 +187,7 @@ export function SellersManagement() {
       business_description: seller.businessDescription,
       seller_type: seller.sellerType,
       status: seller.status,
+      whatsapp_number: seller.whatsappNumber, // Add WhatsApp number field
       vat_number: seller.vatNumber,
       vat_rate: seller.vatRate,
       vat_registered: seller.vatRegistered,
