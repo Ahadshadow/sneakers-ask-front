@@ -54,6 +54,12 @@ export interface OrderItem {
   destination: string;
   customer: string;
   processed_at: string;
+  wtb_order_id: string | null;
+  seller: {
+    store_name: string;
+    owner_name: string;
+    whatsapp_number: string;
+  } | null;
 }
 
 // UI Product interface (for existing design compatibility)
@@ -64,8 +70,12 @@ export interface Product {
   category: string;
   price: string;
   stock: number;
-  status: "open" | "sourcing" | "stock" | "fliproom_sale" | "sneakerask" | "bought";
-  seller: string;
+  status: "open" | "sourcing" | "stock" | "fliproom_sale" | "sneakerask" | "bought" | "wtb";
+  seller: {
+    store_name: string;
+    owner_name: string;
+    whatsapp_number: string;
+  } | null;
   shopifyId: string;
   orders: OrderReference[];
   orderUrl?: string; // Add order URL support for the product
