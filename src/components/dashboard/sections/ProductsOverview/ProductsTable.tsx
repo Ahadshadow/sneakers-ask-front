@@ -228,6 +228,24 @@ export function ProductsTable({
     }
   };
 
+  const handleWhatsAppClick = (whatsappNumber: string) => {
+    if (!whatsappNumber) {
+      toast({
+        title: "No WhatsApp Number",
+        description: "This seller doesn't have a WhatsApp number registered.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Clean the number (remove any spaces or special characters except +)
+    const cleanNumber = whatsappNumber.replace(/[^\d+]/g, '');
+    
+    // Open WhatsApp chat
+    const whatsappUrl = `https://wa.me/${cleanNumber}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="w-full">
       {isLoading ? (
@@ -253,7 +271,7 @@ export function ProductsTable({
                     </svg>
                   </TableHead>
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">Customer</TableHead>
-                  <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">Vendor</TableHead>
+                  <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">Seller</TableHead>
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">Shopify</TableHead>
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">Sale Channel</TableHead>
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">Manual Status</TableHead>
@@ -311,10 +329,18 @@ export function ProductsTable({
                     {/* Vendor Column */}
                     <TableCell className="py-3">
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-sm text-foreground flex-1">{product.seller}</span>
-                        {/* <button className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 cursor-pointer">
-                          <MessageCircle className="h-4 w-4 text-green-500" />
-                        </button> */}
+                        <span className="text-sm text-foreground flex-1">
+                          {product.seller?.store_name || "--"}
+                        </span>
+                        {product.seller && (
+                          <button 
+                            onClick={() => handleWhatsAppClick(product.seller?.whatsapp_number || '')}
+                            className="p-1 rounded-full hover:bg-green-50 transition-colors duration-200 cursor-pointer"
+                            title="Open WhatsApp chat"
+                          >
+                            <MessageCircle className="h-4 w-4 text-green-500 hover:text-green-600" />
+                          </button>
+                        )}
                       </div>
                     </TableCell>
                     
