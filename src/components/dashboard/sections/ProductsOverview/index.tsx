@@ -54,8 +54,8 @@ export function ProductsOverview() {
         category: orderItem.variant.variant || 'N/A',
         price: `${orderItem.currency} ${orderItem.price.toFixed(2)}`,
         stock: orderItem.quantity,
-        status: orderItem.status as 'open' | 'sourcing' | 'stock' | 'fliproom_sale' | 'sneakerask' | 'bought',
-        seller: orderItem.vendor,
+        status: orderItem.status as 'open' | 'sourcing' | 'stock' | 'fliproom_sale' | 'sneakerask' | 'bought' | 'wtb',
+        seller: orderItem.seller,
         shopifyId: orderItem.order_id.toString(),
         orderUrl: orderItem.order_url,
         variant: orderItem.variant.variant,
@@ -84,7 +84,7 @@ export function ProductsOverview() {
 
   // Get unique values for filter dropdowns
   const availableSellers = useMemo(() => {
-    return Array.from(new Set(apiOrderItems.map(product => product.seller))).sort();
+    return Array.from(new Set(apiOrderItems.map(product => product.seller?.store_name || '--'))).sort();
   }, [apiOrderItems]);
 
   const filteredProducts = useMemo(() => {
@@ -104,10 +104,10 @@ export function ProductsOverview() {
       const matchesSearch = searchTerm === "" || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.seller.toLowerCase().includes(searchTerm.toLowerCase());
+        (product.seller?.store_name || '').toLowerCase().includes(searchTerm.toLowerCase());
 
       // Seller filter
-      const matchesSeller = sellerFilter === "all" || product.seller === sellerFilter;
+      const matchesSeller = sellerFilter === "all" || (product.seller?.store_name || '--') === sellerFilter;
 
       return matchesSearch && matchesSeller;
     });
@@ -177,7 +177,7 @@ export function ProductsOverview() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search by product name, SKU, or vendor..."
+                  placeholder="Search by product name, SKU, or seller..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -185,18 +185,18 @@ export function ProductsOverview() {
               </div>
             </div>
 
-            {/* Vendor Filter */}
+            {/* Seller Filter */}
             <div>
-              <Label htmlFor="vendor" className="text-sm font-medium mb-2 block">
-                Vendor
+              <Label htmlFor="seller" className="text-sm font-medium mb-2 block">
+                Seller
               </Label>
               <select
-                id="vendor"
+                id="seller"
                 value={sellerFilter}
                 onChange={(e) => setSellerFilter(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
-                <option value="all">All Vendors</option>
+                <option value="all">All Sellers</option>
                 {availableSellers.map(seller => (
                   <option key={seller} value={seller}>{seller}</option>
                 ))}
