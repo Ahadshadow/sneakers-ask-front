@@ -27,51 +27,17 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { rolesApi, Role, Permission, CreateRoleRequest, UpdateRoleRequest } from "@/lib/api/roles";
 
-interface PermissionOption {
-  id: number;
-  name: string;
-  description: string;
-  icon: any;
-}
-
-const availablePermissions: PermissionOption[] = [
-  {
-    id: 1,
-    name: "View Dashboard",
-    description: "Access to dashboard overview and analytics",
-    icon: Eye
-  },
-  {
-    id: 2,
-    name: "Manage Products",
-    description: "View and manage Shopify products",
-    icon: Package
-  },
-  {
-    id: 3,
-    name: "Manage Users",
-    description: "Add, edit, and delete team members",
-    icon: Users
-  },
-  {
-    id: 4,
-    name: "Manage Roles",
-    description: "Create and modify user roles and permissions",
-    icon: Shield
-  },
-  {
-    id: 5,
-    name: "Manage Sellers",
-    description: "Oversee seller accounts and onboarding",
-    icon: Store
-  },
-  {
-    id: 6,
-    name: "System Settings",
-    description: "Access to system configuration and settings",
-    icon: Settings
-  }
-];
+// Icon mapping for permissions
+const getPermissionIcon = (permissionName: string) => {
+  const name = permissionName.toLowerCase();
+  if (name.includes('dashboard') || name.includes('view')) return Eye;
+  if (name.includes('product')) return Package;
+  if (name.includes('user')) return Users;
+  if (name.includes('role')) return Shield;
+  if (name.includes('seller')) return Store;
+  if (name.includes('setting')) return Settings;
+  return Shield; // Default icon
+};
 
 // Color options for roles
 const colorOptions = [
@@ -85,7 +51,9 @@ const colorOptions = [
 
 export function RolesManagement() {
   const [roles, setRoles] = useState<Role[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [permissionsLoading, setPermissionsLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; role: Role | null }>({
@@ -101,9 +69,10 @@ export function RolesManagement() {
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Load roles from API
+  // Load roles and permissions from API
   useEffect(() => {
     loadRoles();
+    loadPermissions();
   }, []);
 
   const loadRoles = async () => {
@@ -128,6 +97,31 @@ export function RolesManagement() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPermissions = async () => {
+    try {
+      setPermissionsLoading(true);
+      const response = await rolesApi.getPermissions();
+      if (response.success) {
+        setPermissions(response.data);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load permissions",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading permissions:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to load permissions",
+        variant: "destructive",
+      });
+    } finally {
+      setPermissionsLoading(false);
     }
   };
 
@@ -351,43 +345,50 @@ export function RolesManagement() {
                 />
               </div>
               
-              {/* Permissions Section */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Permissions</Label>
-                <div className="max-h-60 overflow-y-auto border border-border rounded-lg bg-muted/20">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
-                    {availablePermissions.map((permission) => {
-                      const Icon = permission.icon;
-                      return (
-                        <div key={permission.id} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                          <Checkbox
-                            id={permission.id}
-                            checked={formData.permissions.includes(permission.id)}
-                            onCheckedChange={(checked) => 
-                              handlePermissionChange(permission.id, checked as boolean)
-                            }
-                            className="mt-1"
-                          />
-                          <div className="flex-1 space-y-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <Icon className="h-4 w-4 text-primary flex-shrink-0" />
-                              <Label 
-                                htmlFor={permission.id} 
-                                className="text-sm font-medium cursor-pointer truncate"
-                              >
-                                {permission.name}
-                              </Label>
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {permission.description}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+               {/* Permissions Section */}
+               <div className="space-y-3">
+                 <Label className="text-sm font-medium">Permissions</Label>
+                 {permissionsLoading ? (
+                   <div className="flex items-center justify-center py-8">
+                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                     <span className="ml-2 text-muted-foreground">Loading permissions...</span>
+                   </div>
+                 ) : (
+                   <div className="max-h-60 overflow-y-auto border border-border rounded-lg bg-muted/20">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
+                       {permissions.map((permission) => {
+                         const Icon = getPermissionIcon(permission.name);
+                         return (
+                           <div key={permission.id} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
+                             <Checkbox
+                               id={permission.id}
+                               checked={formData.permissions.includes(permission.id)}
+                               onCheckedChange={(checked) => 
+                                 handlePermissionChange(permission.id, checked as boolean)
+                               }
+                               className="mt-1"
+                             />
+                             <div className="flex-1 space-y-1 min-w-0">
+                               <div className="flex items-center gap-2">
+                                 <Icon className="h-4 w-4 text-primary flex-shrink-0" />
+                                 <Label 
+                                   htmlFor={permission.id} 
+                                   className="text-sm font-medium cursor-pointer truncate"
+                                 >
+                                   {permission.name}
+                                 </Label>
+                               </div>
+                               <p className="text-xs text-muted-foreground line-clamp-2">
+                                 {permission.description}
+                               </p>
+                             </div>
+                           </div>
+                         );
+                       })}
+                     </div>
+                   </div>
+                 )}
+               </div>
               
               <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-border">
                 <Button 
