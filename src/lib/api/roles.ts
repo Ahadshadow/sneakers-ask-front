@@ -169,4 +169,9 @@ export const rolesApi = {
       method: 'DELETE',
     });
   },
+
+  // Get all permissions
+  async getPermissions(): Promise<{ success: boolean; data: Permission[]; message: string }> {
+    return apiRequest<{ success: boolean; data: Permission[]; message: string }>('/permissions');
+  },
 };
