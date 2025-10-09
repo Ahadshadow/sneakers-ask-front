@@ -110,6 +110,22 @@ async function apiRequest<T>(
   }
 }
 
+// Create role request interface
+export interface CreateRoleRequest {
+  name: string;
+  description: string;
+  color: string;
+  permission_ids: number[];
+}
+
+// Update role request interface
+export interface UpdateRoleRequest {
+  name: string;
+  description: string;
+  color: string;
+  permission_ids: number[];
+}
+
 // Roles API functions
 export const rolesApi = {
   // Get all roles with optional filtering and pagination
@@ -129,5 +145,28 @@ export const rolesApi = {
   // Get a specific role by ID
   async getRole(id: number): Promise<RoleResponse> {
     return apiRequest<RoleResponse>(`/roles/${id}`);
+  },
+
+  // Create a new role
+  async createRole(roleData: CreateRoleRequest): Promise<RoleResponse> {
+    return apiRequest<RoleResponse>('/roles', {
+      method: 'POST',
+      body: JSON.stringify(roleData),
+    });
+  },
+
+  // Update an existing role
+  async updateRole(id: number, roleData: UpdateRoleRequest): Promise<RoleResponse> {
+    return apiRequest<RoleResponse>(`/roles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(roleData),
+    });
+  },
+
+  // Delete a role
+  async deleteRole(id: number): Promise<{ success: boolean; message: string }> {
+    return apiRequest<{ success: boolean; message: string }>(`/roles/${id}`, {
+      method: 'DELETE',
+    });
   },
 };
