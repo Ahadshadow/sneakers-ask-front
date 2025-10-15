@@ -21,11 +21,17 @@ const signInSchema = z.object({
 type SignInFormData = z.infer<typeof signInSchema>;
 
 const SignIn = () => {
+
+  const [step, setStep] = useState<"login" | "otp">("login");
+  const [loginEmail, setLoginEmail] = useState<string>("");
+  const [otp, setOtp] = useState<string>("");
+  const [otpError, setOtpError] = useState<string | null>(null);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated, isLoading, isLoggingIn } = useAuth();
+  const { loginWithOtp, verifyOtp, isAuthenticated, isLoading, isLoggingIn } = useAuth();
   const { forgotPassword, isSendingReset } = usePasswordReset();
 
   // Form setup
@@ -46,18 +52,45 @@ const SignIn = () => {
     }
   }, [isAuthenticated, navigate, location]);
 
-  // Handle form submission
+  // Handle form submission (Step 1)
   const onSubmit = async (data: SignInFormData) => {
     try {
-      await login({
-        email: data.email,
+      const res = await loginWithOtp({
+        email: data.email.toLocaleLowerCase(),
         password: data.password,
       });
-      // Navigation will be handled by useEffect above
-    } catch (error) {
+      if (res.success && res.message.includes("OTP")) {
+        setLoginEmail(data.email.toLocaleLowerCase());
+        setStep("otp");
+      } else {
+        setError("root", { message: res.message || "Login failed" });
+      }
+    } catch (error: any) {
       setError("root", {
-        message: error instanceof Error ? error.message : "Login failed",
+        message: error?.message || "Login failed",
       });
+    }
+  };
+
+  // Handle OTP submission (Step 2)
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpError(null);
+    try {
+      const res = await verifyOtp(loginEmail, otp);
+      if (res.success && res.data?.token) {
+        // tokenManager.saveTokens(
+        //   res.data.token,
+        //   "", // If you have a refresh token, pass it here
+        //   res.data.user,
+        //   res.data.expires_at
+        // );
+        navigate("/", { replace: true });
+      } else {
+        setOtpError(res.message || "OTP verification failed");
+      }
+    } catch (error: any) {
+      setOtpError(error?.message || "OTP verification failed");
     }
   };
 
@@ -97,84 +130,121 @@ const SignIn = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Error Alert */}
-            {errors.root && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{errors.root.message}</AlertDescription>
-              </Alert>
-            )}
+          {step === "login" ? (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-            {/* Email Field */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                {...register("email")}
-                className={errors.email ? "border-destructive" : ""}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
+              {/* Error Alert */}
+              {errors.root && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{errors.root.message}</AlertDescription>
+                </Alert>
               )}
-            </div>
 
-            {/* Password Field */}
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  {...register("password")}
-                  className={errors.password ? "border-destructive" : ""}
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  {...register("email")}
+                  className={errors.email ? "border-destructive" : ""}
                 />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                )}
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    {...register("password")}
+                    className={errors.password ? "border-destructive" : ""}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                )}
+              </div>
+
+              {/* Forgot Password */}
+              <div className="flex items-center justify-between">
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
+                  variant="link"
+                  className="px-0"
+                  onClick={() => setShowForgotPassword(true)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  Forgot password?
                 </Button>
               </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
-              )}
-            </div>
 
-            {/* Forgot Password */}
-            <div className="flex items-center justify-between">
+              {/* Submit Button */}
+              <Button type="submit" className="w-full" disabled={isSubmitting || isLoggingIn}>
+                {isSubmitting || isLoggingIn ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleOtpSubmit} className="space-y-4">
+              <Alert>
+                <AlertDescription>
+                  OTP sent to <span className="font-medium">{loginEmail}</span>. Please check your email.
+                </AlertDescription>
+              </Alert>
+              <div className="space-y-2">
+                <Label htmlFor="otp">Enter OTP</Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  value={otp}
+                  onChange={e => setOtp(e.target.value)}
+                  placeholder="Enter the OTP"
+                  maxLength={6}
+                  autoFocus
+                />
+                {otpError && (
+                  <p className="text-sm text-destructive">{otpError}</p>
+                )}
+              </div>
+              <Button type="submit" className="w-full">
+                Verify OTP
+              </Button>
               <Button
                 type="button"
                 variant="link"
-                className="px-0"
-                onClick={() => setShowForgotPassword(true)}
+                className="w-full"
+                onClick={() => setStep("login")}
               >
-                Forgot password?
+                Back to Login
               </Button>
-            </div>
-
-            {/* Submit Button */}
-            <Button type="submit" className="w-full" disabled={isSubmitting || isLoggingIn}>
-              {isSubmitting || isLoggingIn ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-          </form>
+            </form>
+          )}
 
           {/* Forgot Password Modal */}
           {showForgotPassword && (

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useRe
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi, tokenManager, type User, type LoginCredentials } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import type { OtpLoginResponse, OtpVerifyResponse } from '@/lib/api/auth';
 
 // Auth context types
 interface AuthContextType {
@@ -10,7 +11,8 @@ interface AuthContextType {
   isLoading: boolean;
   isLoggingIn: boolean;
   isLoggingOut: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  loginWithOtp: (credentials: LoginCredentials) => Promise<OtpLoginResponse>;
+  verifyOtp: (email: string, otp: string) => Promise<OtpVerifyResponse>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   hasRole: (role: string) => boolean;
@@ -46,36 +48,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Extract user from localStorage only
   const user = localUser;
 
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: authApi.login,
+
+// OTP login mutation
+  const loginWithOtpMutation = useMutation({
+    mutationFn: authApi.loginWithOtp,
+  });
+
+  // OTP verify mutation
+  const verifyOtpMutation = useMutation({
+    mutationFn: ({ email, otp }: { email: string; otp: string }) =>
+      authApi.verifyOtp(email, otp),
     onSuccess: (data) => {
-      console.log('Login successful:', data);
       // Save tokens and user data
-      tokenManager.saveTokens(data.data.token, data.data.token, data.data.user, data.data.expires_at);
+
+      console.log("data", data);
       
-      // Update local state
+      tokenManager.saveTokens(
+        data.data.token,
+        "", // If you have a refresh token, pass it here
+        data.data.user,
+        data.data.expires_at
+      );
       setLocalUser(data.data.user);
-      
-      // No need to update query cache since we're not using getCurrentUser
-      
-      // No need for token refresh timer since we want simple login/logout
-      
-      // Show success message
       toast({
         title: "Welcome back!",
-        description: `Logged in as ${data.data.user.name}`,
+        description: `Logged in as ${data.data.user.full_name}`,
       });
     },
     onError: (error) => {
       toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid credentials",
+        title: "OTP Verification failed",
+        description: error instanceof Error ? error.message : "Invalid OTP",
         variant: "destructive",
       });
     },
   });
-
   // No need for refresh token mutation since we want simple login/logout
 
   // Logout mutation
@@ -108,6 +115,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearTimeout(refreshTimerRef.current);
       refreshTimerRef.current = null;
     }
+  };
+
+
+  // Login with OTP (step 1)
+  const loginWithOtp = async (credentials: LoginCredentials) => {
+    return await loginWithOtpMutation.mutateAsync(credentials);
+  };
+
+  // Verify OTP (step 2)
+  const verifyOtp = async (email: string, otp: string) => {
+    return await verifyOtpMutation.mutateAsync({ email, otp });
   };
 
   // No need for token refresh timer since we want simple login/logout
@@ -151,9 +169,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (credentials: LoginCredentials): Promise<void> => {
-    await loginMutation.mutateAsync(credentials);
-  };
+  // const login = async (credentials: LoginCredentials): Promise<void> => {
+  //   await loginMutation.mutateAsync(credentials);
+  // };
 
   // Logout function
   const logout = async (): Promise<void> => {
@@ -192,9 +210,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user: user || null,
     isAuthenticated,
     isLoading: isUserLoading || !isInitialized,
-    isLoggingIn: loginMutation.isPending,
+    isLoggingIn: loginWithOtpMutation.isPending || verifyOtpMutation.isPending,
     isLoggingOut: logoutMutation.isPending,
-    login,
+    loginWithOtp,
+    verifyOtp,
     logout,
     refreshAuth,
     hasRole,

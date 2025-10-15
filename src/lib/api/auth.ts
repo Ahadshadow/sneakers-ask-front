@@ -34,6 +34,23 @@ export interface RefreshTokenResponse {
   };
 }
 
+export interface OtpLoginResponse {
+  success: boolean;
+  message: string;
+  data: { email: string };
+}
+
+export interface OtpVerifyResponse {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    token_type: string;
+    user: User;
+    expires_at?: string;
+  };
+}
+
 export interface ApiError {
   message: string;
   code?: string;
@@ -100,11 +117,19 @@ async function apiRequest<T>(
 
 // Auth API functions
 export const authApi = {
-  // Login user
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    return apiRequest<AuthResponse>('/login', {
+ // Step 1: Login with email/password (returns OTP sent)
+  async loginWithOtp(credentials: LoginCredentials): Promise<OtpLoginResponse> {
+    return apiRequest<OtpLoginResponse>('/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
+    });
+  },
+
+  // Step 2: Verify OTP
+  async verifyOtp(email: string, otp: string): Promise<OtpVerifyResponse> {
+    return apiRequest<OtpVerifyResponse>('/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
     });
   },
 
