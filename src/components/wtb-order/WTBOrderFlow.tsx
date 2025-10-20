@@ -68,7 +68,7 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
   const [payoutPrice, setPayoutPrice] = useState("");
   const [vatTreatment, setVatTreatment] = useState("regular");
   const [vatRefundIncluded, setVatRefundIncluded] = useState(false);
-  const [selectedShipping, setSelectedShipping] = useState("upload");
+  const [selectedShipping, setSelectedShipping] = useState("sendcloud");
   const [paymentTiming, setPaymentTiming] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
@@ -182,15 +182,30 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
     }
   };
 
+  const handleSendCloudLabelCreated = (labelData: any) => {
+    // SendCloud create-label response matches FileUploadResponse shape
+    // Reuse the same tracking data section
+    setTrackingData(labelData);
+
+    console.log("labelData", labelData);
+    
+    toast.success("SendCloud label created successfully");
+  };
+
   const handlePurchase = async () => {
     if (!selectedSeller || !payoutPrice || !vatTreatment || !selectedShipping) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    // Always require file upload for shipping
-    if (!uploadedFile) {
+    // Check if shipping method is properly configured
+    if (selectedShipping === "upload" && !uploadedFile) {
       toast.error("Please upload a shipment label");
+      return;
+    }
+    
+    if (selectedShipping === "sendcloud" && !trackingData) {
+      toast.error("Please create a SendCloud label");
       return;
     }
     
@@ -310,7 +325,8 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
     }
   };
 
-  const canSubmit = selectedSeller && payoutPrice && parseFloat(payoutPrice) > 0 && vatTreatment && selectedShipping && uploadedFile && !isUploadingFile;
+  const canSubmit = selectedSeller && payoutPrice && parseFloat(payoutPrice) > 0 && vatTreatment && selectedShipping && 
+    ((selectedShipping === "upload" && uploadedFile) || (selectedShipping === "sendcloud" && trackingData)) && !isUploadingFile;
 
   return (
     <div className="min-h-screen bg-background">
@@ -440,6 +456,9 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
                 uploadedFile={uploadedFile}
                 onFileUpload={handleFileUpload}
                 isUploadingFile={isUploadingFile}
+                customerCountryCode={product.customerAddress?.country_code}
+                orderItem={product}
+                onSendCloudLabelCreated={handleSendCloudLabelCreated}
               />
 
               {/* Tracking Data Display */}
@@ -471,6 +490,8 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
                   </CardContent>
                 </Card>
               )}
+
+
 
               {/* Action Buttons */}
               <div className="flex gap-4 pt-4">

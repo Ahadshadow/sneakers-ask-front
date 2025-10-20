@@ -33,6 +33,22 @@ export const config = {
     toastDuration: 5000, // 5 seconds
     animationDuration: 200, // 200ms
   },
+  
+  // SendCloud Configuration
+  sendcloud: {
+    apiKey: import.meta.env.VITE_SENDCLOUD_API_KEY,
+    baseUrl: import.meta.env.VITE_SENDCLOUD_BASE_URL || 'https://panel.sendcloud.sc/api/v3',
+    packageDimensions: {
+      length: import.meta.env.VITE_SENDCLOUD_PACKAGE_LENGTH || '30',
+      width: import.meta.env.VITE_SENDCLOUD_PACKAGE_WIDTH || '20',
+      height: import.meta.env.VITE_SENDCLOUD_PACKAGE_HEIGHT || '15',
+      unit: import.meta.env.VITE_SENDCLOUD_PACKAGE_UNIT || 'cm',
+    },
+    packageWeight: {
+      value: import.meta.env.VITE_SENDCLOUD_PACKAGE_WEIGHT || '2',
+      unit: import.meta.env.VITE_SENDCLOUD_WEIGHT_UNIT || 'kg',
+    },
+  },
 } as const;
 
 // Type for configuration

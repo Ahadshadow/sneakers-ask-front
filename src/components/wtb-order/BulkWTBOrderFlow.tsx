@@ -12,6 +12,7 @@ import { SellerSelection } from "./SellerSelection";
 import { BulkPricingSection } from "./BulkPricingSection";
 import { ShippingSection } from "./ShippingSection";
 import { PricingBreakdown } from "./PricingBreakdown";
+import { SendCloudModal } from "./SendCloudModal";
 import { Product } from "@/components/dashboard/sections/ProductsOverview/types";
 import { sellersApi } from "@/lib/api/sellers";
 import { getVATRateByCountryCode } from "@/data/euCountryVAT";
@@ -96,12 +97,12 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     }
   }, [products, selectedSeller]);
 
-  // Set shipping method to "upload" for all products (always upload)
+  // Set shipping method default to "sendcloud" for all products
   useEffect(() => {
     if (selectedSeller) {
       const shippingMethods: {[key: string]: string} = {};
       products.forEach(product => {
-        shippingMethods[product.id] = 'upload';
+        shippingMethods[product.id] = 'sendcloud';
       });
       
       setSelectedShipping(shippingMethods);
@@ -217,6 +218,14 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     }
   };
 
+  const handleSendCloudLabelCreated = (productId: string, labelData: any) => {
+    // Reuse tracking data section: backend returns same shape as upload-file
+    setTrackingData(prev => ({ ...prev, [productId]: labelData }));
+    // Mark shipping method as sendcloud for this product
+    setSelectedShipping(prev => ({ ...prev, [productId]: 'sendcloud' }));
+    toast.success(`SendCloud label created for ${products.find(p => p.id === productId)?.name || 'product'}`);
+  };
+
   const handleRemoveFromCart = (productId: string) => {
     // Remove related state
     setPayoutPrices(prev => {
@@ -230,6 +239,11 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       return newState;
     });
     setVatRefundIncluded(prev => {
+      const newState = { ...prev };
+      delete newState[productId];
+      return newState;
+    });
+    setTrackingData(prev => {
       const newState = { ...prev };
       delete newState[productId];
       return newState;
@@ -396,12 +410,19 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     selectedShipping[product.id] && selectedShipping[product.id].trim() !== ""
   );
 
-  // Check if all products have required file uploads (always required for upload shipping)
-  const allProductsHaveRequiredFiles = products.every(product => {
-    return uploadedFile[product.id];
+  // Check if all products have required shipping labels based on selected method
+  const allProductsHaveRequiredShipping = products.every(product => {
+    const method = selectedShipping[product.id];
+    if (method === 'upload') {
+      return !!uploadedFile[product.id];
+    }
+    if (method === 'sendcloud') {
+      return !!trackingData[product.id];
+    }
+    return false;
   });
 
-  const canSubmit = selectedSeller && allProductsHaveShipping && allProductsHavePayout && allProductsHaveVat && allProductsHaveRequiredFiles;
+  const canSubmit = selectedSeller && allProductsHaveShipping && allProductsHavePayout && allProductsHaveVat && allProductsHaveRequiredShipping;
 
   if (products.length === 0) {
     return null;
@@ -507,14 +528,14 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                             </div>
                           </div>
                         </div>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleRemoveFromCart(product.id)}
                           className="h-8 w-8 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
 
@@ -723,39 +744,111 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                         {/* Shipping Method */}
                         <div className="mt-6">
                           <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 block">Shipping Method</Label>
-                          <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
-                                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                          <div className="space-y-3">
+                            {/* Method selector */}
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleShippingChange(product.id, 'sendcloud')}
+                                className={`flex-1 px-4 py-2 text-sm rounded-lg border transition-all duration-200 ${
+                                  selectedShipping[product.id] === 'sendcloud'
+                                    ? 'border-primary bg-primary text-white shadow-md'
+                                    : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-primary/50 hover:bg-primary/5'
+                                }`}
+                              >
+                                SendCloud
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleShippingChange(product.id, 'upload')}
+                                className={`flex-1 px-4 py-2 text-sm rounded-lg border transition-all duration-200 ${
+                                  selectedShipping[product.id] === 'upload'
+                                    ? 'border-primary bg-primary text-white shadow-md'
+                                    : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-primary/50 hover:bg-primary/5'
+                                }`}
+                              >
+                                Upload Label
+                              </button>
+                            </div>
+                            {/* Upload Option */}
+                            {selectedShipping[product.id] === 'upload' && (
+                            <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                                </div>
+                                <div>
+                                  <Label className="text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer">
+                                    Upload Shipment Label
+                                  </Label>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    Upload a PDF or image shipment label for this order
+                                  </p>
+                                </div>
                               </div>
-                              <div>
-                                <Label className="text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer">
-                                  Upload Shipment Label
-                                </Label>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  Upload a PDF or image shipment label for this order
-                                </p>
+                              
+                              <div className="mt-4 space-y-2">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Shipment Label</Label>
+                                <div className="flex items-center gap-3">
+                                  <Input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+                                    onChange={(e) => handleFileUpload(product.id, e.target.files?.[0] || null)}
+                                    className="flex-1 h-10 border-slate-300 dark:border-slate-600"
+                                  />
+                                  {isUploadingFile[product.id] ? (
+                                    <div className="flex items-center gap-2 text-xs text-blue-600">
+                                      <Upload className="h-3 w-3 animate-spin" />
+                                      Uploading...
+                                    </div>
+                                  ) : uploadedFile[product.id] ? (
+                                    <div className="flex items-center gap-2 text-xs text-green-600">
+                                      <Upload className="h-3 w-3" />
+                                      Ready
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-2 text-xs text-red-500">
+                                      Required
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                            
-                            <div className="mt-4 space-y-2">
-                              <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Shipment Label</Label>
-                              <div className="flex items-center gap-3">
-                                <Input
-                                  type="file"
-                                  accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
-                                  onChange={(e) => handleFileUpload(product.id, e.target.files?.[0] || null)}
-                                  className="flex-1 h-10 border-slate-300 dark:border-slate-600"
-                                />
-                                {isUploadingFile[product.id] ? (
-                                  <div className="flex items-center gap-2 text-xs text-blue-600">
-                                    <Upload className="h-3 w-3 animate-spin" />
-                                    Uploading...
-                                  </div>
-                                ) : uploadedFile[product.id] ? (
+                            )}
+
+                            {/* SendCloud Option */}
+                            {selectedShipping[product.id] === 'sendcloud' && (
+                            <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                                </div>
+                                <div>
+                                  <Label className="text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer">
+                                    SendCloud Shipment Label
+                                  </Label>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    Create a SendCloud shipment label for this order
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-4 space-y-2">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Create SendCloud Label</Label>
+                                <SendCloudModal
+                                  customerCountryCode={product.customerAddress?.country_code || ""}
+                                  orderItem={product}
+                                  onLabelCreated={(labelData) => handleSendCloudLabelCreated(product.id, labelData)}
+                                >
+                                  <Button className="w-full" variant="outline">
+                                    <Package className="h-4 w-4 mr-2" />
+                                    Create SendCloud Label
+                                  </Button>
+                                </SendCloudModal>
+                                {trackingData[product.id] ? (
                                   <div className="flex items-center gap-2 text-xs text-green-600">
-                                    <Upload className="h-3 w-3" />
-                                    Ready
+                                    <Package className="h-3 w-3" />
+                                    Label Created
                                   </div>
                                 ) : (
                                   <div className="flex items-center gap-2 text-xs text-red-500">
@@ -764,6 +857,7 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                                 )}
                               </div>
                             </div>
+                            )}
                           </div>
                         </div>
 
@@ -794,6 +888,8 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                             </div>
                           </div>
                         )}
+
+                        
 
                         {/* Pricing Breakdown */}
                         {vatTreatments[product.id] && (
