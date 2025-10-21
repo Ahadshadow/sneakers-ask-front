@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,23 @@ import { OrderItem } from "./types";
 
 export function ProductsOverview() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sellerFilter, setSellerFilter] = useState<string>("all");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [saleChannelFilter, setSaleChannelFilter] = useState<string>("all");
   const [cart, setCart] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   
   const { toast } = useToast();
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms debounce delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchTerm]);
 
   // Fetch order items from API
   const {
@@ -28,15 +40,14 @@ export function ProductsOverview() {
     error: orderItemsError,
     refetch: refetchOrderItems,
   } = useQuery({
-    queryKey: ['order-items', currentPage, searchTerm, sellerFilter],
+    queryKey: ['order-items', currentPage, debouncedSearchTerm, saleChannelFilter],
     queryFn: async () => {
-      if (searchTerm) {
-        return await productsApi.searchOrderItems(searchTerm, currentPage);
-      } else if (sellerFilter !== "all") {
-        return await productsApi.getOrderItemsByVendor(sellerFilter, currentPage);
-      } else {
-        return await productsApi.getOrderItems(currentPage);
-      }
+      return await productsApi.getOrderItems(
+        currentPage, 
+        10, 
+        debouncedSearchTerm || undefined, 
+        saleChannelFilter !== "all" ? saleChannelFilter : undefined
+      );
     },
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
@@ -88,12 +99,12 @@ export function ProductsOverview() {
   }, [apiOrderItems]);
 
   const filteredProducts = useMemo(() => {
-    console.log('Filtering products - searchTerm:', searchTerm, 'sellerFilter:', sellerFilter);
+    console.log('Filtering products - searchTerm:', debouncedSearchTerm, 'saleChannelFilter:', saleChannelFilter);
     console.log('API Order Items count:', apiOrderItems.length);
     
-    // If we have a search term or seller filter, the API already filtered the results
+    // If we have a search term or sale channel filter, the API already filtered the results
     // So we just return the API results directly
-    if (searchTerm || sellerFilter !== "all") {
+    if (debouncedSearchTerm || saleChannelFilter !== "all") {
       console.log('Using API filtered results directly');
       return apiOrderItems;
     }
@@ -101,17 +112,17 @@ export function ProductsOverview() {
     // Only apply client-side filtering when no search/filter is active
     return apiOrderItems.filter(product => {
       // Search filter
-      const matchesSearch = searchTerm === "" || 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (product.seller?.store_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = debouncedSearchTerm === "" || 
+        product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        product.sku.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        (product.seller?.store_name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase());
 
-      // Seller filter
-      const matchesSeller = sellerFilter === "all" || (product.seller?.store_name || '--') === sellerFilter;
+      // Sale channel filter
+      const matchesSaleChannel = saleChannelFilter === "all" || product.status === saleChannelFilter;
 
-      return matchesSearch && matchesSeller;
+      return matchesSearch && matchesSaleChannel;
     });
-  }, [apiOrderItems, searchTerm, sellerFilter]);
+  }, [apiOrderItems, debouncedSearchTerm, saleChannelFilter]);
 
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
@@ -185,21 +196,23 @@ export function ProductsOverview() {
               </div>
             </div>
 
-            {/* Seller Filter */}
+            {/* Sale Channel Filter */}
             <div>
-              <Label htmlFor="seller" className="text-sm font-medium mb-2 block">
-                Seller
+              <Label htmlFor="saleChannel" className="text-sm font-medium mb-2 block">
+                Sale Channel
               </Label>
               <select
-                id="seller"
-                value={sellerFilter}
-                onChange={(e) => setSellerFilter(e.target.value)}
+                id="saleChannel"
+                value={saleChannelFilter}
+                onChange={(e) => setSaleChannelFilter(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
-                <option value="all">All Sellers</option>
-                {availableSellers.map(seller => (
-                  <option key={seller} value={seller}>{seller}</option>
-                ))}
+                <option value="all">All Channels</option>
+                <option value="wtb">WTB</option>
+                <option value="sourcing">Sourcing</option>
+                <option value="consignment">Consignment</option>
+                <option value="stock">Stock</option>
+                <option value="open">Open</option>
               </select>
             </div>
 
@@ -210,7 +223,7 @@ export function ProductsOverview() {
                 size="sm"
                 onClick={() => {
                   setSearchTerm("");
-                  setSellerFilter("all");
+                  setSaleChannelFilter("all");
                 }}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -232,7 +245,7 @@ export function ProductsOverview() {
             </span>
           )}
         </span>
-        {(searchTerm || sellerFilter !== "all") && (
+        {(searchTerm || saleChannelFilter !== "all") && (
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filters active</span>
@@ -248,18 +261,18 @@ export function ProductsOverview() {
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
               <h3 className="text-lg font-semibold text-foreground">No Products Found</h3>
               <p className="text-sm text-muted-foreground">
-                {searchTerm || sellerFilter !== "all"
+                {searchTerm || saleChannelFilter !== "all"
                   ? "No products match your current filters."
                   : "No products available at the moment."
                 }
               </p>
-              {(searchTerm || sellerFilter !== "all") && (
+              {(searchTerm || saleChannelFilter !== "all") && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setSearchTerm("");
-                    setSellerFilter("all");
+                    setSaleChannelFilter("all");
                   }}
                 >
                   Clear Filters

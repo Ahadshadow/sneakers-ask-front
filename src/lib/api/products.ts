@@ -222,9 +222,27 @@ export const productsApi = {
     return apiRequest<ProductsResponse>(`/products?vendor=${encodeURIComponent(vendor)}&page=${page}`);
   },
 
-  // Get order items with pagination
-  async getOrderItems(page: number = 1, perPage: number = 10): Promise<OrderItemsResponse> {
-    return apiRequest<OrderItemsResponse>(`/order-items?page=${page}&per_page=${perPage}`);
+  // Get order items with pagination, search and status filter
+  async getOrderItems(
+    page: number = 1, 
+    perPage: number = 10, 
+    search?: string, 
+    status?: string
+  ): Promise<OrderItemsResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      per_page: perPage.toString(),
+    });
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    if (status) {
+      params.append('status', status);
+    }
+    
+    return apiRequest<OrderItemsResponse>(`/order-items?${params.toString()}`);
   },
 
   // Search order items
