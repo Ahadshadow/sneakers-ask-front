@@ -16,20 +16,11 @@ import { sellersApi } from "@/lib/api/sellers";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { validateIBAN, cn } from "@/lib/utils";
+import { COUNTRIES } from "@/data/countries";
 
 const businessTypes = [
   "Private",
   "B2B"
-];
-
-const countries = [
-  "United States",
-  "Canada",
-  "United Kingdom",
-  "Germany",
-  "France",
-  "Australia",
-  "Other"
 ];
 
 const paymentSchedules = [
@@ -246,7 +237,7 @@ export default function AddSeller() {
     businessDescription: "",
     
     // WhatsApp Info
-    whatsappCountryCode: "+1",
+    whatsappCountryCode: "+31",
     whatsappNumber: "",
     
     // Tax Info
@@ -569,7 +560,7 @@ export default function AddSeller() {
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent>
-                      {countries.map(country => (
+                      {COUNTRIES.map(country => (
                         <SelectItem key={country} value={country}>{country}</SelectItem>
                       ))}
                     </SelectContent>

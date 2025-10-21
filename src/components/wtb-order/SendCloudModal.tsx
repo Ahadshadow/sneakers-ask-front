@@ -70,7 +70,12 @@ export function SendCloudModal({
     queryFn: async () => {
       if (!selectedSenderId || !customerCountryCode) return [];
 
-      const selectedSender = senderAddresses?.[parseInt(selectedSenderId)];
+      // Filter NL addresses first
+      const filteredAddresses = senderAddresses?.filter(
+        (addr) => addr.country_code === "NL"
+      ) || [];
+      
+      const selectedSender = filteredAddresses?.[parseInt(selectedSenderId)];
       if (!selectedSender) return [];
 
       const request = {
@@ -84,13 +89,19 @@ export function SendCloudModal({
     enabled: !!selectedSenderId && !!customerCountryCode && isOpen,
   });
 
+  // Filter sender addresses to only show NL (Netherlands) ones
+  const filteredSenderAddresses = senderAddresses?.filter(
+    (addr) => addr.country_code === "NL"
+  ) || [];
+
   // Auto-select default sender address when modal opens and data is loaded
   useEffect(() => {
     if (!isOpen) return;
-    if (!senderAddresses || senderAddresses.length === 0) return;
+    if (!filteredSenderAddresses || filteredSenderAddresses.length === 0) return;
     if (selectedSenderId) return;
 
-    const defaultIndex = senderAddresses.findIndex((addr) =>
+    // Find the default NL sender with most details
+    const defaultIndex = filteredSenderAddresses.findIndex((addr) =>
       addr.company_name === "Candy Wormer" &&
       addr.postal_code === "1531 DT" &&
       addr.country_code === "NL"
@@ -99,10 +110,10 @@ export function SendCloudModal({
     if (defaultIndex !== -1) {
       setSelectedSenderId(defaultIndex.toString());
     } else {
-      // Fallback to first address if specific default not found
+      // Fallback to first NL address if specific default not found
       setSelectedSenderId("0");
     }
-  }, [isOpen, senderAddresses, selectedSenderId]);
+  }, [isOpen, filteredSenderAddresses, selectedSenderId]);
 
   const handleCreateLabel = async () => {
     if (!selectedSenderId || !selectedShippingOptionCode) {
@@ -113,7 +124,7 @@ export function SendCloudModal({
     try {
       setIsCreatingLabel(true);
 
-      const selectedSender = senderAddresses?.[parseInt(selectedSenderId)];
+      const selectedSender = filteredSenderAddresses?.[parseInt(selectedSenderId)];
       const selectedShippingOption = shippingOptions?.find(
         (option) => option.code === selectedShippingOptionCode
       );
@@ -255,7 +266,7 @@ export function SendCloudModal({
         <div className="space-y-6">
           {/* Sender Address Selection */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Sender Location</Label>
+            <Label className="text-sm font-medium">Sender Location (NL Only)</Label>
             {isLoadingSenders ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -266,29 +277,35 @@ export function SendCloudModal({
                 Error loading sender addresses: {sendersError.message}
               </div>
             ) : (
-              <Select
-                value={selectedSenderId}
-                onValueChange={setSelectedSenderId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select sender location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {senderAddresses?.map((address, index) => (
-                    <SelectItem key={index} value={index.toString()}>
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">
-                          {address.company_name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {address.house_number}, {address.address_line_1},{" "}
-                          {address.city}, {address.country_code}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <Select
+                  value={selectedSenderId}
+                  onValueChange={setSelectedSenderId}
+                  disabled={true}
+                >
+                  <SelectTrigger className="cursor-not-allowed opacity-75">
+                    <SelectValue placeholder="Select sender location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredSenderAddresses?.map((address, index) => (
+                      <SelectItem key={index} value={index.toString()}>
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">
+                            {address.company_name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {address.house_number}, {address.address_line_1},{" "}
+                            {address.city}, {address.postal_code}, {address.country_code}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Default sender location is automatically selected (read-only)
+                </p>
+              </>
             )}
           </div>
 

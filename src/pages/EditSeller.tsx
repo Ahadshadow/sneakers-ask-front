@@ -16,20 +16,11 @@ import { sellersApi } from "@/lib/api/sellers";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { validateIBAN, cn } from "@/lib/utils";
+import { COUNTRIES } from "@/data/countries";
 
 const businessTypes = [
   "Private",
   "B2B"
-];
-
-const countries = [
-  "United States",
-  "Canada",
-  "United Kingdom",
-  "Germany",
-  "France",
-  "Australia",
-  "Other"
 ];
 
 const paymentSchedules = [
@@ -225,6 +216,33 @@ const countryCodes = [
   { code: "+998", country: "Uzbekistan" }
 ];
 
+// Helper function to extract country code from WhatsApp number
+const extractCountryCodeFromNumber = (whatsappNumber: string): { countryCode: string; number: string } => {
+  if (!whatsappNumber) {
+    return { countryCode: "+31", number: "" }; // Default to Netherlands
+  }
+
+  // Sort country codes by length (longest first) to match multi-digit codes first
+  const sortedCodes = [...countryCodes].sort((a, b) => b.code.length - a.code.length);
+
+  for (const country of sortedCodes) {
+    if (whatsappNumber.startsWith(country.code)) {
+      return {
+        countryCode: country.code,
+        number: whatsappNumber.substring(country.code.length)
+      };
+    }
+  }
+
+  // If no match found, try to extract any leading + and digits
+  const match = whatsappNumber.match(/^(\+\d+)(.*)$/);
+  if (match) {
+    return { countryCode: match[1], number: match[2] };
+  }
+
+  // Default fallback
+  return { countryCode: "+31", number: whatsappNumber };
+};
 
 export default function EditSeller() {
   const navigate = useNavigate();
@@ -251,7 +269,7 @@ export default function EditSeller() {
     businessDescription: "",
     
     // WhatsApp Info
-    whatsappCountryCode: "+1",
+    whatsappCountryCode: "+31",
     whatsappNumber: "",
     
     // Tax Info
@@ -277,6 +295,9 @@ export default function EditSeller() {
     if (sellerData) {
       // Use data from navigation state (fast)
       
+      // Extract WhatsApp country code and number
+      const whatsappData = extractCountryCodeFromNumber(sellerData.whatsapp_number || "");
+      
       setFormData({
         storeName: sellerData.store_name || "",
         ownerName: sellerData.owner_name || "",
@@ -295,71 +316,10 @@ export default function EditSeller() {
         bankName: sellerData.bank_name || "",
         paymentSchedule: sellerData.payment_schedule || "",
         status: sellerData.status || "pending",
-        whatsappCountryCode: sellerData.whatsapp_number ? 
-          (sellerData.whatsapp_number.startsWith('+92') ? '+92' : 
-           sellerData.whatsapp_number.startsWith('+1') ? '+1' : 
-           sellerData.whatsapp_number.startsWith('+44') ? '+44' : 
-           sellerData.whatsapp_number.startsWith('+49') ? '+49' : 
-           sellerData.whatsapp_number.startsWith('+33') ? '+33' : 
-           sellerData.whatsapp_number.startsWith('+39') ? '+39' : 
-           sellerData.whatsapp_number.startsWith('+34') ? '+34' : 
-           sellerData.whatsapp_number.startsWith('+31') ? '+31' : 
-           sellerData.whatsapp_number.startsWith('+32') ? '+32' : 
-           sellerData.whatsapp_number.startsWith('+41') ? '+41' : 
-           sellerData.whatsapp_number.startsWith('+43') ? '+43' : 
-           sellerData.whatsapp_number.startsWith('+45') ? '+45' : 
-           sellerData.whatsapp_number.startsWith('+46') ? '+46' : 
-           sellerData.whatsapp_number.startsWith('+47') ? '+47' : 
-           sellerData.whatsapp_number.startsWith('+358') ? '+358' : 
-           sellerData.whatsapp_number.startsWith('+61') ? '+61' : 
-           sellerData.whatsapp_number.startsWith('+64') ? '+64' : 
-           sellerData.whatsapp_number.startsWith('+81') ? '+81' : 
-           sellerData.whatsapp_number.startsWith('+82') ? '+82' : 
-           sellerData.whatsapp_number.startsWith('+86') ? '+86' : 
-           sellerData.whatsapp_number.startsWith('+91') ? '+91' : 
-           sellerData.whatsapp_number.startsWith('+93') ? '+93' : 
-           sellerData.whatsapp_number.startsWith('+94') ? '+94' : 
-           sellerData.whatsapp_number.startsWith('+95') ? '+95' : 
-           sellerData.whatsapp_number.startsWith('+98') ? '+98' : '+1') : "+1",
-        whatsappNumber: sellerData.whatsapp_number ? 
-          (sellerData.whatsapp_number.startsWith('+92') ? sellerData.whatsapp_number.replace('+92', '') :
-           sellerData.whatsapp_number.startsWith('+1') ? sellerData.whatsapp_number.replace('+1', '') :
-           sellerData.whatsapp_number.startsWith('+44') ? sellerData.whatsapp_number.replace('+44', '') :
-           sellerData.whatsapp_number.startsWith('+49') ? sellerData.whatsapp_number.replace('+49', '') :
-           sellerData.whatsapp_number.startsWith('+33') ? sellerData.whatsapp_number.replace('+33', '') :
-           sellerData.whatsapp_number.startsWith('+39') ? sellerData.whatsapp_number.replace('+39', '') :
-           sellerData.whatsapp_number.startsWith('+34') ? sellerData.whatsapp_number.replace('+34', '') :
-           sellerData.whatsapp_number.startsWith('+31') ? sellerData.whatsapp_number.replace('+31', '') :
-           sellerData.whatsapp_number.startsWith('+32') ? sellerData.whatsapp_number.replace('+32', '') :
-           sellerData.whatsapp_number.startsWith('+41') ? sellerData.whatsapp_number.replace('+41', '') :
-           sellerData.whatsapp_number.startsWith('+43') ? sellerData.whatsapp_number.replace('+43', '') :
-           sellerData.whatsapp_number.startsWith('+45') ? sellerData.whatsapp_number.replace('+45', '') :
-           sellerData.whatsapp_number.startsWith('+46') ? sellerData.whatsapp_number.replace('+46', '') :
-           sellerData.whatsapp_number.startsWith('+47') ? sellerData.whatsapp_number.replace('+47', '') :
-           sellerData.whatsapp_number.startsWith('+358') ? sellerData.whatsapp_number.replace('+358', '') :
-           sellerData.whatsapp_number.startsWith('+61') ? sellerData.whatsapp_number.replace('+61', '') :
-           sellerData.whatsapp_number.startsWith('+64') ? sellerData.whatsapp_number.replace('+64', '') :
-           sellerData.whatsapp_number.startsWith('+81') ? sellerData.whatsapp_number.replace('+81', '') :
-           sellerData.whatsapp_number.startsWith('+82') ? sellerData.whatsapp_number.replace('+82', '') :
-           sellerData.whatsapp_number.startsWith('+86') ? sellerData.whatsapp_number.replace('+86', '') :
-           sellerData.whatsapp_number.startsWith('+91') ? sellerData.whatsapp_number.replace('+91', '') :
-           sellerData.whatsapp_number.startsWith('+93') ? sellerData.whatsapp_number.replace('+93', '') :
-           sellerData.whatsapp_number.startsWith('+94') ? sellerData.whatsapp_number.replace('+94', '') :
-           sellerData.whatsapp_number.startsWith('+95') ? sellerData.whatsapp_number.replace('+95', '') :
-           sellerData.whatsapp_number.startsWith('+98') ? sellerData.whatsapp_number.replace('+98', '') :
-           sellerData.whatsapp_number.replace(/^\+\d+/, '')) : ""
+        whatsappCountryCode: whatsappData.countryCode,
+        whatsappNumber: whatsappData.number
       });
-      console.log('Form data set with WhatsApp:', {
-        whatsappCountryCode: sellerData.whatsapp_number ? 
-          (sellerData.whatsapp_number.startsWith('+92') ? '+92' : 
-           sellerData.whatsapp_number.startsWith('+1') ? '+1' : 
-           sellerData.whatsapp_number.startsWith('+44') ? '+44' : '+1') : "+1",
-        whatsappNumber: sellerData.whatsapp_number ? 
-          (sellerData.whatsapp_number.startsWith('+92') ? sellerData.whatsapp_number.replace('+92', '') :
-           sellerData.whatsapp_number.startsWith('+1') ? sellerData.whatsapp_number.replace('+1', '') :
-           sellerData.whatsapp_number.startsWith('+44') ? sellerData.whatsapp_number.replace('+44', '') :
-           sellerData.whatsapp_number.replace(/^\+\d+/, '')) : ""
-      });
+      console.log('Form data set with WhatsApp:', whatsappData);
       setIsLoading(false);
     } else {
       // Fallback: Load seller data from API
@@ -373,6 +333,9 @@ export default function EditSeller() {
           setIsLoading(true);
           const response = await sellersApi.getSeller(Number(id));
           const seller = response.data;
+          
+          // Extract WhatsApp country code and number
+          const whatsappData = extractCountryCodeFromNumber(seller.whatsapp_number || "");
           
           setFormData({
             storeName: seller.store_name || "",
@@ -392,66 +355,10 @@ export default function EditSeller() {
             bankName: seller.bank_name || "",
             paymentSchedule: seller.payment_schedule || "",
             status: seller.status || "pending",
-            whatsappCountryCode: seller.whatsapp_number ? 
-              (seller.whatsapp_number.startsWith('+92') ? '+92' : 
-               seller.whatsapp_number.startsWith('+1') ? '+1' : 
-               seller.whatsapp_number.startsWith('+44') ? '+44' : 
-               seller.whatsapp_number.startsWith('+49') ? '+49' : 
-               seller.whatsapp_number.startsWith('+33') ? '+33' : 
-               seller.whatsapp_number.startsWith('+39') ? '+39' : 
-               seller.whatsapp_number.startsWith('+34') ? '+34' : 
-               seller.whatsapp_number.startsWith('+31') ? '+31' : 
-               seller.whatsapp_number.startsWith('+32') ? '+32' : 
-               seller.whatsapp_number.startsWith('+41') ? '+41' : 
-               seller.whatsapp_number.startsWith('+43') ? '+43' : 
-               seller.whatsapp_number.startsWith('+45') ? '+45' : 
-               seller.whatsapp_number.startsWith('+46') ? '+46' : 
-               seller.whatsapp_number.startsWith('+47') ? '+47' : 
-               seller.whatsapp_number.startsWith('+358') ? '+358' : 
-               seller.whatsapp_number.startsWith('+61') ? '+61' : 
-               seller.whatsapp_number.startsWith('+64') ? '+64' : 
-               seller.whatsapp_number.startsWith('+81') ? '+81' : 
-               seller.whatsapp_number.startsWith('+82') ? '+82' : 
-               seller.whatsapp_number.startsWith('+86') ? '+86' : 
-               seller.whatsapp_number.startsWith('+91') ? '+91' : 
-               seller.whatsapp_number.startsWith('+93') ? '+93' : 
-               seller.whatsapp_number.startsWith('+94') ? '+94' : 
-               seller.whatsapp_number.startsWith('+95') ? '+95' : 
-               seller.whatsapp_number.startsWith('+98') ? '+98' : '+1') : "+1",
-            whatsappNumber: seller.whatsapp_number ? 
-              (seller.whatsapp_number.startsWith('+92') ? seller.whatsapp_number.replace('+92', '') :
-               seller.whatsapp_number.startsWith('+1') ? seller.whatsapp_number.replace('+1', '') :
-               seller.whatsapp_number.startsWith('+44') ? seller.whatsapp_number.replace('+44', '') :
-               seller.whatsapp_number.startsWith('+49') ? seller.whatsapp_number.replace('+49', '') :
-               seller.whatsapp_number.startsWith('+33') ? seller.whatsapp_number.replace('+33', '') :
-               seller.whatsapp_number.startsWith('+39') ? seller.whatsapp_number.replace('+39', '') :
-               seller.whatsapp_number.startsWith('+34') ? seller.whatsapp_number.replace('+34', '') :
-               seller.whatsapp_number.startsWith('+31') ? seller.whatsapp_number.replace('+31', '') :
-               seller.whatsapp_number.startsWith('+32') ? seller.whatsapp_number.replace('+32', '') :
-               seller.whatsapp_number.startsWith('+41') ? seller.whatsapp_number.replace('+41', '') :
-               seller.whatsapp_number.startsWith('+43') ? seller.whatsapp_number.replace('+43', '') :
-               seller.whatsapp_number.startsWith('+45') ? seller.whatsapp_number.replace('+45', '') :
-               seller.whatsapp_number.startsWith('+46') ? seller.whatsapp_number.replace('+46', '') :
-               seller.whatsapp_number.startsWith('+47') ? seller.whatsapp_number.replace('+47', '') :
-               seller.whatsapp_number.startsWith('+358') ? seller.whatsapp_number.replace('+358', '') :
-               seller.whatsapp_number.startsWith('+61') ? seller.whatsapp_number.replace('+61', '') :
-               seller.whatsapp_number.startsWith('+64') ? seller.whatsapp_number.replace('+64', '') :
-               seller.whatsapp_number.startsWith('+81') ? seller.whatsapp_number.replace('+81', '') :
-               seller.whatsapp_number.startsWith('+82') ? seller.whatsapp_number.replace('+82', '') :
-               seller.whatsapp_number.startsWith('+86') ? seller.whatsapp_number.replace('+86', '') :
-               seller.whatsapp_number.startsWith('+91') ? seller.whatsapp_number.replace('+91', '') :
-               seller.whatsapp_number.startsWith('+93') ? seller.whatsapp_number.replace('+93', '') :
-               seller.whatsapp_number.startsWith('+94') ? seller.whatsapp_number.replace('+94', '') :
-               seller.whatsapp_number.startsWith('+95') ? seller.whatsapp_number.replace('+95', '') :
-               seller.whatsapp_number.startsWith('+98') ? seller.whatsapp_number.replace('+98', '') :
-               seller.whatsapp_number.replace(/^\+\d+/, '')) : ""
+            whatsappCountryCode: whatsappData.countryCode,
+            whatsappNumber: whatsappData.number
           });
-          console.log('Form data set with WhatsApp from API:', {
-            whatsappCountryCode: seller.whatsapp_number ? 
-              (seller.whatsapp_number.match(/^\+\d+/)?.[0] || "+1") : "+1",
-            whatsappNumber: seller.whatsapp_number ? 
-              seller.whatsapp_number.replace(/^\+\d+/, '') : ""
-          });
+          console.log('Form data set with WhatsApp from API:', whatsappData);
         } catch (error) {
           console.error('Error loading seller:', error);
           toast({
@@ -945,7 +852,7 @@ export default function EditSeller() {
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent>
-                      {countries.map(country => (
+                      {COUNTRIES.map(country => (
                         <SelectItem key={country} value={country}>{country}</SelectItem>
                       ))}
                     </SelectContent>

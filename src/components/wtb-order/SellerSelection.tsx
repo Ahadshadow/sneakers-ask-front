@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Users, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Users, Check, ChevronsUpDown, Loader2, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { QuickAddSellerModal } from "./QuickAddSellerModal";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SellerSelectionProps {
   selectedSeller: string;
@@ -16,10 +18,18 @@ interface SellerSelectionProps {
 
 export function SellerSelection({ selectedSeller, onSellerChange, availableSellers, isLoading, error }: SellerSelectionProps) {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleSellerSelect = (sellerName: string) => {
     onSellerChange(sellerName);
     setOpen(false);
+  };
+
+  const handleSellerCreated = () => {
+    // Invalidate all seller queries to refresh the list
+    queryClient.invalidateQueries({ queryKey: ['wtb-active-sellers'] });
+    queryClient.invalidateQueries({ queryKey: ['bulk-wtb-active-sellers'] });
+    queryClient.invalidateQueries({ queryKey: ['sellers'] });
   };
 
   const seller = availableSellers.find(s => s.name === selectedSeller);
@@ -30,10 +40,18 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          Select Seller
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Select Seller
+          </CardTitle>
+          <QuickAddSellerModal onSellerCreated={handleSellerCreated}>
+            <Button variant="outline" size="sm">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Seller
+            </Button>
+          </QuickAddSellerModal>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <Popover open={open} onOpenChange={setOpen}>
