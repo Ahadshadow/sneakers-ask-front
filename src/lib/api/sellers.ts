@@ -141,6 +141,8 @@ export interface SellerPayout {
   iban?: string;
   bank_name?: string;
   payment_schedule?: string;
+  payout_id?: string; // Payout ID
+  shopify_order_number?: string; // Shopify Order Number
 }
 
 export interface SellerPayoutsResponse {
