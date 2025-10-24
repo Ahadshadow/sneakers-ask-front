@@ -21,9 +21,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Loader2, Mail, Globe, UserPlus, Phone, Check, ChevronsUpDown } from "lucide-react";
+import { Loader2, Mail, Globe, UserPlus, Phone, Check, ChevronsUpDown, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { sellersApi } from "@/lib/api/sellers";
+import { sendcloudApi } from "@/lib/api/sendcloud";
+import { useQuery } from "@tanstack/react-query";
 import { COUNTRIES } from "@/data/countries";
 import { cn } from "@/lib/utils";
 
@@ -33,8 +35,6 @@ interface QuickAddSellerModalProps {
 }
 
 const businessTypes = ["Private", "B2B"];
-
-const paymentSchedules = ["weekly", "bi-weekly", "monthly"];
 
 const countryCodes = [
   { code: "+1", country: "US/Canada" },
@@ -69,6 +69,20 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
   const [ibanError, setIbanError] = useState(false);
   const [whatsappCountryOpen, setWhatsappCountryOpen] = useState(false);
 
+  // Fetch shipping options for NL to NL (default)
+  const { data: shippingOptions, isLoading: isLoadingShipping } = useQuery({
+    queryKey: ['seller-shipping-options'],
+    queryFn: async () => {
+      const request = {
+        from_country_code: 'NL',
+        to_country_code: 'NL',
+        parcels: [sendcloudApi.getDefaultParcel()],
+      };
+      return await sendcloudApi.getShippingOptions(request);
+    },
+    enabled: isOpen, // Only fetch when modal is open
+  });
+
   const [formData, setFormData] = useState({
     storeName: "",
     ownerName: "",
@@ -85,7 +99,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
     accountHolder: "",
     iban: "",
     bankName: "",
-    paymentSchedule: "",
+    preferredShipmentCode: "",
     whatsappCountryCode: "+31",
     whatsappNumber: "",
   });
@@ -121,7 +135,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
       accountHolder: "",
       iban: "",
       bankName: "",
-      paymentSchedule: "",
+      preferredShipmentCode: "",
       whatsappCountryCode: "+31",
       whatsappNumber: "",
     });
@@ -164,11 +178,8 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
       if (formData.bankName.trim()) {
         apiData.bank_name = formData.bankName;
       }
-      if (formData.paymentSchedule) {
-        apiData.payment_schedule = formData.paymentSchedule as
-          | "weekly"
-          | "bi-weekly"
-          | "monthly";
+      if (formData.preferredShipmentCode) {
+        apiData.shipment_method_code = formData.preferredShipmentCode;
       }
 
       await sellersApi.createSeller(apiData);
@@ -533,25 +544,42 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="quick-paymentSchedule">Payment Schedule</Label>
-                  <Select
-                    value={formData.paymentSchedule}
-                    onValueChange={(value) =>
-                      handleInputChange("paymentSchedule", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select payment schedule" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {paymentSchedules.map((schedule) => (
-                        <SelectItem key={schedule} value={schedule}>
-                          {schedule.charAt(0).toUpperCase() +
-                            schedule.slice(1).replace("-", " ")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="quick-preferredShipmentCode">Preferred Shipment Option</Label>
+                  {isLoadingShipping ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 border rounded-md">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading shipping options...
+                    </div>
+                  ) : shippingOptions && shippingOptions.length > 0 ? (
+                    <Select
+                      value={formData.preferredShipmentCode}
+                      onValueChange={(value) =>
+                        handleInputChange("preferredShipmentCode", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select preferred shipment option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {shippingOptions.map((option) => (
+                          <SelectItem key={option.code} value={option.code}>
+                            <div className="flex items-center gap-2">
+                              <Truck className="h-4 w-4" />
+                              <span>{option.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                ({option.carrier?.name})
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-muted-foreground p-2 border rounded-md">
+                      No shipping options available
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">Default shipping method for this seller</p>
                 </div>
               </div>
             </div>
