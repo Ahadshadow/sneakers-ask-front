@@ -69,7 +69,8 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       id: seller.id,
       vatRegistered: seller.vat_registered,
       vatNumber: seller.vat_number,
-      tinNumber: seller.tin_number
+      tinNumber: seller.tin_number,
+      shipmentMethodCode: seller.shipment_method_code
     };
   }) || [];
 
@@ -839,6 +840,7 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                                   customerCountryCode={product.customerAddress?.country_code || ""}
                                   orderItem={product}
                                   onLabelCreated={(labelData) => handleSendCloudLabelCreated(product.id, labelData)}
+                                  defaultShipmentMethodCode={availableSellers.find(s => s.name === selectedSeller)?.shipmentMethodCode}
                                 >
                                   <Button className="w-full" variant="outline">
                                     <Package className="h-4 w-4 mr-2" />

@@ -29,6 +29,7 @@ interface SendCloudModalProps {
   orderItem: any; // product/order line item from WTB flows
   onLabelCreated: (labelData: any) => void;
   children: React.ReactNode;
+  defaultShipmentMethodCode?: string | null;
 }
 
 export function SendCloudModal({
@@ -36,6 +37,7 @@ export function SendCloudModal({
   orderItem,
   onLabelCreated,
   children,
+  defaultShipmentMethodCode,
 }: SendCloudModalProps) {
   console.log("orderItem", orderItem);
 
@@ -114,6 +116,24 @@ export function SendCloudModal({
       setSelectedSenderId("0");
     }
   }, [isOpen, filteredSenderAddresses, selectedSenderId]);
+
+  // Auto-select seller's preferred shipment method when shipping options are loaded
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!defaultShipmentMethodCode) return;
+    if (!shippingOptions || shippingOptions.length === 0) return;
+    if (selectedShippingOptionCode) return; // Don't override user selection
+
+    // Check if the seller's preferred method exists in available options
+    const preferredOption = shippingOptions.find(
+      (option) => option.code === defaultShipmentMethodCode
+    );
+    
+    if (preferredOption) {
+      console.log('Auto-selecting seller preferred shipment method:', preferredOption);
+      setSelectedShippingOptionCode(defaultShipmentMethodCode);
+    }
+  }, [isOpen, defaultShipmentMethodCode, shippingOptions, selectedShippingOptionCode]);
 
   const handleCreateLabel = async () => {
     if (!selectedSenderId || !selectedShippingOptionCode) {

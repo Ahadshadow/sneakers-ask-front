@@ -99,6 +99,7 @@ const convertApiSellerToUISeller = (apiSeller: ApiSeller) => ({
   iban: apiSeller.iban,
   bankName: apiSeller.bank_name,
   paymentSchedule: apiSeller.payment_schedule,
+  shipmentMethodCode: apiSeller.shipment_method_code,
   createdAt: apiSeller.created_at,
   updatedAt: apiSeller.updated_at,
   vatSettings: {
@@ -196,6 +197,7 @@ export function SellersManagement() {
       bank_name: seller.bankName,
       payment_schedule: seller.paymentSchedule,
       products_count: seller.productsCount,
+      shipment_method_code: seller.shipmentMethodCode,
       total_sales: seller.totalSales,
       rating: seller.rating,
       join_date: seller.joinDate,

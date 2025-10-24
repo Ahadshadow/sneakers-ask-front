@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Store, Mail, Phone, Globe, Building, Truck, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Store, Mail, Phone, MapPin, Globe, Building, Loader2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { sellersApi } from "@/lib/api/sellers";
 import { sendcloudApi } from "@/lib/api/sendcloud";
-import { useAuth } from "@/contexts/AuthContext";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/data/countries";
 
@@ -45,180 +44,19 @@ const countryCodes = [
   { code: "+82", country: "South Korea" },
   { code: "+86", country: "China" },
   { code: "+91", country: "India" },
-  { code: "+92", country: "Pakistan" },
-  { code: "+93", country: "Afghanistan" },
-  { code: "+94", country: "Sri Lanka" },
-  { code: "+95", country: "Myanmar" },
-  { code: "+98", country: "Iran" },
-  { code: "+212", country: "Morocco" },
-  { code: "+213", country: "Algeria" },
-  { code: "+216", country: "Tunisia" },
-  { code: "+218", country: "Libya" },
-  { code: "+220", country: "Gambia" },
-  { code: "+221", country: "Senegal" },
-  { code: "+222", country: "Mauritania" },
-  { code: "+223", country: "Mali" },
-  { code: "+224", country: "Guinea" },
-  { code: "+225", country: "Ivory Coast" },
-  { code: "+226", country: "Burkina Faso" },
-  { code: "+227", country: "Niger" },
-  { code: "+228", country: "Togo" },
-  { code: "+229", country: "Benin" },
-  { code: "+230", country: "Mauritius" },
-  { code: "+231", country: "Liberia" },
-  { code: "+232", country: "Sierra Leone" },
-  { code: "+233", country: "Ghana" },
-  { code: "+234", country: "Nigeria" },
-  { code: "+235", country: "Chad" },
-  { code: "+236", country: "Central African Republic" },
-  { code: "+237", country: "Cameroon" },
-  { code: "+238", country: "Cape Verde" },
-  { code: "+239", country: "São Tomé and Príncipe" },
-  { code: "+240", country: "Equatorial Guinea" },
-  { code: "+241", country: "Gabon" },
-  { code: "+242", country: "Republic of the Congo" },
-  { code: "+243", country: "Democratic Republic of the Congo" },
-  { code: "+244", country: "Angola" },
-  { code: "+245", country: "Guinea-Bissau" },
-  { code: "+246", country: "British Indian Ocean Territory" },
-  { code: "+248", country: "Seychelles" },
-  { code: "+249", country: "Sudan" },
-  { code: "+250", country: "Rwanda" },
-  { code: "+251", country: "Ethiopia" },
-  { code: "+252", country: "Somalia" },
-  { code: "+253", country: "Djibouti" },
-  { code: "+254", country: "Kenya" },
-  { code: "+255", country: "Tanzania" },
-  { code: "+256", country: "Uganda" },
-  { code: "+257", country: "Burundi" },
-  { code: "+258", country: "Mozambique" },
-  { code: "+260", country: "Zambia" },
-  { code: "+261", country: "Madagascar" },
-  { code: "+262", country: "Réunion" },
-  { code: "+263", country: "Zimbabwe" },
-  { code: "+264", country: "Namibia" },
-  { code: "+265", country: "Malawi" },
-  { code: "+266", country: "Lesotho" },
-  { code: "+267", country: "Botswana" },
-  { code: "+268", country: "Swaziland" },
-  { code: "+269", country: "Comoros" },
-  { code: "+290", country: "Saint Helena" },
-  { code: "+291", country: "Eritrea" },
-  { code: "+297", country: "Aruba" },
-  { code: "+298", country: "Faroe Islands" },
-  { code: "+299", country: "Greenland" },
-  { code: "+350", country: "Gibraltar" },
-  { code: "+351", country: "Portugal" },
-  { code: "+352", country: "Luxembourg" },
-  { code: "+353", country: "Ireland" },
-  { code: "+354", country: "Iceland" },
-  { code: "+355", country: "Albania" },
-  { code: "+356", country: "Malta" },
-  { code: "+357", country: "Cyprus" },
-  { code: "+358", country: "Finland" },
-  { code: "+359", country: "Bulgaria" },
-  { code: "+370", country: "Lithuania" },
-  { code: "+371", country: "Latvia" },
-  { code: "+372", country: "Estonia" },
-  { code: "+373", country: "Moldova" },
-  { code: "+374", country: "Armenia" },
-  { code: "+375", country: "Belarus" },
-  { code: "+376", country: "Andorra" },
-  { code: "+377", country: "Monaco" },
-  { code: "+378", country: "San Marino" },
-  { code: "+380", country: "Ukraine" },
-  { code: "+381", country: "Serbia" },
-  { code: "+382", country: "Montenegro" },
-  { code: "+383", country: "Kosovo" },
-  { code: "+385", country: "Croatia" },
-  { code: "+386", country: "Slovenia" },
-  { code: "+387", country: "Bosnia and Herzegovina" },
-  { code: "+389", country: "North Macedonia" },
-  { code: "+420", country: "Czech Republic" },
-  { code: "+421", country: "Slovakia" },
-  { code: "+423", country: "Liechtenstein" },
-  { code: "+500", country: "Falkland Islands" },
-  { code: "+501", country: "Belize" },
-  { code: "+502", country: "Guatemala" },
-  { code: "+503", country: "El Salvador" },
-  { code: "+504", country: "Honduras" },
-  { code: "+505", country: "Nicaragua" },
-  { code: "+506", country: "Costa Rica" },
-  { code: "+507", country: "Panama" },
-  { code: "+508", country: "Saint Pierre and Miquelon" },
-  { code: "+509", country: "Haiti" },
-  { code: "+590", country: "Guadeloupe" },
-  { code: "+591", country: "Bolivia" },
-  { code: "+592", country: "Guyana" },
-  { code: "+593", country: "Ecuador" },
-  { code: "+594", country: "French Guiana" },
-  { code: "+595", country: "Paraguay" },
-  { code: "+596", country: "Martinique" },
-  { code: "+597", country: "Suriname" },
-  { code: "+598", country: "Uruguay" },
-  { code: "+599", country: "Netherlands Antilles" },
-  { code: "+670", country: "East Timor" },
-  { code: "+672", country: "Australian External Territories" },
-  { code: "+673", country: "Brunei" },
-  { code: "+674", country: "Nauru" },
-  { code: "+675", country: "Papua New Guinea" },
-  { code: "+676", country: "Tonga" },
-  { code: "+677", country: "Solomon Islands" },
-  { code: "+678", country: "Vanuatu" },
-  { code: "+679", country: "Fiji" },
-  { code: "+680", country: "Palau" },
-  { code: "+681", country: "Wallis and Futuna" },
-  { code: "+682", country: "Cook Islands" },
-  { code: "+683", country: "Niue" },
-  { code: "+684", country: "American Samoa" },
-  { code: "+685", country: "Samoa" },
-  { code: "+686", country: "Kiribati" },
-  { code: "+687", country: "New Caledonia" },
-  { code: "+688", country: "Tuvalu" },
-  { code: "+689", country: "French Polynesia" },
-  { code: "+690", country: "Tokelau" },
-  { code: "+691", country: "Micronesia" },
-  { code: "+692", country: "Marshall Islands" },
-  { code: "+850", country: "North Korea" },
-  { code: "+852", country: "Hong Kong" },
-  { code: "+853", country: "Macau" },
-  { code: "+855", country: "Cambodia" },
-  { code: "+856", country: "Laos" },
-  { code: "+880", country: "Bangladesh" },
-  { code: "+886", country: "Taiwan" },
-  { code: "+960", country: "Maldives" },
-  { code: "+961", country: "Lebanon" },
-  { code: "+962", country: "Jordan" },
-  { code: "+963", country: "Syria" },
-  { code: "+964", country: "Iraq" },
-  { code: "+965", country: "Kuwait" },
-  { code: "+966", country: "Saudi Arabia" },
-  { code: "+967", country: "Yemen" },
-  { code: "+968", country: "Oman" },
-  { code: "+970", country: "Palestine" },
-  { code: "+971", country: "United Arab Emirates" },
-  { code: "+972", country: "Israel" },
-  { code: "+973", country: "Bahrain" },
-  { code: "+974", country: "Qatar" },
-  { code: "+975", country: "Bhutan" },
-  { code: "+976", country: "Mongolia" },
-  { code: "+977", country: "Nepal" },
-  { code: "+992", country: "Tajikistan" },
-  { code: "+993", country: "Turkmenistan" },
-  { code: "+994", country: "Azerbaijan" },
-  { code: "+995", country: "Georgia" },
-  { code: "+996", country: "Kyrgyzstan" },
-  { code: "+998", country: "Uzbekistan" }
 ];
 
-export default function AddSeller() {
+export default function SellerOnboarding() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAuthenticated, user } = useAuth();
-  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+  
+  const [isVerifying, setIsVerifying] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ibanError, setIbanError] = useState(false);
   const [whatsappCountryOpen, setWhatsappCountryOpen] = useState(false);
+  const [email, setEmail] = useState("");
   
   // Fetch shipping options for NL to NL (default)
   const { data: shippingOptions, isLoading: isLoadingShipping } = useQuery({
@@ -237,7 +75,6 @@ export default function AddSeller() {
     // Basic Info
     storeName: "",
     ownerName: "",
-    email: "",
     contactPerson: "",
     website: "",
     businessType: "",
@@ -261,104 +98,116 @@ export default function AddSeller() {
     
     // Shipment
     preferredShipmentCode: "",
-    
-    // Additional
-    status: "pending"
   });
+
+  useEffect(() => {
+    const verifyInvitation = async () => {
+      if (!token) {
+        toast({
+          title: "Invalid Link",
+          description: "No invitation token found. Please check your email link.",
+          variant: "destructive"
+        });
+        setIsVerifying(false);
+        return;
+      }
+
+      try {
+        const response = await sellersApi.verifyToken(token);
+        setEmail(response.data.email);
+        setIsVerifying(false);
+      } catch (error: any) {
+        console.error('Error verifying token:', error);
+        toast({
+          title: "Invalid or Expired Link",
+          description: error?.message || "This invitation link is invalid or has expired.",
+          variant: "destructive"
+        });
+        setIsVerifying(false);
+      }
+    };
+
+    verifyInvitation();
+  }, [token, toast]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Clear IBAN error when user starts typing
     if (field === 'iban') {
       setIbanError(false);
     }
   };
 
   const handleWhatsAppNumberChange = (value: string) => {
-    // Only allow numbers
     const numericValue = value.replace(/[^0-9]/g, '');
     handleInputChange("whatsappNumber", numericValue);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
-    // Check if user is authenticated
-    if (!isAuthenticated) {
+    if (!token) {
       toast({
-        title: "Authentication Required",
-        description: "Please log in to create a seller.",
+        title: "Error",
+        description: "Missing invitation token.",
         variant: "destructive"
       });
-      setIsSubmitting(false);
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
-      // Debug: Check auth token
-      const token = localStorage.getItem('auth_token');
-      console.log('Auth token:', token ? 'Present' : 'Missing');
-      console.log('User authenticated:', isAuthenticated);
-      console.log('User:', user);
-      
-      // Prepare API data
-      const apiData: any = {
+      const registrationData: any = {
+        token,
         store_name: formData.storeName,
         owner_name: formData.ownerName,
-        email: formData.email,
         contact_person: formData.contactPerson,
         website: formData.website,
         tin_number: formData.tinNumber,
         country: formData.country,
         business_description: formData.businessDescription,
         seller_type: formData.businessType.toLowerCase() as "private" | "b2b",
-        status: formData.status as "active" | "pending" | "suspended",
         vat_number: formData.vatNumber,
         vat_rate: parseFloat(formData.vatRate) || 0,
         vat_registered: formData.vatRegistered,
-        join_date: new Date().toISOString().split('T')[0], // Today's date
         whatsapp_number: formData.whatsappCountryCode && formData.whatsappNumber 
           ? `${formData.whatsappCountryCode}${formData.whatsappNumber}` 
           : ""
       };
 
-      // Only add bank details if they are provided
+      // Add bank details if provided
       if (formData.accountHolder.trim()) {
-        apiData.account_holder = formData.accountHolder;
+        registrationData.account_holder = formData.accountHolder;
       }
       if (formData.iban.trim()) {
-        apiData.iban = formData.iban;
+        registrationData.iban = formData.iban;
       }
       if (formData.bankName.trim()) {
-        apiData.bank_name = formData.bankName;
+        registrationData.bank_name = formData.bankName;
       }
       if (formData.preferredShipmentCode) {
-        apiData.shipment_method_code = formData.preferredShipmentCode;
+        registrationData.shipment_method_code = formData.preferredShipmentCode;
       }
 
-      // Call API using sellersApi
-      const result = await sellersApi.createSeller(apiData);
-      
-      // Invalidate sellers cache to refresh data
-      queryClient.invalidateQueries({ queryKey: ['sellers'] });
+      await sellersApi.completeRegistration(registrationData);
       
       toast({
-        title: "Seller Added Successfully",
-        description: `${formData.storeName || formData.ownerName} has been added to your seller network.`,
+        title: "Registration Completed",
+        description: "Your seller registration has been submitted successfully. You'll be contacted once it's reviewed.",
       });
       
-      navigate("/sellers");
+      // Redirect to a success page or homepage
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
     } catch (error: any) {
-      console.error('Error creating seller:', error);
+      console.error('Error completing registration:', error);
       
-      // Handle validation errors from backend
       if (error?.errors) {
         const errorMessages = Object.values(error.errors).flat();
         const errorMessage = errorMessages.join(', ');
         
-        // Check if IBAN validation error exists
         if (error.errors.iban || errorMessage.toLowerCase().includes('iban')) {
           setIbanError(true);
         }
@@ -371,7 +220,7 @@ export default function AddSeller() {
       } else {
         toast({
           title: "Error",
-          description: error?.message || "Failed to create seller. Please try again.",
+          description: error?.message || "Failed to complete registration. Please try again.",
           variant: "destructive"
         });
       }
@@ -380,24 +229,46 @@ export default function AddSeller() {
     }
   };
 
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+          <p className="text-lg text-muted-foreground">Verifying your invitation...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!email) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4">
+          <CardHeader>
+            <CardTitle className="text-center text-destructive">Invalid Invitation</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-muted-foreground">
+              This invitation link is invalid or has expired. Please contact support for assistance.
+            </p>
+            <Button onClick={() => window.location.href = "/"}>
+              Return to Homepage
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/sellers")}
-              className="hover-scale transition-all duration-200"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Sellers
-            </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Add New Seller</h1>
-              <p className="text-sm text-muted-foreground">Onboard a new seller to your marketplace</p>
+              <h1 className="text-2xl font-bold text-foreground">Complete Your Seller Registration</h1>
+              <p className="text-sm text-muted-foreground">Registered email: {email}</p>
             </div>
           </div>
         </div>
@@ -415,7 +286,6 @@ export default function AddSeller() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="storeName">Store Name *</Label>
@@ -450,21 +320,6 @@ export default function AddSeller() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                      placeholder="Enter business email"
-                      className="pl-10 transition-all duration-200 focus:scale-[1.02]"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="website">Website</Label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -478,21 +333,17 @@ export default function AddSeller() {
                   </div>
                 </div>
                 
-               
-                
                 <div className="space-y-2">
                   <Label htmlFor="businessType">Business Type *</Label>
                   <Select 
                     value={formData.businessType} 
                     onValueChange={(value) => {
                       handleInputChange("businessType", value);
-                      // Clear VAT fields if switching to Private
                       if (value === "Private") {
                         handleInputChange("vatNumber", "");
                         handleInputChange("vatRate", "");
                         handleInputChange("vatRegistered", false);
                       }
-                      // Clear TIN if switching to B2B
                       if (value === "B2B") {
                         handleInputChange("tinNumber", "");
                       }
@@ -510,8 +361,6 @@ export default function AddSeller() {
                   </Select>
                 </div>
 
-                
-                
                 {/* Conditional Tax Fields */}
                 {formData.businessType === "B2B" && (
                   <>
@@ -578,73 +427,74 @@ export default function AddSeller() {
                 </div>
                 <div></div>
               </div>
-                {/* WhatsApp Number Field */}
-                <div className="space-y-2">
-                   <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
-                   <div className="flex gap-2">
-                     <div className="w-40">
-                       <Popover open={whatsappCountryOpen} onOpenChange={setWhatsappCountryOpen}>
-                         <PopoverTrigger asChild>
-                           <Button
-                             variant="outline"
-                             role="combobox"
-                             aria-expanded={whatsappCountryOpen}
-                             className="w-full justify-between transition-all duration-200 focus:scale-[1.02]"
-                           >
-                             {formData.whatsappCountryCode
-                               ? `${countryCodes.find((country) => country.code === formData.whatsappCountryCode)?.code} ${countryCodes.find((country) => country.code === formData.whatsappCountryCode)?.country}`
-                               : "Select country code"}
-                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                           </Button>
-                         </PopoverTrigger>
-                         <PopoverContent className="w-80 p-0">
-                           <Command>
-                             <CommandInput placeholder="Search country code..." />
-                             <CommandList>
-                               <CommandEmpty>No country code found.</CommandEmpty>
-                               <CommandGroup>
-                                 {countryCodes.map((country) => (
-                                   <CommandItem
-                                     key={country.code}
-                                     value={`${country.code} ${country.country}`}
-                                     onSelect={() => {
-                                       handleInputChange("whatsappCountryCode", country.code);
-                                       setWhatsappCountryOpen(false);
-                                     }}
-                                   >
-                                     <Check
-                                       className={cn(
-                                         "mr-2 h-4 w-4",
-                                         formData.whatsappCountryCode === country.code ? "opacity-100" : "opacity-0"
-                                       )}
-                                     />
-                                     <div className="flex items-center gap-2">
-                                       <span className="font-mono text-sm">{country.code}</span>
-                                       <span className="text-muted-foreground">{country.country}</span>
-                                     </div>
-                                   </CommandItem>
-                                 ))}
-                               </CommandGroup>
-                             </CommandList>
-                           </Command>
-                         </PopoverContent>
-                       </Popover>
-                     </div>
-                     <div className="flex-1">
-                       <div className="relative">
-                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                         <Input
-                           id="whatsappNumber"
-                           value={formData.whatsappNumber}
-                           onChange={(e) => handleWhatsAppNumberChange(e.target.value)}
-                           placeholder="1234567890"
-                           className="pl-10 transition-all duration-200 focus:scale-[1.02]"
-                         />
-                       </div>
-                     </div>
-                   </div>
-                   <p className="text-xs text-muted-foreground">WhatsApp number only</p>
-                 </div>
+              
+              {/* WhatsApp Number Field */}
+              <div className="space-y-2">
+                <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                <div className="flex gap-2">
+                  <div className="w-40">
+                    <Popover open={whatsappCountryOpen} onOpenChange={setWhatsappCountryOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={whatsappCountryOpen}
+                          className="w-full justify-between transition-all duration-200 focus:scale-[1.02]"
+                        >
+                          {formData.whatsappCountryCode
+                            ? `${countryCodes.find((country) => country.code === formData.whatsappCountryCode)?.code} ${countryCodes.find((country) => country.code === formData.whatsappCountryCode)?.country}`
+                            : "Select country code"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-0">
+                        <Command>
+                          <CommandInput placeholder="Search country code..." />
+                          <CommandList>
+                            <CommandEmpty>No country code found.</CommandEmpty>
+                            <CommandGroup>
+                              {countryCodes.map((country) => (
+                                <CommandItem
+                                  key={country.code}
+                                  value={`${country.code} ${country.country}`}
+                                  onSelect={() => {
+                                    handleInputChange("whatsappCountryCode", country.code);
+                                    setWhatsappCountryOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      formData.whatsappCountryCode === country.code ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-sm">{country.code}</span>
+                                    <span className="text-muted-foreground">{country.country}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="whatsappNumber"
+                        value={formData.whatsappNumber}
+                        onChange={(e) => handleWhatsAppNumberChange(e.target.value)}
+                        placeholder="1234567890"
+                        className="pl-10 transition-all duration-200 focus:scale-[1.02]"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">WhatsApp number only</p>
+              </div>
 
               {/* Preferred Shipment Option */}
               <div className="space-y-2">
@@ -694,13 +544,6 @@ export default function AddSeller() {
                   className="transition-all duration-200 focus:scale-[1.02]"
                   rows={4}
                 />
-              </div>
-              
-              {/* Additional Information Note */}
-              <div className="bg-muted/20 border border-border rounded-lg p-4 mt-6">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Extra informatie:</strong> Als je seller toevoegt, graag ook discord naam of nummer als optie kunnen geven - goed eventueel om SMS of E-mail marketing uiteindelijk te doen hiermee.
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -755,23 +598,14 @@ export default function AddSeller() {
             </CardContent>
           </Card>
 
-
           {/* Actions */}
-          <div className="flex items-center justify-between pt-6">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => navigate("/sellers")}
-              className="hover-scale transition-all duration-200"
-            >
-              Cancel
-            </Button>
+          <div className="flex items-center justify-end pt-6">
             <Button 
               type="submit" 
               disabled={isSubmitting}
               className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-32"
             >
-              {isSubmitting ? "Adding Seller..." : "Add Seller"}
+              {isSubmitting ? "Submitting..." : "Complete Registration"}
             </Button>
           </div>
         </form>
@@ -779,3 +613,4 @@ export default function AddSeller() {
     </div>
   );
 }
+

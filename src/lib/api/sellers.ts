@@ -12,6 +12,7 @@ export interface ActiveSeller {
   tin_number: string | null;
   owner_name: string;
   email: string;
+  shipment_method_code?: string | null;
 }
 
 // Seller interfaces based on your API response
@@ -37,7 +38,7 @@ export interface Seller {
   account_holder: string;
   iban: string;
   bank_name: string;
-  payment_schedule: "weekly" | "bi-weekly" | "monthly";
+  shipment_method_code?: string;
   whatsapp_number?: string;
   created_at: string;
   updated_at: string;
@@ -95,7 +96,7 @@ export interface CreateSellerRequest {
   account_holder: string;
   iban: string;
   bank_name: string;
-  payment_schedule: "weekly" | "bi-weekly" | "monthly";
+  shipment_method_code?: string;
   whatsapp_number?: string;
 }
 
@@ -115,8 +116,28 @@ export interface UpdateSellerRequest {
   account_holder?: string;
   iban?: string;
   bank_name?: string;
-  payment_schedule?: "weekly" | "bi-weekly" | "monthly";
+  shipment_method_code?: string;
   whatsapp_number?: string;
+}
+
+export interface CompleteRegistrationRequest {
+  token: string;
+  store_name: string;
+  owner_name: string;
+  contact_person?: string;
+  website?: string;
+  tin_number?: string;
+  country?: string;
+  business_description?: string;
+  seller_type: "private" | "b2b";
+  vat_number?: string;
+  vat_rate?: number;
+  vat_registered?: boolean;
+  whatsapp_number?: string;
+  account_holder?: string;
+  iban?: string;
+  bank_name?: string;
+  shipment_method_code?: string;
 }
 
 export interface ApiError {
@@ -335,6 +356,30 @@ export const sellersApi = {
   async markPayoutCompleted(id: string): Promise<{ success: boolean; data: SellerPayout; message: string }> {
     return apiRequest<{ success: boolean; data: SellerPayout; message: string }>(`/seller-payouts/${id}/complete`, {
       method: 'PATCH',
+    });
+  },
+
+  // Send seller invitation by email
+  async inviteSeller(email: string, frontendUrl: string): Promise<{ success: boolean; message: string }> {
+    return apiRequest<{ success: boolean; message: string }>('/seller/invite', {
+      method: 'POST',
+      body: JSON.stringify({ email, frontend_url: frontendUrl }),
+    });
+  },
+
+  // Verify seller invitation token
+  async verifyToken(token: string): Promise<{ success: boolean; data: { email: string }; message: string }> {
+    return apiRequest<{ success: boolean; data: { email: string }; message: string }>('/seller/verify-token', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  },
+
+  // Complete seller registration (public endpoint)
+  async completeRegistration(registrationData: CompleteRegistrationRequest): Promise<{ success: boolean; data: Seller; message: string }> {
+    return apiRequest<{ success: boolean; data: Seller; message: string }>('/seller/complete-registration', {
+      method: 'POST',
+      body: JSON.stringify(registrationData),
     });
   },
 };

@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Package, ArrowLeft, Loader2 } from "lucide-react";
+import { Package, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { SellerSelection } from "./SellerSelection";
 import { PricingSection } from "./PricingSection";
@@ -109,7 +109,8 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
       id: seller.id,
       vatRegistered: seller.vat_registered,
       vatNumber: seller.vat_number,
-      tinNumber: seller.tin_number
+      tinNumber: seller.tin_number,
+      shipmentMethodCode: seller.shipment_method_code
     };
   }) || [];
 
@@ -459,6 +460,7 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
                 customerCountryCode={product.customerAddress?.country_code}
                 orderItem={product}
                 onSendCloudLabelCreated={handleSendCloudLabelCreated}
+                sellerShipmentMethodCode={availableSellers.find(s => s.name === selectedSeller)?.shipmentMethodCode}
               />
 
               {/* Tracking Data Display */}

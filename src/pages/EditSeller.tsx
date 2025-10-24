@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ArrowLeft, Store, Mail, Phone, Globe, Upload, Building } from "lucide-react";
+import { ArrowLeft, Store, Mail, Phone, Globe, Building, Truck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,20 +13,15 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { sellersApi } from "@/lib/api/sellers";
+import { sendcloudApi } from "@/lib/api/sendcloud";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
-import { validateIBAN, cn } from "@/lib/utils";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/data/countries";
 
 const businessTypes = [
   "Private",
   "B2B"
-];
-
-const paymentSchedules = [
-  "weekly",
-  "bi-weekly",
-  "monthly"
 ];
 
 const countryCodes = [
@@ -257,6 +252,19 @@ export default function EditSeller() {
   const [ibanError, setIbanError] = useState(false);
   const [whatsappCountryOpen, setWhatsappCountryOpen] = useState(false);
   
+  // Fetch shipping options for NL to NL (default)
+  const { data: shippingOptions, isLoading: isLoadingShipping } = useQuery({
+    queryKey: ['seller-shipping-options'],
+    queryFn: async () => {
+      const request = {
+        from_country_code: 'NL',
+        to_country_code: 'NL',
+        parcels: [sendcloudApi.getDefaultParcel()],
+      };
+      return await sendcloudApi.getShippingOptions(request);
+    },
+  });
+  
   const [formData, setFormData] = useState({
     // Basic Info
     storeName: "",
@@ -282,7 +290,9 @@ export default function EditSeller() {
     accountHolder: "",
     iban: "",
     bankName: "",
-    paymentSchedule: "",
+    
+    // Shipment
+    preferredShipmentCode: "",
     
     // Additional
     status: "pending"
@@ -291,6 +301,8 @@ export default function EditSeller() {
   useEffect(() => {
     // Check if seller data is passed from navigation state
     const sellerData = location.state?.sellerData;
+
+    console.log("sellerData", sellerData);
     
     if (sellerData) {
       // Use data from navigation state (fast)
@@ -314,7 +326,7 @@ export default function EditSeller() {
         accountHolder: sellerData.account_holder || "",
         iban: sellerData.iban || "",
         bankName: sellerData.bank_name || "",
-        paymentSchedule: sellerData.payment_schedule || "",
+        preferredShipmentCode: sellerData.shipment_method_code || "",
         status: sellerData.status || "pending",
         whatsappCountryCode: whatsappData.countryCode,
         whatsappNumber: whatsappData.number
@@ -332,6 +344,8 @@ export default function EditSeller() {
         try {
           setIsLoading(true);
           const response = await sellersApi.getSeller(Number(id));
+
+          
           const seller = response.data;
           
           // Extract WhatsApp country code and number
@@ -353,7 +367,7 @@ export default function EditSeller() {
             accountHolder: seller.account_holder || "",
             iban: seller.iban || "",
             bankName: seller.bank_name || "",
-            paymentSchedule: seller.payment_schedule || "",
+            preferredShipmentCode: seller.shipment_method_code || "",
             status: seller.status || "pending",
             whatsappCountryCode: whatsappData.countryCode,
             whatsappNumber: whatsappData.number
@@ -437,8 +451,8 @@ export default function EditSeller() {
       if (formData.bankName.trim()) {
         apiData.bank_name = formData.bankName;
       }
-      if (formData.paymentSchedule) {
-        apiData.payment_schedule = formData.paymentSchedule as "weekly" | "bi-weekly" | "monthly";
+      if (formData.preferredShipmentCode) {
+        apiData.shipment_method_code = formData.preferredShipmentCode;
       }
 
       // Call API using sellersApi
@@ -764,6 +778,44 @@ export default function EditSeller() {
                    </div>
                    <p className="text-xs text-muted-foreground">WhatsApp number only</p>
                  </div>
+
+              {/* Preferred Shipment Option */}
+              <div className="space-y-2">
+                <Label htmlFor="preferredShipmentCode">Preferred Shipment Option</Label>
+                {isLoadingShipping ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 border rounded-md">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading shipping options...
+                  </div>
+                ) : shippingOptions && shippingOptions.length > 0 ? (
+                  <Select
+                    value={formData.preferredShipmentCode}
+                    onValueChange={(value) => handleInputChange("preferredShipmentCode", value)}
+                  >
+                    <SelectTrigger className="transition-all duration-200 focus:scale-[1.02]">
+                      <SelectValue placeholder="Select preferred shipment option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {shippingOptions.map((option) => (
+                        <SelectItem key={option.code} value={option.code}>
+                          <div className="flex items-center gap-2">
+                            <Truck className="h-4 w-4" />
+                            <span>{option.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              ({option.carrier?.name})
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="text-sm text-muted-foreground p-2 border rounded-md">
+                    No shipping options available
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">Default shipping method for this seller</p>
+              </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="businessType">Business Type *</Label>
@@ -927,24 +979,6 @@ export default function EditSeller() {
                     placeholder="Enter bank name"
                     className="transition-all duration-200 focus:scale-[1.02]"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="paymentSchedule">Payment Schedule</Label>
-                  <Select 
-                    value={formData.paymentSchedule} 
-                    onValueChange={(value) => handleInputChange("paymentSchedule", value)}
-                  >
-                    <SelectTrigger className="transition-all duration-200 focus:scale-[1.02]">
-                      <SelectValue placeholder="Select payment schedule" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {paymentSchedules.map(schedule => (
-                        <SelectItem key={schedule} value={schedule}>
-                          {schedule.charAt(0).toUpperCase() + schedule.slice(1).replace('-', ' ')}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             </CardContent>

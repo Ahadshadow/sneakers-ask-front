@@ -17,6 +17,7 @@ interface ShippingSectionProps {
   customerCountryCode?: string;
   orderItem?: any; // Order line item for SendCloud
   onSendCloudLabelCreated?: (labelData: any) => void;
+  sellerShipmentMethodCode?: string | null;
 }
 
 
@@ -30,7 +31,8 @@ export function ShippingSection({
   isUploadingFile = false,
   customerCountryCode,
   orderItem,
-  onSendCloudLabelCreated
+  onSendCloudLabelCreated,
+  sellerShipmentMethodCode
 }: ShippingSectionProps) {
 
   return (
@@ -139,6 +141,7 @@ export function ShippingSection({
                 customerCountryCode={customerCountryCode}
                 orderItem={orderItem}
                 onLabelCreated={onSendCloudLabelCreated}
+                defaultShipmentMethodCode={sellerShipmentMethodCode}
               >
                 <Button className="w-full" variant="outline">
                   <Package className="h-4 w-4 mr-2" />

@@ -12,7 +12,8 @@ import {
   HelpCircle,
   LogOut,
   Shield,
-  CreditCard
+  CreditCard,
+  Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -37,6 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { InviteSellerModal } from "./InviteSellerModal";
 
 interface AppSidebarProps {
   currentSection: string;
@@ -82,7 +84,15 @@ const navigationItems = [
   },
 ];
 
-const quickActions = [
+interface QuickAction {
+  id: string;
+  label: string;
+  icon: any;
+  path?: string;
+  action?: "modal";
+}
+
+const quickActions: QuickAction[] = [
   {
     id: "add-employee",
     label: "Add Employee",
@@ -94,6 +104,12 @@ const quickActions = [
     label: "Add Seller",
     icon: Store,
     path: "/add-seller"
+  },
+  {
+    id: "invite-seller",
+    label: "Invite Seller",
+    icon: Mail,
+    action: "modal" // Special action to open modal
   }
 ];
 
@@ -103,6 +119,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isLoggingOut } = useAuth();
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   
   // Get user initials for avatar
   const getUserInitials = (name: string | undefined | null) => {
@@ -126,7 +143,9 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   };
 
   return (
-    <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-16" : "w-64")} collapsible="icon">
+    <>
+      <InviteSellerModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
+      <Sidebar className={cn("sticky top-0 h-screen border-r border-border bg-sidebar transition-all duration-300", isCollapsed ? "w-16" : "w-64")} collapsible="icon">
       <SidebarHeader className="h-16 border-b border-border bg-gradient-to-r from-background via-background to-background/95">
         <div className={cn("flex items-center h-16", isCollapsed ? "justify-center" : "gap-3 px-4")}>
           {!isCollapsed && (
@@ -224,7 +243,13 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       >
                         <button 
                           className="flex items-center gap-3 w-full px-3"
-                          onClick={() => navigate(action.path)}
+                          onClick={() => {
+                            if (action.action === "modal" && action.id === "invite-seller") {
+                              setInviteModalOpen(true);
+                            } else if (action.path) {
+                              navigate(action.path);
+                            }
+                          }}
                         >
                           <Icon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                           <span className="font-medium text-sm text-foreground">{action.label}</span>
@@ -293,5 +318,6 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
+    </>
   );
 }
