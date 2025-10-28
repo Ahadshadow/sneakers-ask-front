@@ -417,6 +417,9 @@ export function PayoutManagement() {
               <TableHead className="font-bold text-gray-400 py-3 px-0">
                 Seller
               </TableHead>
+              <TableHead className="font-bold text-gray-400 py-3 px-0">
+                Created By
+              </TableHead>
               {/* <TableHead className="font-bold text-gray-400 py-3 px-0">Order #</TableHead> */}
               <TableHead className="font-bold text-gray-400 py-3 px-0">
                 Items
@@ -427,6 +430,7 @@ export function PayoutManagement() {
               <TableHead className="font-bold text-gray-400 py-3 px-0">
                 Status
               </TableHead>
+           
               <TableHead className="font-bold text-gray-400 py-3 px-0 text-right">
                 Actions
               </TableHead>
@@ -450,6 +454,12 @@ export function PayoutManagement() {
                       </div>
                     </TableCell>
                     <TableCell className="py-4 px-0">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-28"></div>
+                        <div className="h-3 bg-gray-200 rounded animate-pulse w-36"></div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 px-0">
                       <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
                     </TableCell>
                     <TableCell className="py-4 px-0">
@@ -461,9 +471,7 @@ export function PayoutManagement() {
                     <TableCell className="py-4 px-0">
                       <div className="h-5 bg-gray-200 rounded animate-pulse w-20"></div>
                     </TableCell>
-                    <TableCell className="py-4 px-0">
-                      <div className="h-6 bg-gray-200 rounded-full animate-pulse w-16"></div>
-                    </TableCell>
+               
                     <TableCell className="py-4 px-0">
                       <div className="h-8 bg-gray-200 rounded animate-pulse w-24 ml-auto"></div>
                     </TableCell>
@@ -505,6 +513,18 @@ export function PayoutManagement() {
                       </div>
                     </TableCell>
 
+
+                    <TableCell className="py-4 px-0">
+                      <div className="space-y-1">
+                        <div className="font-medium text-gray-900">
+                          {payout.created_by_employee?.name || 'N/A'}
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          {payout.created_by_employee?.email || 'N/A'}
+                        </p>
+                      </div>
+                    </TableCell>
+
                     <TableCell className="py-4 px-0">
                       <div className="space-y-1">
                         <span className="font-semibold text-gray-900">
@@ -535,6 +555,7 @@ export function PayoutManagement() {
                         {payout.status}
                       </Badge>
                     </TableCell>
+
 
                     <TableCell className="text-right py-4 px-0">
                       <div className="flex justify-end">

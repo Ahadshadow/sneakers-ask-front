@@ -164,6 +164,11 @@ export interface SellerPayout {
   payment_schedule?: string;
   payout_id?: string; // Payout ID
   shopify_order_number?: string; // Shopify Order Number
+  created_by_employee?: {
+    id: number;
+    name: string;
+    email: string;
+  };
 }
 
 export interface SellerPayoutsResponse {
