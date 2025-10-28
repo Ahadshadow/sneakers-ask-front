@@ -2,29 +2,25 @@ import { config } from '@/lib/config';
 
 // SendCloud API Types
 export interface SendCloudSenderAddress {
-  name: string;
+  id: number;
   company_name: string;
-  address_line_1: string;
+  contact_name: string;
+  email: string;
+  telephone: string;
+  street: string;
   house_number: string;
-  address_line_2: string;
+  postal_box: string;
   postal_code: string;
   city: string;
-  po_box?: string | null;
-  state_province_code?: string | null;
-  country_code: string;
-  email: string;
-  phone_number: string;
-  signature: {
-    full_name: string;
-    initials: string;
-  };
-  is_active: boolean;
+  country: string;
+  country_state: string | null;
+  vat_number: string;
+  eori_number: string | null;
+  ukims_number: string | null;
+  label: string;
   brand_id: number;
-  tax_numbers: Array<{
-    name: string;
-    country_code: string;
-    value: string;
-  }>;
+  signature_full_name: string;
+  signature_initials: string;
 }
 
 export interface SendCloudShippingOption {
@@ -63,6 +59,32 @@ export interface SendCloudShippingOption {
   requirements?: Record<string, unknown>;
   quotes?: unknown[];
   charging_type?: string;
+}
+
+// WTB Shipping Method Types
+export interface WTBShippingMethodCountry {
+  id: number;
+  name: string;
+  price: number;
+  iso_2: string;
+  iso_3: string;
+  lead_time_hours: number | null;
+  price_breakdown: Array<{
+    type: string;
+    label: string;
+    value: number;
+  }>;
+}
+
+export interface WTBShippingMethod {
+  id: number;
+  name: string;
+  carrier: string;
+  min_weight: string;
+  max_weight: string;
+  service_point_input: string;
+  price: number;
+  countries: WTBShippingMethodCountry[];
 }
 
 export interface SendCloudParcel {
@@ -130,7 +152,7 @@ class SendCloudAPI {
 
       const data = await response.json();
 
-      return data?.data?.data || [];
+      return data?.data?.sender_addresses || [];
     } catch (error) {
       console.error('Error fetching sender addresses:', error);
       throw error;
@@ -161,6 +183,36 @@ class SendCloudAPI {
       return data?.data?.data || [];
     } catch (error) {
       console.error('Error fetching shipping options:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch WTB shipping methods from our backend
+   */
+  async getWTBShippingMethods(senderId: number, toCountryCode: string): Promise<WTBShippingMethod[]> {
+    try {
+      const response = await fetch(`${config.api.baseUrl}/wtb-shipping-methods`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender_address: senderId,
+          to_country: toCountryCode,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch WTB shipping methods: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data?.data?.shipping_methods || [];
+    } catch (error) {
+      console.error('Error fetching WTB shipping methods:', error);
       throw error;
     }
   }

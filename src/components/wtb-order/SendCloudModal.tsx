@@ -19,9 +19,7 @@ import {
 import { Loader2, Package, Truck } from "lucide-react";
 import { toast } from "sonner";
 import {
-  sendcloudApi,
-  SendCloudSenderAddress,
-  SendCloudShippingOption,
+  sendcloudApi
 } from "@/lib/api/sendcloud";
 
 interface SendCloudModalProps {
@@ -42,7 +40,7 @@ export function SendCloudModal({
   console.log("orderItem", orderItem);
 
   const [selectedSenderId, setSelectedSenderId] = useState<string>("");
-  const [selectedShippingOptionCode, setSelectedShippingOptionCode] =
+  const [selectedShippingMethodId, setSelectedShippingMethodId] =
     useState<string>("");
   const [isCreatingLabel, setIsCreatingLabel] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -57,44 +55,33 @@ export function SendCloudModal({
     queryFn: () => sendcloudApi.getSenderAddresses(),
     enabled: isOpen,
   });
+  
+  // Filter sender addresses to only show NL (Netherlands) ones
+  const filteredSenderAddresses = senderAddresses?.filter(
+    (addr) => addr.country === "NL"
+  ) || [];
 
-  // Fetch shipping options when sender is selected
+  // Fetch WTB shipping methods
   const {
-    data: shippingOptions,
+    data: shippingMethods,
     isLoading: isLoadingShipping,
     error: shippingError,
   } = useQuery({
     queryKey: [
-      "sendcloud-shipping-options",
+      "wtb-shipping-methods",
       selectedSenderId,
       customerCountryCode,
     ],
     queryFn: async () => {
       if (!selectedSenderId || !customerCountryCode) return [];
-
-      // Filter NL addresses first
-      const filteredAddresses = senderAddresses?.filter(
-        (addr) => addr.country_code === "NL"
-      ) || [];
       
-      const selectedSender = filteredAddresses?.[parseInt(selectedSenderId)];
+      const selectedSender = filteredSenderAddresses?.[parseInt(selectedSenderId)];
       if (!selectedSender) return [];
-
-      const request = {
-        from_country_code: selectedSender.country_code,
-        to_country_code: customerCountryCode,
-        parcels: [sendcloudApi.getDefaultParcel()],
-      };
-
-      return await sendcloudApi.getShippingOptions(request);
+      
+      return await sendcloudApi.getWTBShippingMethods(selectedSender.id, customerCountryCode);
     },
     enabled: !!selectedSenderId && !!customerCountryCode && isOpen,
   });
-
-  // Filter sender addresses to only show NL (Netherlands) ones
-  const filteredSenderAddresses = senderAddresses?.filter(
-    (addr) => addr.country_code === "NL"
-  ) || [];
 
   // Auto-select default sender address when modal opens and data is loaded
   useEffect(() => {
@@ -106,7 +93,7 @@ export function SendCloudModal({
     const defaultIndex = filteredSenderAddresses.findIndex((addr) =>
       addr.company_name === "Candy Wormer" &&
       addr.postal_code === "1531 DT" &&
-      addr.country_code === "NL"
+      addr.country === "NL"
     );
 
     if (defaultIndex !== -1) {
@@ -117,27 +104,27 @@ export function SendCloudModal({
     }
   }, [isOpen, filteredSenderAddresses, selectedSenderId]);
 
-  // Auto-select seller's preferred shipment method when shipping options are loaded
+  // Auto-select seller's preferred shipment method when shipping methods are loaded
   useEffect(() => {
     if (!isOpen) return;
     if (!defaultShipmentMethodCode) return;
-    if (!shippingOptions || shippingOptions.length === 0) return;
-    if (selectedShippingOptionCode) return; // Don't override user selection
+    if (!shippingMethods || shippingMethods.length === 0) return;
+    if (selectedShippingMethodId) return; // Don't override user selection
 
-    // Check if the seller's preferred method exists in available options
-    const preferredOption = shippingOptions.find(
-      (option) => option.code === defaultShipmentMethodCode
+    // Try to match by ID (if defaultShipmentMethodCode is numeric) or by name
+    const preferredMethod = shippingMethods.find(
+      (method) => method.id === parseInt(defaultShipmentMethodCode) || method.name === defaultShipmentMethodCode
     );
     
-    if (preferredOption) {
-      console.log('Auto-selecting seller preferred shipment method:', preferredOption);
-      setSelectedShippingOptionCode(defaultShipmentMethodCode);
+    if (preferredMethod) {
+      console.log('Auto-selecting seller preferred shipment method:', preferredMethod);
+      setSelectedShippingMethodId(preferredMethod.id.toString());
     }
-  }, [isOpen, defaultShipmentMethodCode, shippingOptions, selectedShippingOptionCode]);
+  }, [isOpen, defaultShipmentMethodCode, shippingMethods, selectedShippingMethodId]);
 
   const handleCreateLabel = async () => {
-    if (!selectedSenderId || !selectedShippingOptionCode) {
-      toast.error("Please select both sender and shipping option");
+    if (!selectedSenderId || !selectedShippingMethodId) {
+      toast.error("Please select both sender and shipping method");
       return;
     }
 
@@ -145,12 +132,12 @@ export function SendCloudModal({
       setIsCreatingLabel(true);
 
       const selectedSender = filteredSenderAddresses?.[parseInt(selectedSenderId)];
-      const selectedShippingOption = shippingOptions?.find(
-        (option) => option.code === selectedShippingOptionCode
+      const selectedShippingMethod = shippingMethods?.find(
+        (method) => method.id === parseInt(selectedShippingMethodId)
       );
 
-      if (!selectedSender || !selectedShippingOption) {
-        throw new Error("Selected sender or shipping option not found");
+      if (!selectedSender || !selectedShippingMethod) {
+        throw new Error("Selected sender or shipping method not found");
       }
 
       // Derive customer address and pricing
@@ -180,33 +167,20 @@ export function SendCloudModal({
           po_box: undefined,
         },
         from_address: {
-          name: selectedSender.name,
+          name: selectedSender.contact_name,
           company_name: selectedSender.company_name,
-          address_line_1: selectedSender.address_line_1,
+          address_line_1: selectedSender.street,
           house_number: selectedSender.house_number,
-          address_line_2: selectedSender.address_line_2,
+          address_line_2: "",
           postal_code: selectedSender.postal_code,
           city: selectedSender.city,
-          country_code: selectedSender.country_code,
+          country_code: selectedSender.country,
           email: selectedSender.email,
-          phone_number: selectedSender.phone_number,
-          po_box: selectedSender.po_box ?? undefined,
+          phone_number: selectedSender.telephone,
+          po_box: selectedSender.postal_box || undefined,
+          sender_address_id: selectedSender.id,
         },
-        ship_with: {
-          type: "shipping_option_code",
-          properties: {
-            shipping_option_code: selectedShippingOption.code,
-            contract_id: selectedShippingOption.contract?.id,
-          },
-        },
-
-        //  ship_with: {
-        //   type: "shipping_option_code",
-        //   properties: {
-        //     shipping_option_code: "unstamped_letter",
-        //     contract_id: "unstamped_letter",
-        //   },
-        // },
+        shipping_method_id: selectedShippingMethod.id,
 
         order_number: orderItem?.orderNumber || "",
         total_order_price: {
@@ -245,7 +219,6 @@ export function SendCloudModal({
 
       const labelData = await sendcloudApi.createShipmentLabel(shipmentData);
 
-      console.log("labelData asdasd" , labelData);
 
       // Backend now returns the same structure as upload-file API response
       // Pass it through so the main flow can reuse the tracking section
@@ -256,7 +229,7 @@ export function SendCloudModal({
 
       // Reset form
       setSelectedSenderId("");
-      setSelectedShippingOptionCode("");
+      setSelectedShippingMethodId("");
     } catch (error) {
       console.error("Error creating SendCloud label:", error);
       toast.error(
@@ -270,7 +243,7 @@ export function SendCloudModal({
   };
 
   const canCreateLabel =
-    selectedSenderId && selectedShippingOptionCode && !isCreatingLabel;
+    selectedSenderId && selectedShippingMethodId && !isCreatingLabel;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -314,8 +287,8 @@ export function SendCloudModal({
                             {address.company_name}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {address.house_number}, {address.address_line_1},{" "}
-                            {address.city}, {address.postal_code}, {address.country_code}
+                            {address.house_number}, {address.street},{" "}
+                            {address.city}, {address.postal_code}, {address.country}
                           </span>
                         </div>
                       </SelectItem>
@@ -329,49 +302,59 @@ export function SendCloudModal({
             )}
           </div>
 
-          {/* Shipping Options */}
+          {/* Shipping Methods */}
           {selectedSenderId && (
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Shipping Option</Label>
-              {isLoadingShipping ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading shipping options...
-                </div>
-              ) : shippingError ? (
-                <div className="text-sm text-destructive">
-                  Error loading shipping options: {shippingError.message}
-                </div>
-              ) : shippingOptions && shippingOptions.length > 0 ? (
-                <Select
-                  value={selectedShippingOptionCode}
-                  onValueChange={setSelectedShippingOptionCode}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select shipping option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {shippingOptions.map((option) => (
-                      <SelectItem key={option.code} value={option.code}>
+              <Label className="text-sm font-medium">Shipping Method</Label>
+            {isLoadingShipping ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading shipping methods...
+              </div>
+            ) : shippingError ? (
+              <div className="text-sm text-destructive">
+                Error loading shipping methods: {shippingError.message}
+              </div>
+            ) : shippingMethods && shippingMethods.length > 0 ? (
+              <Select
+                value={selectedShippingMethodId}
+                onValueChange={setSelectedShippingMethodId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select shipping method" />
+                </SelectTrigger>
+                <SelectContent>
+                  {shippingMethods.map((method) => {
+                    // Find price for destination country
+                    const countryPrice = method.countries.find(
+                      (c) => c.iso_2 === customerCountryCode
+                    );
+                    return (
+                      <SelectItem key={method.id} value={method.id.toString()}>
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
                             <Truck className="h-4 w-4" />
-                            <span>{option.name}</span>
+                            <span>{method.name}</span>
                             <span className="text-xs text-muted-foreground">
-                              ({option.carrier?.name} • {option.product?.name})
+                              ({method.carrier} • {method.min_weight}-{method.max_weight}kg)
                             </span>
+                            {countryPrice && (
+                              <span className="text-xs font-medium text-primary">
+                                €{countryPrice.price.toFixed(2)}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm text-muted-foreground">
-                  No shipping options available for the selected sender and
-                  destination.
-                </div>
-              )}
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                No shipping methods available for the destination country.
+              </div>
+            )}
             </div>
           )}
 
