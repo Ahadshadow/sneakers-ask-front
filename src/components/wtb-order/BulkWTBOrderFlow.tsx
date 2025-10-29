@@ -841,6 +841,7 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                                   orderItem={product}
                                   onLabelCreated={(labelData) => handleSendCloudLabelCreated(product.id, labelData)}
                                   defaultShipmentMethodCode={availableSellers.find(s => s.name === selectedSeller)?.shipmentMethodCode}
+                                  orderItemStatus="sourcing"
                                 >
                                   <Button className="w-full" variant="outline">
                                     <Package className="h-4 w-4 mr-2" />

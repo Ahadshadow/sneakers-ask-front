@@ -142,6 +142,7 @@ export function ShippingSection({
                 orderItem={orderItem}
                 onLabelCreated={onSendCloudLabelCreated}
                 defaultShipmentMethodCode={sellerShipmentMethodCode}
+                orderItemStatus="sourcing"
               >
                 <Button className="w-full" variant="outline">
                   <Package className="h-4 w-4 mr-2" />

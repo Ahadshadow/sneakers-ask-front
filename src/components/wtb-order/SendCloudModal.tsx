@@ -28,6 +28,7 @@ interface SendCloudModalProps {
   onLabelCreated: (labelData: any) => void;
   children: React.ReactNode;
   defaultShipmentMethodCode?: string | null;
+  orderItemStatus?: string; // Status of the order item (e.g., 'wtb', 'stock', 'consignment', 'sourcing')
 }
 
 export function SendCloudModal({
@@ -36,6 +37,7 @@ export function SendCloudModal({
   onLabelCreated,
   children,
   defaultShipmentMethodCode,
+  orderItemStatus,
 }: SendCloudModalProps) {
   console.log("orderItem", orderItem);
 
@@ -123,6 +125,7 @@ export function SendCloudModal({
   }, [isOpen, defaultShipmentMethodCode, shippingMethods, selectedShippingMethodId]);
 
   const handleCreateLabel = async () => {
+
     if (!selectedSenderId || !selectedShippingMethodId) {
       toast.error("Please select both sender and shipping method");
       return;
@@ -154,6 +157,9 @@ export function SendCloudModal({
       // Build full shipment payload expected by backend
       const shipmentData = {
         request_label: true,
+        order_item_id: orderItem?.id || null,  // Order item ID for tracking
+        order_id: orderItem?.orderId || orderItem?.order_id || null,  // Shopify order ID
+        order_item_status: orderItemStatus || null,  // Status: wtb, stock, consignment, sourcing, etc.
         to_address: {
           name: orderItem?.customerName || "",
           company_name: "",
@@ -218,7 +224,6 @@ export function SendCloudModal({
       };
 
       const labelData = await sendcloudApi.createShipmentLabel(shipmentData);
-
 
       // Backend now returns the same structure as upload-file API response
       // Pass it through so the main flow can reuse the tracking section

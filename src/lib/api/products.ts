@@ -44,6 +44,49 @@ export interface OrderItem {
   destination: string;
   customer: string;
   processed_at: string;
+  customer_details?: any;
+  customer_email?: string;
+  customer_name?: string;
+  total_price?: number;
+  variant_title?: string;
+  shipping_address?: {
+    first_name: string;
+    last_name: string;
+    address1: string;
+    address2: string | null;
+    city: string;
+    zip: string;
+    province: string | null;
+    country: string;
+    country_code: string;
+    phone: string;
+    company: string | null;
+  };
+  billing_address?: {
+    first_name: string;
+    last_name: string;
+    address1: string;
+    address2: string | null;
+    city: string;
+    zip: string;
+    province: string | null;
+    country: string;
+    country_code: string;
+    phone: string;
+    company: string | null;
+  };
+  shipment_label?: {
+    id: number;
+    tracking_number: string;
+    carrier: string;
+    label_url: string;
+    sendcloud_label_url: string;
+    status: string;
+    shipped_at: string;
+    created_at: string;
+    shipping_method: string;
+  };
+  has_shipment_label?: boolean;
 }
 
 export interface OrderItemsResponse {

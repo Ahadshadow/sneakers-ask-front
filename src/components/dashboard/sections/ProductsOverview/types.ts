@@ -60,6 +60,49 @@ export interface OrderItem {
     owner_name: string;
     whatsapp_number: string;
   } | null;
+  customer_details?: any;
+  customer_email?: string;
+  customer_name?: string;
+  total_price?: number;
+  variant_title?: string;
+  shipping_address?: {
+    first_name: string;
+    last_name: string;
+    address1: string;
+    address2: string | null;
+    city: string;
+    zip: string;
+    province: string | null;
+    country: string;
+    country_code: string;
+    phone: string;
+    company: string | null;
+  };
+  billing_address?: {
+    first_name: string;
+    last_name: string;
+    address1: string;
+    address2: string | null;
+    city: string;
+    zip: string;
+    province: string | null;
+    country: string;
+    country_code: string;
+    phone: string;
+    company: string | null;
+  };
+  shipment_label?: {
+    id: number;
+    tracking_number: string;
+    carrier: string;
+    label_url: string;
+    sendcloud_label_url: string;
+    status: string;
+    shipped_at: string;
+    created_at: string;
+    shipping_method: string;
+  };
+  has_shipment_label?: boolean;
 }
 
 // UI Product interface (for existing design compatibility)
@@ -70,7 +113,7 @@ export interface Product {
   category: string;
   price: string;
   stock: number;
-  status: "open" | "sourcing" | "stock" | "fliproom_sale" | "sneakerask" | "bought" | "wtb";
+  status: "open" | "sourcing" | "stock" | "fliproom_sale" | "sneakerask" | "bought" | "wtb" | "consignment";
   seller: {
     store_name: string;
     owner_name: string;
@@ -113,6 +156,18 @@ export interface Product {
   destination?: string;
   manualStatus?: string;
   processedAt?: string;
+  shipmentLabel?: {
+    id: number;
+    tracking_number: string;
+    carrier: string;
+    label_url: string;
+    sendcloud_label_url: string;
+    status: string;
+    shipped_at: string;
+    created_at: string;
+    shipping_method: string;
+  };
+  hasShipmentLabel?: boolean;
 }
 
 export interface WTBPurchase {

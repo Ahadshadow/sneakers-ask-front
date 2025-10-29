@@ -55,40 +55,72 @@ export function ProductsOverview() {
 
   // Convert API order items to UI products
   const apiOrderItems = useMemo(() => {
-    console.log('API Response:', orderItemsResponse);
     if (orderItemsResponse?.data?.order_items) {
-      console.log('Order items from API:', orderItemsResponse.data.order_items);
-      return orderItemsResponse.data.order_items.map((orderItem: OrderItem) => ({
-        id: orderItem.id.toString(),
-        name: orderItem.product_name,
-        sku: orderItem.sku === "N/A" ? "N/A" : orderItem.sku,
-        category: orderItem.variant.variant || 'N/A',
-        price: `${orderItem.currency} ${orderItem.price.toFixed(2)}`,
-        stock: orderItem.quantity,
-        status: orderItem.status as 'open' | 'sourcing' | 'stock' | 'fliproom_sale' | 'sneakerask' | 'bought' | 'wtb',
-        seller: orderItem.seller,
-        shopifyId: orderItem.order_id.toString(),
-        orderUrl: orderItem.order_url,
-        variant: orderItem.variant.variant,
-        orders: [{
-          orderId: orderItem.order_id.toString(),
-          orderNumber: orderItem.order_number,
-          quantity: orderItem.quantity,
-          orderDate: new Date().toISOString().split('T')[0],
-          customerName: orderItem.customer,
-          orderTotal: orderItem.price.toString(),
+      return orderItemsResponse.data.order_items.map((orderItem: OrderItem) => {
+        // Parse customer details if available (can be string or object)
+        const customerDetails = orderItem.customer_details
+          ? (typeof orderItem.customer_details === 'string' 
+              ? JSON.parse(orderItem.customer_details) 
+              : orderItem.customer_details)
+          : null;
+
+        // Use shipping_address first, then fall back to customer_details.default_address
+        const shippingAddress = orderItem.shipping_address || customerDetails?.default_address;
+        
+        // Format customer name
+        const customerName = orderItem.customer_name 
+          || orderItem.customer
+          || (shippingAddress ? `${shippingAddress.first_name} ${shippingAddress.last_name}` : 'N/A');
+
+        return {
+          id: orderItem.id.toString(),
+          name: orderItem.product_name,
+          sku: orderItem.sku === "N/A" ? "N/A" : orderItem.sku,
+          category: orderItem.variant.variant || 'N/A',
+          price: `${orderItem.currency} ${orderItem.price.toFixed(2)}`,
+          stock: orderItem.quantity,
+          status: orderItem.status as 'open' | 'sourcing' | 'stock' | 'fliproom_sale' | 'sneakerask' | 'bought' | 'wtb' | 'consignment',
+          seller: orderItem.seller,
+          shopifyId: orderItem.order_id.toString(),
           orderUrl: orderItem.order_url,
-        }],
-        // New fields from API
-        orderId: orderItem.order_id,
-        orderNumber: orderItem.order_number,
-        currency: orderItem.currency,
-        totalPrice: orderItem.price,
-        customerName: orderItem.customer,
-        destination: orderItem.destination,
-        manualStatus: orderItem.manual_status,
-        processedAt: orderItem.processed_at,
-      }));
+          variant: orderItem.variant.variant || orderItem.variant_title,
+
+
+          
+          orders: [{
+            orderId: orderItem.order_id.toString(),
+            orderNumber: orderItem.order_number,
+            quantity: orderItem.quantity,
+            orderDate: new Date().toISOString().split('T')[0],
+            customerName: customerName,
+            orderTotal: orderItem.price.toString(),
+            orderUrl: orderItem.order_url,
+          }],
+          // New fields from API
+          orderId: orderItem.order_id,
+          orderNumber: orderItem.order_number,
+          currency: orderItem.currency,
+          totalPrice: orderItem.total_price || orderItem.price,
+          quantity: orderItem.quantity,
+          customerName: customerName,
+          customerEmail: orderItem.customer_email,
+          customerAddress: shippingAddress ? {
+            address1: shippingAddress.address1,
+            address2: shippingAddress.address2,
+            city: shippingAddress.city,
+            province: shippingAddress.province,
+            country: shippingAddress.country,
+            country_code: shippingAddress.country_code,
+            zip: shippingAddress.zip,
+            phone: shippingAddress.phone,
+          } : null,
+          destination: orderItem.destination,
+          manualStatus: orderItem.manual_status,
+          processedAt: orderItem.processed_at,
+          shipmentLabel: orderItem.shipment_label,
+          hasShipmentLabel: orderItem.has_shipment_label || false,
+        };
+      });
     }
     return [];
   }, [orderItemsResponse]);
@@ -99,9 +131,7 @@ export function ProductsOverview() {
   }, [apiOrderItems]);
 
   const filteredProducts = useMemo(() => {
-    console.log('Filtering products - searchTerm:', debouncedSearchTerm, 'saleChannelFilter:', saleChannelFilter);
-    console.log('API Order Items count:', apiOrderItems.length);
-    
+
     // If we have a search term or sale channel filter, the API already filtered the results
     // So we just return the API results directly
     if (debouncedSearchTerm || saleChannelFilter !== "all") {
@@ -294,6 +324,7 @@ export function ProductsOverview() {
           onPageChange={setCurrentPage}
           totalItems={orderItemsResponse?.data?.pagination?.total || 0}
           itemsPerPage={orderItemsResponse?.data?.pagination?.per_page || 10}
+          onRefetch={refetchOrderItems}
         />
       )}
 

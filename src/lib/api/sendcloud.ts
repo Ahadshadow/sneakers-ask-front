@@ -245,6 +245,32 @@ class SendCloudAPI {
   }
 
   /**
+   * Fetch shipment labels for an order item
+   */
+  async getOrderItemShipmentLabels(orderItemId: number) {
+    try {
+      const response = await fetch(`${config.api.baseUrl}/order-items/${orderItemId}/shipment-labels`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch shipment labels: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching shipment labels:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get default parcel dimensions from config
    */
   getDefaultParcel(): SendCloudParcel {
