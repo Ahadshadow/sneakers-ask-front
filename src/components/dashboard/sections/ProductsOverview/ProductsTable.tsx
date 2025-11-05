@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
 import { SendCloudModal } from "@/components/wtb-order/SendCloudModal";
+import { ConsignmentSendCloudModal } from "@/components/wtb-order/ConsignmentSendCloudModal";
 import { ViewShipmentLabelModal } from "@/components/wtb-order/ViewShipmentLabelModal";
 import {
   Table,
@@ -587,12 +588,56 @@ export function ProductsTable({
                              </ViewShipmentLabelModal>
                            ) : null}
 
-                          {(
-                            // product.status === "consignment" ||
-                            product.status === "stock") && !product.hasShipmentLabel && (
+                          {/* Consignment Orders - Use ConsignmentSendCloudModal */}
+                          {product.status === "consignment" && !product.hasShipmentLabel && (
                             <>
                               {product.customerAddress ? (
-                                // Create new label
+                                <ConsignmentSendCloudModal
+                                  customerCountryCode={
+                                    product.customerAddress.country_code ||
+                                    product.destination ||
+                                    "NL"
+                                  }
+                                  orderItem={{
+                                    id: product.id,
+                                    orderId: product.orderId,
+                                    orderNumber: product.orderNumber,
+                                    name: product.name,
+                                    sku: product.sku,
+                                    variant: product.variant,
+                                    price: product.price,
+                                    totalPrice: product.totalPrice,
+                                    quantity: product.quantity || 1,
+                                    customerName: product.customerName,
+                                    customerEmail: product.customerEmail,
+                                    customerPhone:
+                                      product.customerAddress.phone,
+                                    customerAddress: product.customerAddress,
+                                  }}
+                                  onLabelCreated={(labelData) =>
+                                    handleShipmentLabelCreated(
+                                      product,
+                                      labelData
+                                    )
+                                  }
+                                >
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="h-8 px-3 gap-1 text-xs bg-indigo-600 hover:bg-indigo-700"
+                                  >
+                                    <Truck className="h-3.5 w-3.5" />
+                                    Ship
+                                  </Button>
+                                </ConsignmentSendCloudModal>
+                              ) : null}
+                            </>
+                          )}
+
+                          {/* Stock Orders - Use regular SendCloudModal */}
+                          {product.status === "stock" && !product.hasShipmentLabel && (
+                            <>
+                              {product.customerAddress ? (
                                 <SendCloudModal
                                   customerCountryCode={
                                     product.customerAddress.country_code ||
