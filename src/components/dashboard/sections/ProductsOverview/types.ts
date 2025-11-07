@@ -101,6 +101,10 @@ export interface OrderItem {
     shipped_at: string;
     created_at: string;
     shipping_method: string;
+    shipping_destination?: string;
+    consignor_id?: number;
+    consigner_name?: string;
+    consigner_email?: string;
   };
   has_shipment_label?: boolean;
 }
@@ -166,6 +170,10 @@ export interface Product {
     shipped_at: string;
     created_at: string;
     shipping_method: string;
+    shipping_destination?: string;
+    consignor_id?: number;
+    consigner_name?: string;
+    consigner_email?: string;
   };
   hasShipmentLabel?: boolean;
 }

@@ -17,10 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Package, Truck, User, Mail, Award, CheckCircle, Home, Warehouse } from "lucide-react";
+import { Loader2, Package, Truck, User, Mail, Award, CheckCircle, Home, Warehouse, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { sendcloudApi } from "@/lib/api/sendcloud";
-import { consignmentApi, type ConsignerMetadata } from "@/lib/api/consignment";
+import { consignmentApi, type ConsignerInfo } from "@/lib/api/consignment";
 
 interface ConsignmentSendCloudModalProps {
   customerCountryCode: string;
@@ -40,7 +40,8 @@ export function ConsignmentSendCloudModal({
   const [isCreatingLabel, setIsCreatingLabel] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [consignerMetadata, setConsignerMetadata] = useState<ConsignerMetadata | null>(null);
+  const [consignerInfo, setConsignerInfo] = useState<ConsignerInfo | null>(null);
+  const [consignorId, setConsignorId] = useState<number | null>(null);
   const [verificationComplete, setVerificationComplete] = useState(false);
   const [shippingDestination, setShippingDestination] = useState<string>("consumer"); // "consumer" or "warehouse"
 
@@ -118,9 +119,10 @@ export function ConsignmentSendCloudModal({
         });
 
         if (response.success && response.matched_items && response.matched_items.length > 0) {
-          // Successfully found consigner - use metadata
-          const metadata = response.matched_items[0].consigner_metadata;
-          setConsignerMetadata(metadata);
+          // Successfully found consigner - use the consigner object
+          const matchedItem = response.matched_items[0];
+          setConsignerInfo(matchedItem.consigner);
+          setConsignorId(matchedItem.consignor_id);
           setVerificationComplete(true);
           toast.success("Consigner verified successfully!");
         } else {
@@ -148,7 +150,8 @@ export function ConsignmentSendCloudModal({
   useEffect(() => {
     if (!isOpen) {
       setVerificationComplete(false);
-      setConsignerMetadata(null);
+      setConsignerInfo(null);
+      setConsignorId(null);
       setSelectedSenderId("");
       setSelectedShippingMethodId("");
       setIsVerifying(false);
@@ -157,7 +160,7 @@ export function ConsignmentSendCloudModal({
   }, [isOpen]);
 
   const handleCreateLabel = async () => {
-    if (!selectedSenderId || !selectedShippingMethodId || !consignerMetadata) {
+    if (!selectedSenderId || !selectedShippingMethodId || !consignerInfo) {
       toast.error("Please select both sender and shipping method");
       return;
     }
@@ -250,9 +253,10 @@ export function ConsignmentSendCloudModal({
         order_item_id: orderItem?.id || null,
         order_id: orderItem?.orderId || orderItem?.order_id || null,
         order_item_status: "consignment",
-        // Include consigner information separately
-        consigner_name: consignerMetadata?.name || "",
-        consigner_email: consignerMetadata?.email || "",
+        // Include consigner information separately for tracking
+        consignor_id: consignorId,
+        consigner_name: consignerInfo?.name || "",
+        consigner_email: consignerInfo?.email || "",
         to_address: toAddress,
         from_address: fromAddress,
         shipping_method_id: selectedShippingMethod.id,
@@ -261,6 +265,7 @@ export function ConsignmentSendCloudModal({
           currency: "EUR",
           value: priceValue,
         },
+        shippingDestination,
         parcels: [
           {
             dimensions: parcelDefault.dimensions,
@@ -290,6 +295,10 @@ export function ConsignmentSendCloudModal({
         ],
       };
 
+
+      console.log("shipmentData", shipmentData);
+      
+
       const labelData = await sendcloudApi.createShipmentLabel(shipmentData);
 
       onLabelCreated(labelData);
@@ -300,7 +309,8 @@ export function ConsignmentSendCloudModal({
       setSelectedSenderId("");
       setSelectedShippingMethodId("");
       setVerificationComplete(false);
-      setConsignerMetadata(null);
+      setConsignerInfo(null);
+      setConsignorId(null);
     } catch (error) {
       console.error("Error creating SendCloud label:", error);
       toast.error(
@@ -314,7 +324,7 @@ export function ConsignmentSendCloudModal({
   };
 
   const canCreateLabel =
-    selectedSenderId && selectedShippingMethodId && !isCreatingLabel && consignerMetadata;
+    selectedSenderId && selectedShippingMethodId && !isCreatingLabel && consignerInfo;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -338,8 +348,8 @@ export function ConsignmentSendCloudModal({
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Consigner Metadata Display */}
-            {consignerMetadata && (
+            {/* Consigner Information Display */}
+            {consignerInfo && (
               <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 space-y-3 border border-blue-200 dark:border-blue-800">
                 <Label className="text-sm font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                   <User className="h-4 w-4" />
@@ -350,28 +360,35 @@ export function ConsignmentSendCloudModal({
                     <User className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                     <div>
                       <p className="text-xs text-muted-foreground">Name</p>
-                      <p className="font-medium">{consignerMetadata.name}</p>
+                      <p className="font-medium">{consignerInfo.name}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                     <div>
                       <p className="text-xs text-muted-foreground">Email</p>
-                      <p className="font-medium">{consignerMetadata.email}</p>
+                      <p className="font-medium">{consignerInfo.email}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <Award className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                     <div>
                       <p className="text-xs text-muted-foreground">Tier</p>
-                      <p className="font-medium capitalize">{consignerMetadata.tier}</p>
+                      <p className="font-medium capitalize">{consignerInfo.tier}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Phone className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Phone</p>
+                      <p className="font-medium">{consignerInfo.phoneNumber || "N/A"}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                     <div>
                       <p className="text-xs text-muted-foreground">Status</p>
-                      <p className="font-medium capitalize">{consignerMetadata.status}</p>
+                      <p className="font-medium capitalize">{consignerInfo.status}</p>
                     </div>
                   </div>
                 </div>
@@ -482,6 +499,7 @@ export function ConsignmentSendCloudModal({
                             <div className="flex items-center justify-between w-full">
                               <div className="flex items-center gap-2">
                                 <Truck className="h-4 w-4" />
+                                {/* <span>{method.id}</span> */}
                                 <span>{method.name}</span>
                                 <span className="text-xs text-muted-foreground">
                                   ({method.carrier} • {method.min_weight}-{method.max_weight}kg)
@@ -532,22 +550,22 @@ export function ConsignmentSendCloudModal({
             {/* Action Buttons */}
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setIsOpen(false)}>
-                Cancel
-              </Button>
-              {/* <Button
-                onClick={handleCreateLabel}
-                disabled={!canCreateLabel}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {isCreatingLabel ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creating Label...
-                  </>
-                ) : (
-                  "Create Label"
-                )}
-              </Button> */}
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateLabel}
+                  disabled={!canCreateLabel}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {isCreatingLabel ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating Label...
+                    </>
+                  ) : (
+                    "Create Label"
+                  )}
+                </Button>
             </div>
           </div>
         )}

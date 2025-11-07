@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,9 @@ import { productsApi } from "@/lib/api";
 import { OrderItem } from "./types";
 
 export function ProductsOverview() {
+  const [searchParams] = useSearchParams();
+  const statusFromUrl = searchParams.get("status");
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [saleChannelFilter, setSaleChannelFilter] = useState<string>("all");
@@ -21,6 +25,16 @@ export function ProductsOverview() {
   const [currentPage, setCurrentPage] = useState(1);
   
   const { toast } = useToast();
+
+  // Update filter when URL changes
+  useEffect(() => {
+    if (statusFromUrl) {
+      setSaleChannelFilter(statusFromUrl);
+      setCurrentPage(1); // Reset to first page when filter changes
+    } else {
+      setSaleChannelFilter("all");
+    }
+  }, [statusFromUrl]);
 
   // Debounce search term
   useEffect(() => {
@@ -226,40 +240,21 @@ export function ProductsOverview() {
               </div>
             </div>
 
-            {/* Sale Channel Filter */}
-            <div>
-              <Label htmlFor="saleChannel" className="text-sm font-medium mb-2 block">
-                Sale Channel
-              </Label>
-              <select
-                id="saleChannel"
-                value={saleChannelFilter}
-                onChange={(e) => setSaleChannelFilter(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
-                <option value="all">All Channels</option>
-                <option value="wtb">WTB</option>
-                <option value="sourcing">Sourcing</option>
-                <option value="consignment">Consignment</option>
-                <option value="stock">Stock</option>
-                <option value="open">Open</option>
-              </select>
-            </div>
-
-            {/* Clear Filters */}
-            <div className="flex items-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchTerm("");
-                  setSaleChannelFilter("all");
-                }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Clear
-              </Button>
-            </div>
+            {/* Clear Search */}
+            {searchTerm && (
+              <div className="flex items-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm("");
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

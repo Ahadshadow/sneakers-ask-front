@@ -24,26 +24,36 @@ export interface ConsignerAddress {
   updatedAt: string;
 }
 
-export interface ConsignerMetadata {
+export interface ConsignerInfo {
+  since: string;
   name: string;
   email: string;
+  lastVisitAt: string;
+  phoneNumber: string;
   tier: string;
   status: string;
-  createdAt: string;
-  fulfillment_policy: string;
-  saleChannels_title: string;
-  payments: string;
+  fulfillmentPolicy: string;
+  onboardingQuestions: string | null;
+  paymentMethods?: any[];
+  shippingAddress?: ConsignerAddress;
+  saleChannels?: any[];
+  stripeAccount?: any;
+  revolutAccount?: any;
+  analytics?: any;
 }
 
 export interface MatchedConsignmentItem {
-  inbound_order_id: number;
-  inbound_order_reference: string;
-  inbound_line_item_id: number;
-  outbound_line_item_id?: number;
-  consigner: ConsignerAddress;
-  consigner_metadata: ConsignerMetadata;
+  outbound_order_id: number;
+  outbound_order_reference: string;
+  transaction_id: number;
+  transaction_reference: string;
+  transaction_amount: string;
+  variant_size: string;
+  consigner: ConsignerInfo;
+  consigner_metadata: any | null;
   flipromo_product_id: number;
-  item_id: number;
+  flipromo_order_line_item_id: number;
+  consignor_id: number;
   product_details?: any;
   db_order_item?: any;
 }

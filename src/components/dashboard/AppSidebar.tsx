@@ -13,7 +13,9 @@ import {
   LogOut,
   Shield,
   CreditCard,
-  Mail
+  Mail,
+  ChevronDown,
+  Circle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -26,11 +28,15 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarTrigger,
   SidebarFooter,
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +63,7 @@ const navigationItems = [
     label: "Products",
     icon: Package,
     path: "/products",
+    hasSubmenu: true,
   },
   {
     id: "payouts",
@@ -82,6 +89,15 @@ const navigationItems = [
     icon: Store,
     path: "/sellers",
   },
+];
+
+const salesChannelFilters = [
+  { id: "all", label: "All", color: "text-gray-600" },
+  { id: "open", label: "Open", color: "text-green-600" },
+  { id: "sourcing", label: "Sourcing", color: "text-yellow-600" },
+  { id: "wtb", label: "WTB", color: "text-red-600" },
+  { id: "stock", label: "Stock", color: "text-blue-600" },
+  { id: "consignment", label: "Consignment", color: "text-indigo-600" },
 ];
 
 interface QuickAction {
@@ -120,6 +136,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const location = useLocation();
   const { user, logout, isLoggingOut } = useAuth();
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [productsMenuOpen, setProductsMenuOpen] = useState(true);
   
   // Get user initials for avatar
   const getUserInitials = (name: string | undefined | null) => {
@@ -183,6 +200,82 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                 const Icon = item.icon;
                 const isActive = currentSection === item.id || (item.path && location.pathname === item.path);
                 
+                // Products menu with submenu
+                if (item.hasSubmenu && item.id === "products") {
+                  return (
+                    <Collapsible
+                      key={item.id}
+                      open={productsMenuOpen}
+                      onOpenChange={setProductsMenuOpen}
+                      className="group/collapsible"
+                    >
+                      <SidebarMenuItem>
+                        <div className="relative">
+                          <SidebarMenuButton
+                            tooltip={isCollapsed ? item.label : undefined}
+                            className={cn(
+                              "group transition-all duration-200 hover:bg-muted rounded-lg relative",
+                              isCollapsed ? "h-10 w-10 mx-auto my-2 flex items-center justify-center" : "h-11 mx-1 my-0.5",
+                              isActive && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+                            )}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (item.path) {
+                                navigate(item.path);
+                              }
+                            }}
+                          >
+                            <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5")} />
+                            {!isCollapsed && (
+                              <span className="font-medium text-sm">{item.label}</span>
+                            )}
+                            {isActive && isCollapsed && (
+                              <div className="absolute -right-0.5 top-1/2 transform -translate-y-1/2 h-2 w-1 rounded-l-full bg-primary" />
+                            )}
+                          </SidebarMenuButton>
+                          {!isCollapsed && (
+                            <CollapsibleTrigger asChild>
+                              <button
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted/50 rounded transition-colors cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
+                              >
+                                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", productsMenuOpen && "rotate-180")} />
+                              </button>
+                            </CollapsibleTrigger>
+                          )}
+                        </div>
+                        {!isCollapsed && (
+                          <CollapsibleContent>
+                            <SidebarMenuSub>
+                              {salesChannelFilters.map((filter) => (
+                                <SidebarMenuSubItem key={filter.id}>
+                                  <SidebarMenuSubButton
+                                    onClick={() => {
+                                      if (filter.id === "all") {
+                                        navigate("/products");
+                                      } else {
+                                        navigate(`/products?status=${filter.id}`);
+                                      }
+                                    }}
+                                    className="cursor-pointer"
+                                  >
+                                    <Circle className={cn("h-2 w-2 fill-current mr-2", filter.color)} />
+                                    <span>{filter.label}</span>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              ))}
+                            </SidebarMenuSub>
+                          </CollapsibleContent>
+                        )}
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  );
+                }
+                
+                // Regular menu items
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton

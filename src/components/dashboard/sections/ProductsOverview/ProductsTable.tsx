@@ -21,13 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { Product } from "./types";
 import { toast } from "@/components/ui/use-toast";
@@ -103,33 +96,6 @@ const formatDateTwoLine = (dateString: string | undefined): string => {
   }
 };
 
-// API function to update manual status
-const updateManualStatus = async (
-  orderItemId: number,
-  manualStatus: string
-) => {
-  const token = localStorage.getItem("auth_token");
-
-  const response = await fetch(
-    `${config.api.baseUrl}/order-items/${orderItemId}/manual-status`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        manual_status: manualStatus,
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to update manual status");
-  }
-
-  return await response.json();
-};
 
 interface ProductsTableProps {
   products: Product[];
@@ -160,7 +126,6 @@ export function ProductsTable({
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(
     new Set()
   );
-  const [updatingStatus, setUpdatingStatus] = useState<Set<string>>(new Set());
 
   // Use external pagination if provided, otherwise use local pagination
   const currentPage = externalCurrentPage || 1;
@@ -248,44 +213,6 @@ export function ProductsTable({
     );
   };
 
-  const handleManualStatusChange = async (
-    product: Product,
-    newStatus: string
-  ) => {
-    setUpdatingStatus((prev) => new Set([...prev, product.id]));
-
-    try {
-      const response = await updateManualStatus(
-        parseInt(product.id),
-        newStatus
-      );
-
-      // Update the product's manual status with the API response
-      if (response.success && response.manual_status) {
-        product.manualStatus = response.manual_status;
-      }
-
-      toast({
-        title: "Status Updated",
-        description: `Manual status updated to "${
-          response.manual_status || newStatus
-        }"`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update manual status",
-        variant: "destructive",
-      });
-    } finally {
-      setUpdatingStatus((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(product.id);
-        return newSet;
-      });
-    }
-  };
-
   const handleWhatsAppClick = (whatsappNumber: string) => {
     if (!whatsappNumber) {
       toast({
@@ -314,6 +241,54 @@ export function ProductsTable({
     if (onRefetch) {
       onRefetch();
     }
+  };
+
+  // Format tracking status based on shipping destination
+  const getTrackingStatusLabel = (status: string, shippingDestination?: string) => {
+    // If destination is not consumer (i.e., warehouse), rename some statuses
+    if (shippingDestination && shippingDestination !== "consumer") {
+      switch (status) {
+        case "Driver en route":
+          return "On the way to authentication";
+        case "Delivered":
+          return "Arrived at authentication";
+        default:
+          return status;
+      }
+    }
+    return status;
+  };
+
+  // Get status badge color based on tracking status
+  const getTrackingStatusColor = (status: string) => {
+    const lowerStatus = status.toLowerCase();
+    
+    if (lowerStatus.includes("delivered") || lowerStatus.includes("arrived")) {
+      return "border-green-300 bg-green-50 text-green-700";
+    }
+    if (lowerStatus.includes("en route") || lowerStatus.includes("on the way") || lowerStatus.includes("driver")) {
+      return "border-blue-300 bg-blue-50 text-blue-700";
+    }
+    if (lowerStatus.includes("ready") || lowerStatus.includes("sorting") || lowerStatus.includes("pickup")) {
+      return "border-yellow-300 bg-yellow-50 text-yellow-700";
+    }
+    if (lowerStatus.includes("failed") || lowerStatus.includes("refused") || lowerStatus.includes("returned") || lowerStatus.includes("invalid")) {
+      return "border-red-300 bg-red-50 text-red-700";
+    }
+    if (lowerStatus.includes("delayed")) {
+      return "border-orange-300 bg-orange-50 text-orange-700";
+    }
+    
+    return "border-gray-300 bg-gray-50 text-gray-700";
+  };
+
+  // Format tracking status for display
+  const formatTrackingStatus = (status: string) => {
+    // Convert snake_case to Title Case
+    return status
+      .split("_")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   return (
@@ -368,8 +343,8 @@ export function ProductsTable({
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
                     Sale Channel
                   </TableHead>
-                  <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
-                    Manual Status
+                  <TableHead className="font-bold text-gray-400 text-sm py-4 px-4 min-w-[180px]">
+                    Tracking Status
                   </TableHead>
                   {showActions && (
                     <TableHead className="font-bold text-gray-400 text-sm py-4 px-4 text-right">
@@ -494,45 +469,25 @@ export function ProductsTable({
                       </Badge>
                     </TableCell>
 
-                    {/* Manual Status Column */}
-                    <TableCell className="py-3">
-                      <div className="relative">
-                        <Select
-                          value={
-                            product.manualStatus &&
-                            product.manualStatus !== "N/A"
-                              ? product.manualStatus
-                              : ""
-                          }
-                          onValueChange={(value) =>
-                            handleManualStatusChange(product, value)
-                          }
-                          disabled={updatingStatus.has(product.id)}
-                        >
-                          <SelectTrigger className="w-48 h-8 text-xs">
-                            <SelectValue placeholder="Select status..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="On the way to warehouse">
-                              On the way to warehouse
-                            </SelectItem>
-                            <SelectItem value="Arrived at warehouse">
-                              Arrived at warehouse
-                            </SelectItem>
-                            <SelectItem value="Verified">Verified</SelectItem>
-                            <SelectItem value="Cancelled">Cancelled</SelectItem>
-                            <SelectItem value="On the way customer">
-                              On the way customer
-                            </SelectItem>
-                            <SelectItem value="Delivered">Delivered</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {updatingStatus.has(product.id) && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-md">
-                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          </div>
-                        )}
-                      </div>
+                    {/* Tracking Status Column */}
+                    <TableCell className="py-3 min-w-[180px]">
+                      {product.shipmentLabel && product.shipmentLabel.status ? (
+                        <div className="flex items-center">
+                          <Badge
+                            variant="outline"
+                            className={`font-medium border whitespace-nowrap ${getTrackingStatusColor(
+                              product.shipmentLabel.status
+                            )}`}
+                          >
+                            {getTrackingStatusLabel(
+                              formatTrackingStatus(product.shipmentLabel.status),
+                              product.shipmentLabel?.shipping_destination
+                            )}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
                     </TableCell>
 
                     {/* Actions Column */}
