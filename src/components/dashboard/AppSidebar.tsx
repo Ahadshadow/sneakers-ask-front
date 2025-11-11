@@ -105,7 +105,12 @@ const vendorFilters = [
   { id: "GOAT", label: "GOAT" },
   { id: "LEO", label: "LEO" },
   { id: "AIRPLANE", label: "AIRPLANE" },
+  { id: "Mikail", label: "Mikail" },
+  { id: "Luca", label: "Luca" },
+  { id: "T/M ling", label: "T/M ling" },
+  { id: "Bulk ess", label: "Bulk ess" },
 ];
+
 
 interface QuickAction {
   id: string;
