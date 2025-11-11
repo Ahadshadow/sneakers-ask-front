@@ -7,12 +7,14 @@ import {
   MessageCircle,
   Truck,
   Eye,
+  Package,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
 import { SendCloudModal } from "@/components/wtb-order/SendCloudModal";
 import { ConsignmentSendCloudModal } from "@/components/wtb-order/ConsignmentSendCloudModal";
 import { ViewShipmentLabelModal } from "@/components/wtb-order/ViewShipmentLabelModal";
+import { VendorAssignmentModal } from "./VendorAssignmentModal";
 import {
   Table,
   TableBody,
@@ -25,6 +27,7 @@ import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { Product } from "./types";
 import { toast } from "@/components/ui/use-toast";
 import { config } from "@/lib/config";
+import { VENDOR_OPTIONS } from "@/lib/constants/vendors";
 
 // Date formatting function
 const formatDate = (dateString: string | undefined): string => {
@@ -108,6 +111,7 @@ interface ProductsTableProps {
   isLoading?: boolean;
   showActions?: boolean;
   onRefetch?: () => void;
+  showVendorColumns?: boolean;
 }
 
 export function ProductsTable({
@@ -121,11 +125,14 @@ export function ProductsTable({
   isLoading = false,
   showActions = true,
   onRefetch,
+  showVendorColumns = false,
 }: ProductsTableProps) {
   const navigate = useNavigate();
   const [unlockedProducts, setUnlockedProducts] = useState<Set<string>>(
     new Set()
   );
+  const [vendorAssignmentModalOpen, setVendorAssignmentModalOpen] = useState(false);
+  const [selectedProductForVendor, setSelectedProductForVendor] = useState<Product | null>(null);
 
   // Use external pagination if provided, otherwise use local pagination
   const currentPage = externalCurrentPage || 1;
@@ -243,6 +250,18 @@ export function ProductsTable({
     }
   };
 
+  const handleAssignVendorClick = (product: Product) => {
+    setSelectedProductForVendor(product);
+    setVendorAssignmentModalOpen(true);
+  };
+
+  const handleVendorAssignmentSuccess = () => {
+    // Refresh the products list to show updated vendor assignment
+    if (onRefetch) {
+      onRefetch();
+    }
+  };
+
   // Format tracking status based on shipping destination
   const getTrackingStatusLabel = (status: string, shippingDestination?: string) => {
     // If destination is not consumer (i.e., warehouse), rename some statuses
@@ -343,6 +362,16 @@ export function ProductsTable({
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
                     Sale Channel
                   </TableHead>
+                  {showVendorColumns && (
+                    <>
+                      <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
+                        Vendor Price
+                      </TableHead>
+                      <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
+                        Vendor Order ID
+                      </TableHead>
+                    </>
+                  )}
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4 min-w-[180px]">
                     Tracking Status
                   </TableHead>
@@ -468,6 +497,22 @@ export function ProductsTable({
                         {product.status.replace("_", " ")}
                       </Badge>
                     </TableCell>
+                    {showVendorColumns && (
+                      <>
+                        {/* Vendor Price Column */}
+                        <TableCell className="py-3">
+                          <span className="text-sm text-foreground">
+                            {product.vendorPrice != null ? product.vendorPrice : "-"}
+                          </span>
+                        </TableCell>
+                        {/* Vendor Order ID Column */}
+                        <TableCell className="py-3">
+                          <span className="text-sm text-foreground">
+                            {product.vendorOrderId || "-"}
+                          </span>
+                        </TableCell>
+                      </>
+                    )}
 
                     {/* Tracking Status Column */}
                     <TableCell className="py-3 min-w-[180px]">
@@ -494,6 +539,19 @@ export function ProductsTable({
                     {showActions && (
                       <TableCell className="py-3">
                         <div className="flex gap-2 justify-end">
+                          {/* Assign Vendor Button - Only for sourcing items */}
+                          {product.status === "sourcing" && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleAssignVendorClick(product)}
+                              className="h-8 px-3 gap-1 text-xs bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Package className="h-3.5 w-3.5" />
+                              Assign Vendor
+                            </Button>
+                          )}
+
                           {onAddToCart && (
                             <>
                               <Button
@@ -544,7 +602,7 @@ export function ProductsTable({
                            ) : null}
 
                           {/* Consignment Orders - Use ConsignmentSendCloudModal */}
-                          {product.status === "consignment" && !product.hasShipmentLabel && (
+                          {(product.status === "consignment" ) && !product.hasShipmentLabel && (
                             <>
                               {product.customerAddress ? (
                                 <ConsignmentSendCloudModal
@@ -590,7 +648,7 @@ export function ProductsTable({
                           )}
 
                           {/* Stock Orders - Use regular SendCloudModal */}
-                          {product.status === "stock" && !product.hasShipmentLabel && (
+                          {(product.status === "stock" || VENDOR_OPTIONS.some(option => option.value === product.status )) && !product.hasShipmentLabel && (
                             <>
                               {product.customerAddress ? (
                                 <SendCloudModal
@@ -656,6 +714,17 @@ export function ProductsTable({
             />
           </div>
         </>
+      )}
+
+      {/* Vendor Assignment Modal */}
+      {selectedProductForVendor && (
+        <VendorAssignmentModal
+          open={vendorAssignmentModalOpen}
+          onOpenChange={setVendorAssignmentModalOpen}
+          orderItemId={parseInt(selectedProductForVendor.id)}
+          productName={selectedProductForVendor.name}
+          onSuccess={handleVendorAssignmentSuccess}
+        />
       )}
     </div>
   );

@@ -100,6 +100,13 @@ const salesChannelFilters = [
   { id: "consignment", label: "Consignment", color: "text-indigo-600" },
 ];
 
+const vendorFilters = [
+  { id: "StockX", label: "StockX" },
+  { id: "GOAT", label: "GOAT" },
+  { id: "LEO", label: "LEO" },
+  { id: "AIRPLANE", label: "AIRPLANE" },
+];
+
 interface QuickAction {
   id: string;
   label: string;
@@ -264,6 +271,20 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                                   >
                                     <Circle className={cn("h-2 w-2 fill-current mr-2", filter.color)} />
                                     <span>{filter.label}</span>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              ))}
+                              {/* Vendor quick filters */}
+                              {vendorFilters.map((vendor) => (
+                                <SidebarMenuSubItem key={`vendor-${vendor.id}`}>
+                                  <SidebarMenuSubButton
+                                    onClick={() => {
+                                      navigate(`/products?vendor=${encodeURIComponent(vendor.id)}`);
+                                    }}
+                                    className="cursor-pointer"
+                                  >
+                                    <Circle className="h-2 w-2 fill-current mr-2 text-gray-500" />
+                                    <span>{vendor.label}</span>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
                               ))}

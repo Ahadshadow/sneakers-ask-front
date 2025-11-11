@@ -107,6 +107,9 @@ export interface OrderItem {
     consigner_email?: string;
   };
   has_shipment_label?: boolean;
+  vendor_name?: string | null;
+  vendor_order_id?: string | null;
+  vendor_price?: number | null;
 }
 
 // UI Product interface (for existing design compatibility)
@@ -176,6 +179,9 @@ export interface Product {
     consigner_email?: string;
   };
   hasShipmentLabel?: boolean;
+  vendorName?: string | null;
+  vendorOrderId?: string | null;
+  vendorPrice?: number | null;
 }
 
 export interface WTBPurchase {

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Package, Search, Filter, Loader2, AlertCircle, WifiOff } from "lucide-react";
 
 import { ProductsTable } from "./ProductsTable";
@@ -17,10 +18,12 @@ import { OrderItem } from "./types";
 export function ProductsOverview() {
   const [searchParams] = useSearchParams();
   const statusFromUrl = searchParams.get("status");
+  const vendorFromUrl = searchParams.get("vendor");
   
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [saleChannelFilter, setSaleChannelFilter] = useState<string>("all");
+  const [vendorFilter, setVendorFilter] = useState<string>(vendorFromUrl || "all");
   const [cart, setCart] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -35,6 +38,16 @@ export function ProductsOverview() {
       setSaleChannelFilter("all");
     }
   }, [statusFromUrl]);
+
+  // Update vendor filter when URL changes
+  useEffect(() => {
+    if (vendorFromUrl) {
+      setVendorFilter(vendorFromUrl);
+      setCurrentPage(1);
+    } else {
+      setVendorFilter("all");
+    }
+  }, [vendorFromUrl]);
 
   // Debounce search term
   useEffect(() => {
@@ -54,13 +67,18 @@ export function ProductsOverview() {
     error: orderItemsError,
     refetch: refetchOrderItems,
   } = useQuery({
-    queryKey: ['order-items', currentPage, debouncedSearchTerm, saleChannelFilter],
+    queryKey: ['order-items', currentPage, debouncedSearchTerm, saleChannelFilter, vendorFilter],
     queryFn: async () => {
+      // If a vendor is specified, we pass it through the status param as requested
+      const statusParam = vendorFilter !== "all"
+        ? vendorFilter
+        : (saleChannelFilter !== "all" ? saleChannelFilter : undefined);
+
       return await productsApi.getOrderItems(
-        currentPage, 
-        10, 
-        debouncedSearchTerm || undefined, 
-        saleChannelFilter !== "all" ? saleChannelFilter : undefined
+        currentPage,
+        10,
+        debouncedSearchTerm || undefined,
+        statusParam
       );
     },
     staleTime: 0, // Always fetch fresh data
@@ -133,6 +151,9 @@ export function ProductsOverview() {
           processedAt: orderItem.processed_at,
           shipmentLabel: orderItem.shipment_label,
           hasShipmentLabel: orderItem.has_shipment_label || false,
+          vendorName: orderItem.vendor_name || null,
+          vendorOrderId: orderItem.vendor_order_id || null,
+          vendorPrice: orderItem.vendor_price || null,
         };
       });
     }
@@ -144,17 +165,35 @@ export function ProductsOverview() {
     return Array.from(new Set(apiOrderItems.map(product => product.seller?.store_name || '--'))).sort();
   }, [apiOrderItems]);
 
+  // Get unique vendor names for filter
+  const availableVendors = useMemo(() => {
+    return Array.from(
+      new Set(
+        apiOrderItems
+          .map(product => product.vendorName)
+          .filter((vendor): vendor is string => vendor !== null && vendor !== undefined)
+      )
+    ).sort();
+  }, [apiOrderItems]);
+
   const filteredProducts = useMemo(() => {
+    // If we have a search term or sale channel filter, the API already filtered the results
+    // But we still need to apply vendor filter client-side
+    let filtered = apiOrderItems;
+
+    // Apply vendor filter (client-side)
+    if (vendorFilter !== "all") {
+      filtered = filtered.filter(product => product.vendorName === vendorFilter);
+    }
 
     // If we have a search term or sale channel filter, the API already filtered the results
-    // So we just return the API results directly
+    // So we just return the filtered results
     if (debouncedSearchTerm || saleChannelFilter !== "all") {
-      console.log('Using API filtered results directly');
-      return apiOrderItems;
+      return filtered;
     }
     
     // Only apply client-side filtering when no search/filter is active
-    return apiOrderItems.filter(product => {
+    return filtered.filter(product => {
       // Search filter
       const matchesSearch = debouncedSearchTerm === "" || 
         product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
@@ -166,7 +205,7 @@ export function ProductsOverview() {
 
       return matchesSearch && matchesSaleChannel;
     });
-  }, [apiOrderItems, debouncedSearchTerm, saleChannelFilter]);
+  }, [apiOrderItems, debouncedSearchTerm, saleChannelFilter, vendorFilter]);
 
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
@@ -270,7 +309,7 @@ export function ProductsOverview() {
             </span>
           )}
         </span>
-        {(searchTerm || saleChannelFilter !== "all") && (
+        {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all") && (
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filters active</span>
@@ -286,18 +325,19 @@ export function ProductsOverview() {
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
               <h3 className="text-lg font-semibold text-foreground">No Products Found</h3>
               <p className="text-sm text-muted-foreground">
-                {searchTerm || saleChannelFilter !== "all"
+                {searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all"
                   ? "No products match your current filters."
                   : "No products available at the moment."
                 }
               </p>
-              {(searchTerm || saleChannelFilter !== "all") && (
+              {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all") && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setSearchTerm("");
                     setSaleChannelFilter("all");
+                    setVendorFilter("all");
                   }}
                 >
                   Clear Filters
@@ -320,6 +360,7 @@ export function ProductsOverview() {
           totalItems={orderItemsResponse?.data?.pagination?.total || 0}
           itemsPerPage={orderItemsResponse?.data?.pagination?.per_page || 10}
           onRefetch={refetchOrderItems}
+          showVendorColumns={vendorFilter !== "all"}
         />
       )}
 

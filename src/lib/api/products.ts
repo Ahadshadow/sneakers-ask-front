@@ -87,6 +87,9 @@ export interface OrderItem {
     shipping_method: string;
   };
   has_shipment_label?: boolean;
+  vendor_name?: string | null;
+  vendor_order_id?: string | null;
+  vendor_price?: number | null;
 }
 
 export interface OrderItemsResponse {
@@ -429,5 +432,34 @@ export const productsApi = {
   // Filter WTB items by vendor
   async getWTBItemsByVendor(vendor: string, page: number = 1): Promise<WTBItemsResponse> {
     return apiRequest<WTBItemsResponse>(`/wtb-items?vendor=${encodeURIComponent(vendor)}&page=${page}`);
+  },
+
+  // Assign vendor to order item
+  async assignVendorToOrderItem(
+    orderItemId: number,
+    vendorName: string,
+    vendorPrice: number,
+    vendorOrderId?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      order_item: OrderItem;
+    };
+  }> {
+    return apiRequest<{
+      success: boolean;
+      message: string;
+      data: {
+        order_item: OrderItem;
+      };
+    }>(`/order-items/${orderItemId}/assign-vendor`, {
+      method: 'POST',
+      body: JSON.stringify({
+        vendor_name: vendorName,
+        vendor_price: vendorPrice,
+        vendor_order_id: vendorOrderId || null,
+      }),
+    });
   },
 };
