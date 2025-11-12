@@ -39,6 +39,7 @@ const countryCodes = [
   { code: "+46", country: "Sweden" },
   { code: "+47", country: "Norway" },
   { code: "+358", country: "Finland" },
+  { code: "+420", country: "Czech Republic" }, { code: "+36", country: "Hungary" }, { code: "+40", country: "Romania" }, { code: "+30", country: "Greece" }, { code: "+48", country: "Poland" }, { code: "+351", country: "Portugal" },
   { code: "+61", country: "Australia" },
   { code: "+64", country: "New Zealand" },
   { code: "+81", country: "Japan" },

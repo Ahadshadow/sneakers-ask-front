@@ -61,6 +61,9 @@ const countryCodes = [
   { code: "+966", country: "Saudi Arabia" },
   { code: "+852", country: "Hong Kong" },
   { code: "+65", country: "Singapore" },
+  { code: "+420", country: "Czech Republic" }, { code: "+36", country: "Hungary" }, { code: "+40", country: "Romania" }, { code: "+30", country: "Greece" }, { code: "+48", country: "Poland" }, { code: "+351", country: "Portugal" },
+
+  
 ];
 
 export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSellerModalProps) {
