@@ -19,6 +19,8 @@ import WTBOrder from "./pages/WTBOrder";
 import BulkWTBOrder from "./pages/BulkWTBOrder";
 import Profile from "./pages/Profile";
 import SignIn from "./pages/SignIn";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import SellerOnboarding from "./pages/SellerOnboarding";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
@@ -49,6 +51,8 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/seller/onboarding" element={<SellerOnboarding />} />
             
             {/* Protected routes */}

@@ -105,6 +105,7 @@ export interface OrderItem {
     consignor_id?: number;
     consigner_name?: string;
     consigner_email?: string;
+    consigner_phone?: string;
   };
   has_shipment_label?: boolean;
   vendor_name?: string | null;
@@ -177,6 +178,7 @@ export interface Product {
     consignor_id?: number;
     consigner_name?: string;
     consigner_email?: string;
+    consigner_phone?: string;
   };
   hasShipmentLabel?: boolean;
   vendorName?: string | null;

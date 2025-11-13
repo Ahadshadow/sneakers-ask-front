@@ -17,36 +17,14 @@ import { sendcloudApi } from "@/lib/api/sendcloud";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/data/countries";
+import { COUNTRY_CODES, getCountryCodeByName } from "@/data/countryCodes";
 
 const businessTypes = [
   "Private",
   "B2B"
 ];
 
-const countryCodes = [
-  { code: "+1", country: "US/Canada" },
-  { code: "+44", country: "UK" },
-  { code: "+49", country: "Germany" },
-  { code: "+33", country: "France" },
-  { code: "+39", country: "Italy" },
-  { code: "+34", country: "Spain" },
-  { code: "+31", country: "Netherlands" },
-  { code: "+32", country: "Belgium" },
-  { code: "+41", country: "Switzerland" },
-  { code: "+43", country: "Austria" },
-  { code: "+45", country: "Denmark" },
-  { code: "+46", country: "Sweden" },
-  { code: "+47", country: "Norway" },
-  { code: "+358", country: "Finland" },
-  { code: "+61", country: "Australia" },
-  { code: "+64", country: "New Zealand" },
-  { code: "+81", country: "Japan" },
-  { code: "+82", country: "South Korea" },
-  { code: "+86", country: "China" },
-  { code: "+91", country: "India" },
-  { code: "+420", country: "Czech Republic" }, { code: "+36", country: "Hungary" }, { code: "+40", country: "Romania" }, { code: "+30", country: "Greece" }, { code: "+48", country: "Poland" }, { code: "+351", country: "Portugal" },
-
-];
+const countryCodes = COUNTRY_CODES;
 
 export default function SellerOnboarding() {
   const navigate = useNavigate();
@@ -134,6 +112,14 @@ export default function SellerOnboarding() {
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Auto-select country code when country is selected
+    if (field === 'country' && typeof value === 'string') {
+      const countryCode = getCountryCodeByName(value);
+      if (countryCode) {
+        setFormData(prev => ({ ...prev, whatsappCountryCode: countryCode }));
+      }
+    }
     
     if (field === 'iban') {
       setIbanError(false);

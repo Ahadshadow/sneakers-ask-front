@@ -193,6 +193,53 @@ export interface SellerPayoutsResponse {
   };
 }
 
+// Seller Invitations interfaces
+export interface SellerInvitation {
+  id: number;
+  email: string;
+  status: "pending" | "completed" | "expired";
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  is_expired: boolean;
+  is_valid: boolean;
+  days_until_expiry: number | null;
+  seller: {
+    id: number;
+    email: string;
+    store_name: string;
+    owner_name: string;
+  } | null;
+}
+
+export interface SellerInvitationsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    invitations: SellerInvitation[];
+    pagination: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+      from: number;
+      to: number;
+    };
+  };
+}
+
+export interface ResendInvitationResponse {
+  success: boolean;
+  message: string;
+  data: {
+    invitation_id: number;
+    email: string;
+    status: string;
+    expires_at: string;
+  };
+}
+
 // Generic API request function
 async function apiRequest<T>(
   endpoint: string,
@@ -337,6 +384,41 @@ export const sellersApi = {
   // Get active sellers only
   async getActiveSellers(): Promise<{ success: boolean; data: ActiveSeller[]; message: string; count: number }> {
     return apiRequest<{ success: boolean; data: ActiveSeller[]; message: string; count: number }>('/sellers/active');
+  },
+
+  // List seller invitations
+  async getSellerInvitations(params?: {
+    status?: "pending" | "completed" | "expired";
+    search?: string;
+    expired_only?: boolean;
+    valid_only?: boolean;
+    sort_by?: "created_at" | "updated_at" | "expires_at" | "email" | "status";
+    sort_order?: "asc" | "desc";
+    per_page?: number;
+    page?: number;
+  }): Promise<SellerInvitationsResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.expired_only !== undefined) queryParams.append("expired_only", params.expired_only.toString());
+    if (params?.valid_only !== undefined) queryParams.append("valid_only", params.valid_only.toString());
+    if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
+    if (params?.sort_order) queryParams.append("sort_order", params.sort_order);
+    if (params?.per_page) queryParams.append("per_page", params.per_page.toString());
+    if (params?.page) queryParams.append("page", params.page.toString());
+
+    const queryString = queryParams.toString();
+    return apiRequest<SellerInvitationsResponse>(`/seller/invitations${queryString ? `?${queryString}` : ""}`);
+  },
+
+  // Resend invitation email
+  async resendInvitation(id: number, frontendUrl?: string): Promise<ResendInvitationResponse> {
+    const frontend_url = frontendUrl || window.location.origin;
+    return apiRequest<ResendInvitationResponse>(`/seller/invitations/${id}/resend`, {
+      method: "POST",
+      body: JSON.stringify({ frontend_url }),
+    });
   },
 
   // Get seller payouts with pagination

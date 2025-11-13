@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Store, Plus, MoreHorizontal, Building2, User, Edit, Trash2, Loader2, ToggleLeft, ToggleRight } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Search, Store, Plus, MoreHorizontal, Building2, User, Edit, Trash2, Loader2, ToggleLeft, ToggleRight, Mail } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/table";
 import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { sellersApi, Seller as ApiSeller } from "@/lib/api/sellers";
+import { SellerInvitations } from "./SellerInvitations";
 
 // UI Seller interface
 interface Seller {
@@ -295,21 +297,21 @@ export function SellersManagement() {
   };
 
 
-  // Show error state
-  if (error) {
-    return (
-      <div className="space-y-6">
-        {/* Header Actions */}
-        <div className="flex items-center justify-between">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search sellers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
-            />
-          </div>
+
+  return (
+    <div className="space-y-6">
+      <Tabs defaultValue="sellers" className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <TabsList>
+            <TabsTrigger value="sellers">
+              <Store className="h-4 w-4 mr-2" />
+              Sellers
+            </TabsTrigger>
+            <TabsTrigger value="invitations">
+              <Mail className="h-4 w-4 mr-2" />
+              Invitations
+            </TabsTrigger>
+          </TabsList>
           <Button 
             onClick={() => navigate("/add-seller")}
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -319,54 +321,49 @@ export function SellersManagement() {
           </Button>
         </div>
 
-        <Card className="bg-destructive/5 border-destructive/20">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div>
-                <h3 className="font-semibold text-destructive">Connection Error</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Something went wrong. Please check your connection and try again.
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => refetch()}
-                  className="mt-3"
-                >
-                  Try Again
-                </Button>
+        <TabsContent value="sellers" className="space-y-6">
+          {/* Error State */}
+          {error && (
+            <Card className="bg-destructive/5 border-destructive/20">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <h3 className="font-semibold text-destructive">Connection Error</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Something went wrong. Please check your connection and try again.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => refetch()}
+                      className="mt-3"
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Header Actions */}
+          {!error && (
+            <div className="flex items-center justify-between">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search sellers..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-64"
+                />
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+          )}
 
-  return (
-    <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex items-center justify-between">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search sellers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-64"
-          />
-        </div>
-        <Button 
-          onClick={() => navigate("/add-seller")}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Seller
-        </Button>
-      </div>
-
-      {/* Sellers Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Sellers Stats */}
+          {!error && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-gradient-card border-border shadow-soft">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -408,10 +405,12 @@ export function SellersManagement() {
             </div>
           </CardContent>
         </Card>
-      </div>
+            </div>
+          )}
 
-      {/* Sellers Table */}
-      <Card className="bg-gradient-card border-border shadow-soft">
+          {/* Sellers Table */}
+          {!error && (
+            <Card className="bg-gradient-card border-border shadow-soft">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Store className="h-5 w-5 text-primary" />
@@ -544,8 +543,9 @@ export function SellersManagement() {
           )}
         </CardContent>
       </Card>
+          )}
 
-      {/* Delete Confirmation Dialog */}
+          {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => !deleteSellerMutation.isPending && setDeleteDialog({ open, seller: null })}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -575,6 +575,12 @@ export function SellersManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </TabsContent>
+
+        <TabsContent value="invitations" className="space-y-6">
+          <SellerInvitations />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

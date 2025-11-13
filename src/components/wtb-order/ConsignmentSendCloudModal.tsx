@@ -257,6 +257,7 @@ export function ConsignmentSendCloudModal({
         consignor_id: consignorId,
         consigner_name: consignerInfo?.name || "",
         consigner_email: consignerInfo?.email || "",
+        consigner_phone: consignerInfo?.phoneNumber || "",
         to_address: toAddress,
         from_address: fromAddress,
         shipping_method_id: selectedShippingMethod.id,
@@ -296,7 +297,6 @@ export function ConsignmentSendCloudModal({
       };
 
 
-      console.log("shipmentData", shipmentData);
       
 
       const labelData = await sendcloudApi.createShipmentLabel(shipmentData);

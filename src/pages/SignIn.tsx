@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePasswordReset } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,11 +27,9 @@ const SignIn = () => {
   const [otpError, setOtpError] = useState<string | null>(null);
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { loginWithOtp, verifyOtp, isAuthenticated, isLoading, isLoggingIn } = useAuth();
-  const { forgotPassword, isSendingReset } = usePasswordReset();
 
   // Form setup
   const {
@@ -94,15 +91,6 @@ const SignIn = () => {
     }
   };
 
-  // Handle forgot password
-  const handleForgotPassword = async (email: string) => {
-    try {
-      await forgotPassword(email);
-      setShowForgotPassword(false);
-    } catch (error) {
-      // Error handling is done in the hook
-    }
-  };
 
   // Show loading if auth is being checked
   if (isLoading) {
@@ -192,7 +180,7 @@ const SignIn = () => {
                   type="button"
                   variant="link"
                   className="px-0"
-                  onClick={() => setShowForgotPassword(true)}
+                  onClick={() => navigate("/forgot-password")}
                 >
                   Forgot password?
                 </Button>
@@ -246,48 +234,6 @@ const SignIn = () => {
             </form>
           )}
 
-          {/* Forgot Password Modal */}
-          {showForgotPassword && (
-            <div className="mt-6 p-4 bg-muted/20 border border-border rounded-lg">
-              <h3 className="font-medium mb-2">Reset Password</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Enter your email address and we'll send you a password reset link.
-              </p>
-              <div className="space-y-2">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  id="reset-email"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      const email = (document.getElementById('reset-email') as HTMLInputElement)?.value;
-                      if (email) handleForgotPassword(email);
-                    }}
-                    disabled={isSendingReset}
-                  >
-                    {isSendingReset ? (
-                      <>
-                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      "Send Reset Link"
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowForgotPassword(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

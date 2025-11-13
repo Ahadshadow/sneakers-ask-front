@@ -97,7 +97,8 @@ export const usePasswordReset = () => {
 
   // Forgot password mutation
   const forgotPasswordMutation = useMutation({
-    mutationFn: authApi.forgotPassword,
+    mutationFn: ({ email, frontendUrl }: { email: string; frontendUrl?: string }) =>
+      authApi.forgotPassword(email, frontendUrl),
     onSuccess: (response) => {
       toast({
         title: "Reset email sent",

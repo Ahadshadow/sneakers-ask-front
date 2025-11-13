@@ -15,6 +15,7 @@ import { SendCloudModal } from "@/components/wtb-order/SendCloudModal";
 import { ConsignmentSendCloudModal } from "@/components/wtb-order/ConsignmentSendCloudModal";
 import { ViewShipmentLabelModal } from "@/components/wtb-order/ViewShipmentLabelModal";
 import { VendorAssignmentModal } from "./VendorAssignmentModal";
+import { isVendorStatus } from "@/lib/constants/vendors";
 import {
   Table,
   TableBody,
@@ -436,13 +437,40 @@ export function ProductsTable({
                       </div>
                     </TableCell>
 
-                    {/* Vendor Column */}
+                    {/* Vendor/Seller Column */}
                     <TableCell className="py-3">
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-sm text-foreground flex-1">
-                          {product.seller?.store_name || "--"}
-                        </span>
-                        {product.seller && (
+                        {/* Show consigner info for consignment items with shipment labels */}
+                        {product.status === "consignment" && product.hasShipmentLabel && product.shipmentLabel ? (
+                          <div className="flex-1 space-y-1">
+                            <div className="text-sm text-foreground font-medium">
+                              {product.shipmentLabel.consigner_name || "--"}
+                            </div>
+                            {product.shipmentLabel.consigner_email && (
+                              <div className="text-xs text-muted-foreground">
+                                {product.shipmentLabel.consigner_email}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-foreground flex-1">
+                            {product.seller?.store_name || "--"}
+                          </span>
+                        )}
+                        {/* Show WhatsApp button for consignment items with phone, or regular seller */}
+                        {product.status === "consignment" && product.hasShipmentLabel && product.shipmentLabel?.consigner_phone && product.shipmentLabel.consigner_phone.trim() !== "+" ? (
+                          <button
+                            onClick={() =>
+                              handleWhatsAppClick(
+                                product.shipmentLabel?.consigner_phone || ""
+                              )
+                            }
+                            className="p-1 rounded-full hover:bg-green-50 transition-colors duration-200 cursor-pointer"
+                            title="Open WhatsApp chat with consigner"
+                          >
+                            <MessageCircle className="h-4 w-4 text-green-500 hover:text-green-600" />
+                          </button>
+                        ) : product.seller ? (
                           <button
                             onClick={() =>
                               handleWhatsAppClick(
@@ -454,7 +482,7 @@ export function ProductsTable({
                           >
                             <MessageCircle className="h-4 w-4 text-green-500 hover:text-green-600" />
                           </button>
-                        )}
+                        ) : null}
                       </div>
                     </TableCell>
 
@@ -648,7 +676,55 @@ export function ProductsTable({
                           )}
 
                           {/* Stock Orders - Use regular SendCloudModal */}
-                          {(product.status === "stock" || VENDOR_OPTIONS.some(option => option.value === product.status )) && !product.hasShipmentLabel && (
+                          {product.status === "stock" && !product.hasShipmentLabel && (
+                            <>
+                              {product.customerAddress ? (
+                                <SendCloudModal
+                                  customerCountryCode={
+                                    product.customerAddress.country_code ||
+                                    product.destination ||
+                                    "NL"
+                                  }
+                                  orderItem={{
+                                    id: product.id,
+                                    orderId: product.orderId,
+                                    orderNumber: product.orderNumber,
+                                    name: product.name,
+                                    sku: product.sku,
+                                    variant: product.variant,
+                                    price: product.price,
+                                    totalPrice: product.totalPrice,
+                                    quantity: product.quantity || 1,
+                                    customerName: product.customerName,
+                                    customerEmail: product.customerEmail,
+                                    customerPhone:
+                                      product.customerAddress.phone,
+                                    customerAddress: product.customerAddress,
+                                  }}
+                                  onLabelCreated={(labelData) =>
+                                    handleShipmentLabelCreated(
+                                      product,
+                                      labelData
+                                    )
+                                  }
+                                  defaultShipmentMethodCode={null}
+                                  orderItemStatus={product.status}
+                                >
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="h-8 px-3 gap-1 text-xs bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    <Truck className="h-3.5 w-3.5" />
+                                    Ship
+                                  </Button>
+                                </SendCloudModal>
+                              ) : null}
+                            </>
+                          )}
+
+                          {/* Vendor Orders - Use regular SendCloudModal for vendor statuses */}
+                          {isVendorStatus(product.status) && !product.hasShipmentLabel && (
                             <>
                               {product.customerAddress ? (
                                 <SendCloudModal

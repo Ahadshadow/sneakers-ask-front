@@ -100,7 +100,11 @@ async function apiRequest<T>(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      const error = new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`) as any;
+      error.status = response.status;
+      error.data = errorData;
+      error.errors = errorData.errors;
+      throw error;
     }
 
     return await response.json();
@@ -175,10 +179,11 @@ export const authApi = {
   },
 
   // Forgot password
-  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
-    return apiRequest<{ success: boolean; message: string }>('/auth/forgot-password', {
+  async forgotPassword(email: string, frontendUrl?: string): Promise<{ success: boolean; message: string }> {
+    const frontend_url = frontendUrl || window.location.origin;
+    return apiRequest<{ success: boolean; message: string }>('/forgot-password', {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, frontend_url }),
     });
   },
 
@@ -186,8 +191,9 @@ export const authApi = {
   async resetPassword(data: {
     token: string;
     password: string;
+    password_confirmation: string;
   }): Promise<{ success: boolean; message: string }> {
-    return apiRequest<{ success: boolean; message: string }>('/auth/reset-password', {
+    return apiRequest<{ success: boolean; message: string }>('/reset-password', {
       method: 'POST',
       body: JSON.stringify(data),
     });
