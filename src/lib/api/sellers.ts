@@ -341,8 +341,14 @@ async function apiRequest<T>(
 // Sellers API functions
 export const sellersApi = {
   // Get all sellers with pagination
-  async getSellers(page: number = 1, perPage: number = 15): Promise<SellersResponse> {
-    return apiRequest<SellersResponse>(`/sellers?page=${page}&per_page=${perPage}`);
+  async getSellers(page: number = 1, perPage: number = 15, search?: string): Promise<SellersResponse> {
+    const queryParams = new URLSearchParams();
+    queryParams.append("page", page.toString());
+    queryParams.append("per_page", perPage.toString());
+    if (search && search.trim().length > 0) {
+      queryParams.append("search", search.trim());
+    }
+    return apiRequest<SellersResponse>(`/sellers?${queryParams.toString()}`);
   },
 
   // Get single seller by ID
@@ -381,8 +387,9 @@ export const sellersApi = {
     });
   },
 
-  // Get active sellers only
+  // Get active sellers only (no pagination - returns all active sellers)
   async getActiveSellers(): Promise<{ success: boolean; data: ActiveSeller[]; message: string; count: number }> {
+    // Note: This endpoint returns all active sellers without pagination
     return apiRequest<{ success: boolean; data: ActiveSeller[]; message: string; count: number }>('/sellers/active');
   },
 

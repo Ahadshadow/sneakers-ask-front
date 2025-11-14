@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,6 +129,11 @@ export function SellersManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   // Fetch sellers from API
   const {
     data: sellersResponse,
@@ -136,8 +141,8 @@ export function SellersManagement() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['sellers', currentPage],
-    queryFn: () => sellersApi.getSellers(currentPage),
+    queryKey: ['sellers', currentPage, searchTerm],
+    queryFn: () => sellersApi.getSellers(currentPage, 15, searchTerm),
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
   });
@@ -149,15 +154,6 @@ export function SellersManagement() {
     }
     return [];
   }, [sellersResponse]);
-
-  // Filter sellers based on search term
-  const filteredSellers = useMemo(() => {
-    return apiSellers.filter(seller =>
-      seller.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      seller.ownerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      seller.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [apiSellers, searchTerm]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -438,7 +434,7 @@ export function SellersManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSellers.map((seller) => (
+                {apiSellers.map((seller) => (
                 <TableRow key={seller.id}>
                   <TableCell>
                     <div>
