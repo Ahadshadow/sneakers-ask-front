@@ -6,12 +6,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Package, Download, Calendar, Truck, MapPin, ExternalLink, Loader2 } from "lucide-react";
+import { Package, Download, Calendar, Truck, MapPin, ExternalLink, Loader2, Clock, CheckCircle, History, User, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from "react";
 import { sendcloudApi } from "@/lib/api/sendcloud";
 import { useToast } from "@/hooks/use-toast";
+
+interface TrackingStatusHistory {
+  carrier_update_timestamp: string;
+  parcel_status_history_id: string;
+  parent_status: string;
+  carrier_code: string;
+  carrier_message: string;
+}
 
 interface ShipmentLabel {
   id: number;
@@ -25,9 +33,17 @@ interface ShipmentLabel {
   label_url: string;
   sendcloud_label_url: string;
   status: string;
+  current_tracking_status?: string;
+  tracking_status_history?: TrackingStatusHistory[];
+  last_tracking_update?: string;
   shipped_at: string;
   delivered_at: string | null;
   shipping_method_name: string;
+  shipping_destination?: string;
+  consignor_id?: number | null;
+  consigner_name?: string | null;
+  consigner_email?: string | null;
+  consigner_phone?: string | null;
   to_address: {
     name: string;
     company_name: string | null;
@@ -66,14 +82,28 @@ interface ViewShipmentLabelModalProps {
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "ready_to_send":
-      return <Badge className="bg-green-100 text-green-800">Ready to Send</Badge>;
+      return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Ready to Send</Badge>;
     case "shipped":
-      return <Badge className="bg-blue-100 text-blue-800">Shipped</Badge>;
+      return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Shipped</Badge>;
     case "delivered":
-      return <Badge className="bg-purple-100 text-purple-800">Delivered</Badge>;
+      return <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">Delivered</Badge>;
     default:
       return <Badge>{status}</Badge>;
   }
+};
+
+const getTrackingStatusBadge = (status: string) => {
+  const statusLower = status?.toLowerCase() || "";
+  if (statusLower.includes("ready")) {
+    return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">{status}</Badge>;
+  } else if (statusLower.includes("announcing")) {
+    return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs">{status}</Badge>;
+  } else if (statusLower.includes("delivered")) {
+    return <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-xs">{status}</Badge>;
+  } else if (statusLower.includes("shipped")) {
+    return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">{status}</Badge>;
+  }
+  return <Badge className="text-xs">{status}</Badge>;
 };
 
 const formatDate = (dateString: string) => {
@@ -143,7 +173,7 @@ export function ViewShipmentLabelModal({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
@@ -168,8 +198,21 @@ export function ViewShipmentLabelModal({
                   <div className="flex-1">
                     <p className="font-semibold text-foreground">{productName}</p>
                     <p className="text-sm text-muted-foreground">Order: {orderNumber}</p>
+                    {shipmentLabel.order_item_status && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Order Status: <span className="font-medium capitalize">{shipmentLabel.order_item_status}</span>
+                      </p>
+                    )}
                   </div>
-                  {getStatusBadge(shipmentLabel.status)}
+                  <div className="flex flex-col items-end gap-2">
+                    {getStatusBadge(shipmentLabel.status)}
+                    {shipmentLabel.current_tracking_status && (
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Current Status</p>
+                        {getTrackingStatusBadge(shipmentLabel.current_tracking_status)}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -246,7 +289,139 @@ export function ViewShipmentLabelModal({
                   </div>
                 </div>
               )}
+
+              {/* Delivered Date */}
+              {shipmentLabel.delivered_at && (
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Delivered At</p>
+                    <p className="text-base text-foreground">
+                      {formatDate(shipmentLabel.delivered_at)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Last Tracking Update */}
+              {shipmentLabel.last_tracking_update && (
+                <div className="flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Last Tracking Update</p>
+                    <p className="text-base text-foreground">
+                      {formatDate(shipmentLabel.last_tracking_update)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Shipping Destination */}
+              {shipmentLabel.shipping_destination && (
+                <div className="flex items-start gap-3">
+                  <Truck className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Shipping Destination</p>
+                    <p className="text-base text-foreground capitalize">
+                      {shipmentLabel.shipping_destination}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Consigner Information */}
+            {(shipmentLabel.consigner_name || shipmentLabel.consigner_email || shipmentLabel.consigner_phone) && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Consigner Information</h3>
+                  
+                  {shipmentLabel.consigner_name && (
+                    <div className="flex items-start gap-3">
+                      <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-muted-foreground">Name</p>
+                        <p className="text-base text-foreground">
+                          {shipmentLabel.consigner_name}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {shipmentLabel.consigner_email && (
+                    <div className="flex items-start gap-3">
+                      <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-muted-foreground">Email</p>
+                        <p className="text-base text-foreground">
+                          {shipmentLabel.consigner_email}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {shipmentLabel.consigner_phone && (
+                    <div className="flex items-start gap-3">
+                      <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                        <p className="text-base text-foreground">
+                          {shipmentLabel.consigner_phone}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Tracking Status History */}
+            {shipmentLabel.tracking_status_history && shipmentLabel.tracking_status_history.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                    <History className="h-4 w-4" />
+                    Tracking Status History
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {shipmentLabel.tracking_status_history
+                      .sort((a, b) => new Date(a.carrier_update_timestamp).getTime() - new Date(b.carrier_update_timestamp).getTime())
+                      .map((historyItem, index) => (
+                        <div key={historyItem.parcel_status_history_id} className="relative pl-8 border-l-2 border-muted">
+                          {index < shipmentLabel.tracking_status_history!.length - 1 && (
+                            <div className="absolute left-[-5px] top-6 bottom-[-16px] w-0.5 bg-muted" />
+                          )}
+                          <div className="absolute left-[-9px] top-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              {getTrackingStatusBadge(historyItem.carrier_message || historyItem.parent_status)}
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(historyItem.carrier_update_timestamp)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground font-medium capitalize">
+                              {historyItem.parent_status.replace(/-/g, ' ')}
+                            </p>
+                            {historyItem.carrier_message && historyItem.carrier_message !== historyItem.parent_status && (
+                              <p className="text-xs text-muted-foreground">
+                                {historyItem.carrier_message}
+                              </p>
+                            )}
+                            {historyItem.carrier_code && (
+                              <p className="text-xs text-muted-foreground font-mono">
+                                Carrier Code: {historyItem.carrier_code}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             <Separator />
 
