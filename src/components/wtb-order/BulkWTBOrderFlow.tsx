@@ -70,7 +70,9 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       vatRegistered: seller.vat_registered,
       vatNumber: seller.vat_number,
       tinNumber: seller.tin_number,
-      shipmentMethodCode: seller.shipment_method_code
+      shipmentMethodCode: seller.shipment_method_code,
+      storeName: seller.store_name || undefined,
+      contactName: seller.contact_person || undefined
     };
   }) || [];
 

@@ -35,8 +35,8 @@ export function SellerInvitations() {
       per_page?: number;
       search?: string;
       status?: "pending" | "completed" | "expired";
-      sort_by?: string;
-      sort_order?: string;
+      sort_by?: "created_at" | "updated_at" | "expires_at" | "email" | "status";
+      sort_order?: "asc" | "desc";
     } = {
       page: currentPage,
       per_page: 15,
@@ -153,6 +153,7 @@ export function SellerInvitations() {
 
   const invitations = invitationsResponse?.data?.invitations || [];
   const pagination = invitationsResponse?.data?.pagination;
+  const metrics = invitationsResponse?.metrics;
 
   // Show error state
   if (error) {
@@ -237,7 +238,7 @@ export function SellerInvitations() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Invitations</p>
                 <p className="text-2xl font-bold text-card-foreground">
-                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : pagination?.total || 0}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : metrics?.total_invitations || pagination?.total || 0}
                 </p>
               </div>
               <Mail className="h-8 w-8 text-primary" />
@@ -254,7 +255,7 @@ export function SellerInvitations() {
                   {isLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />
                   ) : (
-                    invitations.filter((inv) => inv.status === "pending" && inv.is_valid).length
+                    metrics?.total_pending ?? invitations.filter((inv) => inv.status === "pending" && inv.is_valid).length
                   )}
                 </p>
               </div>
@@ -272,7 +273,7 @@ export function SellerInvitations() {
                   {isLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />
                   ) : (
-                    invitations.filter((inv) => inv.status === "completed").length
+                    metrics?.total_completed ?? invitations.filter((inv) => inv.status === "completed").length
                   )}
                 </p>
               </div>
@@ -290,7 +291,7 @@ export function SellerInvitations() {
                   {isLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />
                   ) : (
-                    invitations.filter((inv) => inv.status === "expired" || inv.is_expired).length
+                    metrics?.total_expired ?? invitations.filter((inv) => inv.status === "expired" || inv.is_expired).length
                   )}
                 </p>
               </div>

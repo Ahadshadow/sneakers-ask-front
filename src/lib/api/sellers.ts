@@ -13,6 +13,8 @@ export interface ActiveSeller {
   owner_name: string;
   email: string;
   shipment_method_code?: string | null;
+  store_name?: string | null;
+  contact_person?: string | null;
 }
 
 // Seller interfaces based on your API response
@@ -77,6 +79,15 @@ export interface SellersResponse {
     prev_page_url: string | null;
     to: number;
     total: number;
+  };
+  metrics?: {
+    total_sellers: number;
+    total_active: number;
+    total_pending: number;
+    total_suspended: number;
+    total_b2b: number;
+    total_private: number;
+    filtered_count: number;
   };
 }
 
@@ -226,6 +237,14 @@ export interface SellerInvitationsResponse {
       from: number;
       to: number;
     };
+  };
+  metrics?: {
+    total_invitations: number;
+    total_pending: number;
+    total_completed: number;
+    total_expired: number;
+    total_valid: number;
+    filtered_count: number;
   };
 }
 

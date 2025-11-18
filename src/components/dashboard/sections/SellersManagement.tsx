@@ -119,6 +119,7 @@ const convertApiSellerToUISeller = (apiSeller: ApiSeller) => ({
 
 export function SellersManagement() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; seller: Seller | null }>({
     open: false,
@@ -129,10 +130,21 @@ export function SellersManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Reset to page 1 when search term changes
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms debounce delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchTerm]);
+
+  // Reset to page 1 when debounced search term changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [debouncedSearchTerm]);
 
   // Fetch sellers from API
   const {
@@ -141,8 +153,8 @@ export function SellersManagement() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['sellers', currentPage, searchTerm],
-    queryFn: () => sellersApi.getSellers(currentPage, 15, searchTerm),
+    queryKey: ['sellers', currentPage, debouncedSearchTerm],
+    queryFn: () => sellersApi.getSellers(currentPage, 15, debouncedSearchTerm),
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
   });
@@ -241,22 +253,45 @@ export function SellersManagement() {
       // Clear updating state
       setUpdatingSellerId(null);
       
-      // Optimistically update the cache instead of invalidating all queries
-      queryClient.setQueryData(['sellers', currentPage], (oldData: any) => {
-        if (!oldData) return oldData;
+      // Update the current query's cache with the updated seller from response
+      queryClient.setQueryData(['sellers', currentPage, debouncedSearchTerm], (oldData: any) => {
+        if (!oldData || !oldData.data?.data) return oldData;
+        
+        // Use the response data if available, otherwise update with the new status
+        const updatedSeller = response.data || { id: variables.id, status: variables.status };
         
         return {
           ...oldData,
           data: {
             ...oldData.data,
             data: oldData.data.data.map((seller: any) => 
-              seller.id === variables.id 
-                ? { ...seller, status: variables.status }
+              Number(seller.id) === variables.id 
+                ? { ...seller, ...updatedSeller, status: variables.status }
                 : seller
             )
           }
         };
       });
+      
+      // Also update all other seller queries in cache
+      queryClient.setQueriesData(
+        { queryKey: ['sellers'] },
+        (oldData: any) => {
+          if (!oldData || !oldData.data?.data) return oldData;
+          
+          return {
+            ...oldData,
+            data: {
+              ...oldData.data,
+              data: oldData.data.data.map((seller: any) => 
+                Number(seller.id) === variables.id 
+                  ? { ...seller, status: variables.status }
+                  : seller
+              )
+            }
+          };
+        }
+      );
       
       const statusText = variables.status.charAt(0).toUpperCase() + variables.status.slice(1);
       toast({
@@ -268,7 +303,7 @@ export function SellersManagement() {
       // Clear updating state
       setUpdatingSellerId(null);
       
-      // Revert optimistic update on error
+      // Revert optimistic update on error by invalidating
       queryClient.invalidateQueries({ queryKey: ['sellers'] });
       toast({
         title: "Error",
@@ -366,7 +401,7 @@ export function SellersManagement() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Sellers</p>
                 <p className="text-2xl font-bold text-card-foreground">
-                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : sellersResponse?.data?.total || 0}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : sellersResponse?.metrics?.total_sellers || sellersResponse?.data?.total || 0}
                 </p>
               </div>
               <Store className="h-8 w-8 text-primary" />
@@ -380,7 +415,7 @@ export function SellersManagement() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">B2B Sellers</p>
                 <p className="text-2xl font-bold text-card-foreground">
-                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : apiSellers.filter(s => s.sellerType === 'b2b').length}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : sellersResponse?.metrics?.total_b2b ?? apiSellers.filter(s => s.sellerType === 'b2b').length}
                 </p>
               </div>
               <Building2 className="h-8 w-8 text-primary" />
@@ -394,7 +429,7 @@ export function SellersManagement() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Private Sellers</p>
                 <p className="text-2xl font-bold text-card-foreground">
-                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : apiSellers.filter(s => s.sellerType === 'private').length}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : sellersResponse?.metrics?.total_private ?? apiSellers.filter(s => s.sellerType === 'private').length}
                 </p>
               </div>
               <User className="h-8 w-8 text-primary" />

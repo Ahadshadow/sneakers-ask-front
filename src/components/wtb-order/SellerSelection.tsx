@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -11,18 +11,29 @@ import { useQueryClient } from "@tanstack/react-query";
 interface SellerSelectionProps {
   selectedSeller: string;
   onSellerChange: (seller: string) => void;
-  availableSellers: Array<{ name: string; country: string; vatRate: number; id?: number; email?: string; status?: string }>;
+  availableSellers: Array<{ 
+    name: string; 
+    country: string; 
+    vatRate: number; 
+    id?: number; 
+    email?: string; 
+    status?: string;
+    storeName?: string;
+    contactName?: string;
+  }>;
   isLoading?: boolean;
   error?: any;
 }
 
 export function SellerSelection({ selectedSeller, onSellerChange, availableSellers, isLoading, error }: SellerSelectionProps) {
   const [open, setOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const queryClient = useQueryClient();
 
   const handleSellerSelect = (sellerName: string) => {
     onSellerChange(sellerName);
     setOpen(false);
+    setSearchValue(""); // Clear search when seller is selected
   };
 
   const handleSellerCreated = () => {
@@ -33,6 +44,30 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
   };
 
   const seller = availableSellers.find(s => s.name === selectedSeller);
+  
+  // Filter sellers based on search term (contact name, store name, seller name)
+  const filteredSellers = useMemo(() => {
+    if (!searchValue.trim()) {
+      return availableSellers;
+    }
+
+    const searchLower = searchValue.toLowerCase().trim();
+    return availableSellers.filter(seller => {
+      // Search in seller name (owner_name)
+      const nameMatch = seller.name?.toLowerCase().includes(searchLower);
+      
+      // Search in store name
+      const storeNameMatch = seller.storeName?.toLowerCase().includes(searchLower);
+      
+      // Search in contact name
+      const contactNameMatch = seller.contactName?.toLowerCase().includes(searchLower);
+      
+      // Search in email (bonus)
+      const emailMatch = seller.email?.toLowerCase().includes(searchLower);
+
+      return nameMatch || storeNameMatch || contactNameMatch || emailMatch;
+    });
+  }, [availableSellers, searchValue]);
   
   // Debug log to see what sellers are available
   console.log('Available sellers in dropdown:', availableSellers);
@@ -54,7 +89,12 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) {
+            setSearchValue(""); // Clear search when popover closes
+          }
+        }}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -77,8 +117,12 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-full p-0">
-            <Command>
-              <CommandInput placeholder="Search sellers..." />
+            <Command shouldFilter={false}>
+              <CommandInput 
+                placeholder="Search by name, store, or contact..." 
+                value={searchValue}
+                onValueChange={setSearchValue}
+              />
               <CommandList>
                 {isLoading ? (
                   <div className="flex items-center justify-center py-6">
@@ -89,29 +133,34 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
                   <CommandEmpty>Failed to load sellers</CommandEmpty>
                 ) : (
                   <>
-                    <CommandEmpty>No seller found.</CommandEmpty>
-                    <CommandGroup>
-                      {availableSellers.map((seller) => (
-                        <CommandItem
-                          key={seller.name}
-                          value={seller.name}
-                          onSelect={handleSellerSelect}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedSeller === seller.name ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <div className="flex flex-col">
-                            <span className="font-medium">{seller.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {seller.email}
-                            </span>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
+                    {filteredSellers.length === 0 ? (
+                      <CommandEmpty>No seller found.</CommandEmpty>
+                    ) : (
+                      <CommandGroup>
+                        {filteredSellers.map((seller) => (
+                          <CommandItem
+                            key={seller.name}
+                            value={`${seller.name} ${seller.storeName || ''} ${seller.contactName || ''} ${seller.email || ''}`}
+                            onSelect={() => handleSellerSelect(seller.name)}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedSeller === seller.name ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium">{seller.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {seller.storeName && <span>{seller.storeName} • </span>}
+                                {seller.contactName && <span>{seller.contactName} • </span>}
+                                {seller.email}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
                   </>
                 )}
               </CommandList>
