@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { vendorsApi } from "@/lib/api/vendors";
 import { 
   Users, 
   Store, 
@@ -15,7 +17,8 @@ import {
   CreditCard,
   Mail,
   ChevronDown,
-  Circle
+  Circle,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -89,6 +92,12 @@ const navigationItems = [
     icon: Store,
     path: "/sellers",
   },
+  {
+    id: "vendors",
+    label: "Vendors",
+    icon: Building2,
+    path: "/vendors",
+  },
 ];
 
 const salesChannelFilters = [
@@ -100,16 +109,7 @@ const salesChannelFilters = [
   { id: "consignment", label: "Consignment", color: "text-indigo-600" },
 ];
 
-const vendorFilters = [
-  { id: "StockX", label: "StockX" },
-  { id: "GOAT", label: "GOAT" },
-  { id: "LEO", label: "LEO" },
-  { id: "AIRPLANE", label: "AIRPLANE" },
-  { id: "Mikail", label: "Mikail" },
-  { id: "Luca", label: "Luca" },
-  { id: "T/M ling", label: "T/M ling" },
-  { id: "Bulk ess", label: "Bulk ess" },
-];
+// Vendor filters are now fetched dynamically from the API
 
 
 interface QuickAction {
@@ -149,6 +149,15 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const { user, logout, isLoggingOut } = useAuth();
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [productsMenuOpen, setProductsMenuOpen] = useState(true);
+
+  // Fetch all vendors for dynamic sidebar filters
+  const { data: vendorsResponse } = useQuery({
+    queryKey: ['vendors', 'sidebar'],
+    queryFn: () => vendorsApi.getVendors({ per_page: 'all' }),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const vendors = vendorsResponse?.data?.data || [];
   
   // Get user initials for avatar
   const getUserInitials = (name: string | undefined | null) => {
@@ -279,17 +288,17 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
                               ))}
-                              {/* Vendor quick filters */}
-                              {vendorFilters.map((vendor) => (
+                              {/* Vendor quick filters - dynamically loaded from API */}
+                              {vendors.map((vendor) => (
                                 <SidebarMenuSubItem key={`vendor-${vendor.id}`}>
                                   <SidebarMenuSubButton
                                     onClick={() => {
-                                      navigate(`/products?vendor=${encodeURIComponent(vendor.id)}`);
+                                      navigate(`/products?vendor=${encodeURIComponent(vendor.name)}`);
                                     }}
                                     className="cursor-pointer"
                                   >
                                     <Circle className="h-2 w-2 fill-current mr-2 text-gray-500" />
-                                    <span>{vendor.label}</span>
+                                    <span>{vendor.name}</span>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
                               ))}

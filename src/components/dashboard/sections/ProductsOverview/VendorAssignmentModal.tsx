@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -10,17 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { productsApi } from "@/lib/api";
+import { vendorsApi } from "@/lib/api/vendors";
 import { Loader2 } from "lucide-react";
-import { VENDOR_OPTIONS, VENDORS_REQUIRING_ORDER_ID } from "@/lib/constants/vendors";
+import { VENDORS_REQUIRING_ORDER_ID } from "@/lib/constants/vendors";
+import { VendorSelect } from "./VendorSelect";
 
 interface VendorAssignmentModalProps {
   open: boolean;
@@ -37,11 +33,22 @@ export function VendorAssignmentModal({
   productName,
   onSuccess,
 }: VendorAssignmentModalProps) {
-  const [vendorName, setVendorName] = useState<string>("");
+  const [vendorId, setVendorId] = useState<string>("");
   const [vendorOrderId, setVendorOrderId] = useState<string>("");
   const [vendorPrice, setVendorPrice] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  // Fetch vendor details when vendorId is selected
+  const { data: vendorResponse } = useQuery({
+    queryKey: ['vendor', vendorId],
+    queryFn: () => vendorsApi.getVendor(parseInt(vendorId)),
+    enabled: !!vendorId && vendorId !== "",
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const selectedVendor = vendorResponse?.data;
+  const vendorName = selectedVendor?.name || "";
 
   // Check if current vendor requires order ID
   const requiresOrderId = vendorName && VENDORS_REQUIRING_ORDER_ID.includes(vendorName);
@@ -49,7 +56,7 @@ export function VendorAssignmentModal({
   // Reset form when modal closes
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      setVendorName("");
+      setVendorId("");
       setVendorOrderId("");
       setVendorPrice("");
     }
@@ -60,7 +67,7 @@ export function VendorAssignmentModal({
     e.preventDefault();
 
     // Validation
-    if (!vendorName) {
+    if (!vendorId) {
       toast({
         title: "Validation Error",
         description: "Please select a vendor",
@@ -92,14 +99,14 @@ export function VendorAssignmentModal({
     try {
       await productsApi.assignVendorToOrderItem(
         orderItemId,
-        vendorName,
+        parseInt(vendorId),
         parseFloat(vendorPrice),
-        requiresOrderId ? vendorOrderId.trim() : undefined
+        vendorOrderId.trim() || undefined
       );
 
       toast({
         title: "Vendor Assigned",
-        description: `Vendor ${vendorName} has been assigned to ${productName}`,
+        description: `Vendor ${vendorName || 'selected vendor'} has been assigned to ${productName}`,
       });
 
       handleOpenChange(false);
@@ -130,27 +137,22 @@ export function VendorAssignmentModal({
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
-            {/* Vendor Name Dropdown */}
+            {/* Vendor Selection */}
             <div className="space-y-2">
-              <Label htmlFor="vendor-name">
-                Vendor Name <span className="text-destructive">*</span>
+              <Label htmlFor="vendor-select">
+                Vendor <span className="text-destructive">*</span>
               </Label>
-              <Select value={vendorName} onValueChange={setVendorName}>
-                <SelectTrigger id="vendor-name">
-                  <SelectValue placeholder="Select a vendor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {VENDOR_OPTIONS.map((vendor) => (
-                    <SelectItem key={vendor.value} value={vendor.value}>
-                      {vendor.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <VendorSelect
+                value={vendorId}
+                onValueChange={setVendorId}
+                placeholder="Select a vendor"
+                disabled={isSubmitting}
+                showSecondaryInfo={true}
+              />
             </div>
 
             {/* Vendor Order ID - Conditionally Required */}
-            {vendorName && (
+            {vendorId && (
               <div className="space-y-2">
                 <Label htmlFor="vendor-order-id">
                   Vendor Order ID

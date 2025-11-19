@@ -24,6 +24,7 @@ export function ProductsOverview() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [saleChannelFilter, setSaleChannelFilter] = useState<string>("all");
   const [vendorFilter, setVendorFilter] = useState<string>(vendorFromUrl || "all");
+  const [showFearOfGodOnly, setShowFearOfGodOnly] = useState(false);
   const [cart, setCart] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -186,6 +187,14 @@ export function ProductsOverview() {
       filtered = filtered.filter(product => product.vendorName === vendorFilter);
     }
 
+    // Apply Fear of God filter for stock products (case insensitive)
+    if (showFearOfGodOnly) {
+      filtered = filtered.filter(product => 
+        product.status === "stock" && 
+        product.name.toLowerCase().includes("fear of god")
+      );
+    }
+
     // If we have a search term or sale channel filter, the API already filtered the results
     // So we just return the filtered results
     if (debouncedSearchTerm || saleChannelFilter !== "all") {
@@ -205,7 +214,7 @@ export function ProductsOverview() {
 
       return matchesSearch && matchesSaleChannel;
     });
-  }, [apiOrderItems, debouncedSearchTerm, saleChannelFilter, vendorFilter]);
+  }, [apiOrderItems, debouncedSearchTerm, saleChannelFilter, vendorFilter, showFearOfGodOnly]);
 
   const handleAddToCart = (product: Product) => {
     if (!cart.find(item => item.id === product.id)) {
@@ -294,6 +303,25 @@ export function ProductsOverview() {
                 </Button>
               </div>
             )}
+
+            {/* Fear of God Filter Toggle */}
+            <div className="flex items-end">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="fear-of-god-filter"
+                  checked={showFearOfGodOnly}
+                  onChange={(e) => setShowFearOfGodOnly(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <Label 
+                  htmlFor="fear-of-god-filter" 
+                  className="text-sm font-medium cursor-pointer whitespace-nowrap"
+                >
+                  Show only Fear of God (Stock)
+                </Label>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -309,7 +337,7 @@ export function ProductsOverview() {
             </span>
           )}
         </span>
-        {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all") && (
+        {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all" || showFearOfGodOnly) && (
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filters active</span>
@@ -325,12 +353,12 @@ export function ProductsOverview() {
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
               <h3 className="text-lg font-semibold text-foreground">No Products Found</h3>
               <p className="text-sm text-muted-foreground">
-                {searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all"
+                {searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all" || showFearOfGodOnly
                   ? "No products match your current filters."
                   : "No products available at the moment."
                 }
               </p>
-              {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all") && (
+              {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all" || showFearOfGodOnly) && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -338,6 +366,7 @@ export function ProductsOverview() {
                     setSearchTerm("");
                     setSaleChannelFilter("all");
                     setVendorFilter("all");
+                    setShowFearOfGodOnly(false);
                   }}
                 >
                   Clear Filters

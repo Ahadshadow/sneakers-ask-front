@@ -437,7 +437,7 @@ export const productsApi = {
   // Assign vendor to order item
   async assignVendorToOrderItem(
     orderItemId: number,
-    vendorName: string,
+    vendorId: number,
     vendorPrice: number,
     vendorOrderId?: string
   ): Promise<{
@@ -456,7 +456,7 @@ export const productsApi = {
     }>(`/order-items/${orderItemId}/assign-vendor`, {
       method: 'POST',
       body: JSON.stringify({
-        vendor_name: vendorName,
+        vendor_id: vendorId,
         vendor_price: vendorPrice,
         vendor_order_id: vendorOrderId || null,
       }),

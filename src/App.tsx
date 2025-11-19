@@ -11,6 +11,7 @@ import Payouts from "./pages/Payouts";
 import Users from "./pages/Users";
 import Roles from "./pages/Roles";
 import Sellers from "./pages/Sellers";
+import Vendors from "./pages/Vendors";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
 import AddSeller from "./pages/AddSeller";
@@ -84,6 +85,11 @@ const App = () => (
             <Route path="/sellers" element={
               <ProtectedRoute>
                 <Sellers />
+              </ProtectedRoute>
+            } />
+            <Route path="/vendors" element={
+              <ProtectedRoute>
+                <Vendors />
               </ProtectedRoute>
             } />
             <Route path="/add-employee" element={

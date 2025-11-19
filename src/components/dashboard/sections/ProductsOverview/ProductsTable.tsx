@@ -384,12 +384,19 @@ export function ProductsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedProducts.map((product, index) => (
+                {paginatedProducts.map((product, index) => {
+                  // Check if product is stock and has "fear of god" in name (case insensitive)
+                  const isFearOfGodStock = product.status === "stock" && 
+                    product.name.toLowerCase().includes("fear of god");
+                  
+                  return (
                   <TableRow
                     key={product.id}
                     className={`border-b transition-colors duration-200 ${
                       product.status === "wtb"
                         ? "bg-gray-100 hover:bg-gray-200"
+                        : isFearOfGodStock
+                        ? "bg-yellow-50 hover:bg-yellow-100 border-yellow-200"
                         : "hover:bg-muted/10"
                     }`}
                   >
@@ -567,8 +574,9 @@ export function ProductsTable({
                     {showActions && (
                       <TableCell className="py-3">
                         <div className="flex gap-2 justify-end">
-                          {/* Assign Vendor Button - Only for sourcing items */}
-                          {product.status === "sourcing" && (
+                          {/* Assign Vendor Button - For sourcing items, or stock items with "fear of god" in name */}
+                          {(product.status === "sourcing" || 
+                            (product.status === "stock" && product.name.toLowerCase().includes("fear of god"))) && (
                             <Button
                               variant="default"
                               size="sm"
@@ -774,7 +782,8 @@ export function ProductsTable({
                       </TableCell>
                     )}
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
