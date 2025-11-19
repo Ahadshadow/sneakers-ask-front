@@ -683,8 +683,9 @@ export function ProductsTable({
                             </>
                           )}
 
-                          {/* Stock Orders - Use regular SendCloudModal */}
-                          {product.status === "stock" && !product.hasShipmentLabel && (
+                          {/* Any Order Line Item with Vendor - Show shipment button if vendor_name is assigned */}
+                          {/* Check vendorName (mapped from vendor_name) - exclude vendor statuses and consignment which have their own handlers */}
+                          {product.vendorName && !product.hasShipmentLabel && !isVendorStatus(product.status) && product.status !== "consignment" && (
                             <>
                               {product.customerAddress ? (
                                 <SendCloudModal
