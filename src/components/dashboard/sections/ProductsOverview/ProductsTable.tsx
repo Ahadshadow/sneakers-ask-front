@@ -363,16 +363,12 @@ export function ProductsTable({
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
                     Sale Channel
                   </TableHead>
-                  {showVendorColumns && (
-                    <>
-                      <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
-                        Vendor Price
-                      </TableHead>
-                      <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
-                        Vendor Order ID
-                      </TableHead>
-                    </>
-                  )}
+                  <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
+                    Vendor Price
+                  </TableHead>
+                  <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
+                    Vendor Order ID
+                  </TableHead>
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4 min-w-[180px]">
                     Tracking Status
                   </TableHead>
@@ -532,23 +528,20 @@ export function ProductsTable({
                         {product.status.replace("_", " ")}
                       </Badge>
                     </TableCell>
-                    {showVendorColumns && (
-                      <>
-                        {/* Vendor Price Column */}
-                        <TableCell className="py-3">
-                          <span className="text-sm text-foreground">
-                            {product.vendorPrice != null ? product.vendorPrice : "-"}
-                          </span>
-                        </TableCell>
-                        {/* Vendor Order ID Column */}
-                        <TableCell className="py-3">
-                          <span className="text-sm text-foreground">
-                            {product.vendorOrderId || "-"}
-                          </span>
-                        </TableCell>
-                      </>
-                    )}
-
+                    {/* Vendor Price Column */}
+                    <TableCell className="py-3">
+                      <span className="text-sm text-foreground">
+                        {product.vendorPrice != null 
+                          ? `${product.currency || "EUR"} ${product.vendorPrice.toFixed(2)}` 
+                          : "-"}
+                      </span>
+                    </TableCell>
+                    {/* Vendor Order ID Column */}
+                    <TableCell className="py-3">
+                      <span className="text-sm text-foreground">
+                        {product.vendorOrderId || "-"}
+                      </span>
+                    </TableCell>
                     {/* Tracking Status Column */}
                     <TableCell className="py-3 min-w-[180px]">
                       {product.shipmentLabel && product.shipmentLabel.status ? (

@@ -360,7 +360,7 @@ export function ProductsOverview() {
           totalItems={orderItemsResponse?.data?.pagination?.total || 0}
           itemsPerPage={orderItemsResponse?.data?.pagination?.per_page || 10}
           onRefetch={refetchOrderItems}
-          showVendorColumns={vendorFilter !== "all"}
+          showVendorColumns={true}
         />
       )}
 
