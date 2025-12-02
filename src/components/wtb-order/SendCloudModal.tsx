@@ -29,6 +29,7 @@ interface SendCloudModalProps {
   children: React.ReactNode;
   defaultShipmentMethodCode?: string | null;
   orderItemStatus?: string; // Status of the order item (e.g., 'wtb', 'stock', 'consignment', 'sourcing')
+  vendorName?: string | null; // Vendor name if vendor is assigned (to distinguish vendor items)
 }
 
 export function SendCloudModal({
@@ -38,6 +39,7 @@ export function SendCloudModal({
   children,
   defaultShipmentMethodCode,
   orderItemStatus,
+  vendorName,
 }: SendCloudModalProps) {
   console.log("orderItem", orderItem);
 
@@ -155,7 +157,7 @@ export function SendCloudModal({
             ) || 0;
 
       // Build full shipment payload expected by backend
-      const shipmentData = {
+      const shipmentData: any = {
         request_label: true,
         order_item_id: orderItem?.id || null,  // Order item ID for tracking
         order_id: orderItem?.orderId || orderItem?.order_id || null,  // Shopify order ID
@@ -222,6 +224,11 @@ export function SendCloudModal({
           },
         ],
       };
+
+      // Add vendor_name to payload if vendor is assigned (to distinguish vendor items from regular items)
+      if (vendorName) {
+        shipmentData.vendor_name = vendorName;
+      }
 
       const labelData = await sendcloudApi.createShipmentLabel(shipmentData);
 

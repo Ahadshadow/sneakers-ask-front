@@ -716,6 +716,7 @@ export function ProductsTable({
                                   }
                                   defaultShipmentMethodCode={null}
                                   orderItemStatus={product.status}
+                                  vendorName={product.vendorName}
                                 >
                                   <Button
                                     variant="default"
@@ -764,6 +765,7 @@ export function ProductsTable({
                                   }
                                   defaultShipmentMethodCode={null}
                                   orderItemStatus={product.status}
+                                  vendorName={product.vendorName || product.status}
                                 >
                                   <Button
                                     variant="default"
