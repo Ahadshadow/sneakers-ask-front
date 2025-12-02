@@ -24,6 +24,8 @@ interface VendorAssignmentModalProps {
   orderItemId: number;
   productName: string;
   onSuccess?: () => void;
+  currentVendorName?: string | null;
+  isReassigning?: boolean;
 }
 
 export function VendorAssignmentModal({
@@ -32,6 +34,8 @@ export function VendorAssignmentModal({
   orderItemId,
   productName,
   onSuccess,
+  currentVendorName,
+  isReassigning = false,
 }: VendorAssignmentModalProps) {
   const [vendorId, setVendorId] = useState<string>("");
   const [vendorOrderId, setVendorOrderId] = useState<string>("");
@@ -105,8 +109,8 @@ export function VendorAssignmentModal({
       );
 
       toast({
-        title: "Vendor Assigned",
-        description: `Vendor ${vendorName || 'selected vendor'} has been assigned to ${productName}`,
+        title: isReassigning ? "Vendor Re-assigned" : "Vendor Assigned",
+        description: `Vendor ${vendorName || 'selected vendor'} has been ${isReassigning ? 're-assigned' : 'assigned'} to ${productName}`,
       });
 
       handleOpenChange(false);
@@ -129,9 +133,13 @@ export function VendorAssignmentModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Assign Vendor to {productName}</DialogTitle>
+          <DialogTitle>
+            {isReassigning ? "Re-assign Vendor" : "Assign Vendor"} to {productName}
+          </DialogTitle>
           <DialogDescription>
-            Assign a vendor directly to this sourcing item. Items with assigned vendors will not go through the WTB flow.
+            {isReassigning 
+              ? `Change the vendor assignment for this item. Current vendor: ${currentVendorName || "Unknown"}.`
+              : "Assign a vendor directly to this sourcing item. Items with assigned vendors will not go through the WTB flow."}
           </DialogDescription>
         </DialogHeader>
 
@@ -201,7 +209,7 @@ export function VendorAssignmentModal({
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Assign Vendor
+              {isReassigning ? "Re-assign Vendor" : "Assign Vendor"}
             </Button>
           </DialogFooter>
         </form>

@@ -54,6 +54,7 @@ interface Seller {
   rating: number;
   joinDate: string;
   whatsappNumber?: string; // Add WhatsApp number field
+  discordName?: string; // Add Discord name field
   vatNumber?: string;
   vatRate?: string;
   vatRegistered?: boolean;
@@ -94,6 +95,7 @@ const convertApiSellerToUISeller = (apiSeller: ApiSeller) => ({
   rating: parseFloat(apiSeller.rating),
   joinDate: apiSeller.join_date,
   whatsappNumber: apiSeller.whatsapp_number, // Add WhatsApp number field
+  discordName: apiSeller.discord_name, // Add Discord name field
   vatNumber: apiSeller.vat_number,
   vatRate: apiSeller.vat_rate,
   vatRegistered: apiSeller.vat_registered,
@@ -199,6 +201,7 @@ export function SellersManagement() {
       seller_type: seller.sellerType,
       status: seller.status,
       whatsapp_number: seller.whatsappNumber, // Add WhatsApp number field
+      discord_name: seller.discordName, // Add Discord name field
       vat_number: seller.vatNumber,
       vat_rate: seller.vatRate,
       vat_registered: seller.vatRegistered,

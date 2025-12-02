@@ -42,6 +42,7 @@ export interface Seller {
   bank_name: string;
   shipment_method_code?: string;
   whatsapp_number?: string;
+  discord_name?: string;
   created_at: string;
   updated_at: string;
   vat_settings: {
@@ -109,6 +110,7 @@ export interface CreateSellerRequest {
   bank_name: string;
   shipment_method_code?: string;
   whatsapp_number?: string;
+  discord_name?: string;
 }
 
 export interface UpdateSellerRequest {
@@ -129,6 +131,7 @@ export interface UpdateSellerRequest {
   bank_name?: string;
   shipment_method_code?: string;
   whatsapp_number?: string;
+  discord_name?: string;
 }
 
 export interface CompleteRegistrationRequest {
@@ -149,6 +152,7 @@ export interface CompleteRegistrationRequest {
   iban?: string;
   bank_name?: string;
   shipment_method_code?: string;
+  discord_name?: string;
 }
 
 export interface ApiError {

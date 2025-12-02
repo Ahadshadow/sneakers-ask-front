@@ -385,6 +385,10 @@ export function ProductsTable({
                   const isFearOfGodStock = product.status === "stock" && 
                     product.name.toLowerCase().includes("fear of god");
                   
+                  // Check if product is stock and NOT "fear of god" - can create shipment
+                  const isNonFearOfGodStock = product.status === "stock" && 
+                    !product.name.toLowerCase().includes("fear of god");
+                  
                   return (
                   <TableRow
                     key={product.id}
@@ -567,9 +571,10 @@ export function ProductsTable({
                     {showActions && (
                       <TableCell className="py-3">
                         <div className="flex gap-2 justify-end">
-                          {/* Assign Vendor Button - For sourcing items, or stock items with "fear of god" in name */}
-                          {(product.status === "sourcing" || 
-                            (product.status === "stock" && product.name.toLowerCase().includes("fear of god"))) && (
+                          {/* Assign/Re-assign Vendor Button - For sourcing items, stock items with "fear of god" in name, or items with existing vendor */}
+                          {((product.status === "sourcing" || 
+                            (product.status === "stock" && product.name.toLowerCase().includes("fear of god"))) ||
+                            product.vendorName) && (
                             <Button
                               variant="default"
                               size="sm"
@@ -577,7 +582,7 @@ export function ProductsTable({
                               className="h-8 px-3 gap-1 text-xs bg-blue-600 hover:bg-blue-700"
                             >
                               <Package className="h-3.5 w-3.5" />
-                              Assign Vendor
+                              {product.vendorName ? "Re-assign Vendor" : "Assign Vendor"}
                             </Button>
                           )}
 
@@ -772,6 +777,54 @@ export function ProductsTable({
                               ) : null}
                             </>
                           )}
+
+                          {/* Stock items that are NOT "Fear of God" - Allow shipment creation (only if no vendor assigned) */}
+                          {isNonFearOfGodStock && !product.hasShipmentLabel && !product.vendorName && (
+                            <>
+                              {product.customerAddress ? (
+                                <SendCloudModal
+                                  customerCountryCode={
+                                    product.customerAddress.country_code ||
+                                    product.destination ||
+                                    "NL"
+                                  }
+                                  orderItem={{
+                                    id: product.id,
+                                    orderId: product.orderId,
+                                    orderNumber: product.orderNumber,
+                                    name: product.name,
+                                    sku: product.sku,
+                                    variant: product.variant,
+                                    price: product.price,
+                                    totalPrice: product.totalPrice,
+                                    quantity: product.quantity || 1,
+                                    customerName: product.customerName,
+                                    customerEmail: product.customerEmail,
+                                    customerPhone:
+                                      product.customerAddress.phone,
+                                    customerAddress: product.customerAddress,
+                                  }}
+                                  onLabelCreated={(labelData) =>
+                                    handleShipmentLabelCreated(
+                                      product,
+                                      labelData
+                                    )
+                                  }
+                                  defaultShipmentMethodCode={null}
+                                  orderItemStatus={product.status}
+                                >
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="h-8 px-3 gap-1 text-xs bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    <Truck className="h-3.5 w-3.5" />
+                                    Ship
+                                  </Button>
+                                </SendCloudModal>
+                              ) : null}
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     )}
@@ -803,6 +856,8 @@ export function ProductsTable({
           orderItemId={parseInt(selectedProductForVendor.id)}
           productName={selectedProductForVendor.name}
           onSuccess={handleVendorAssignmentSuccess}
+          currentVendorName={selectedProductForVendor.vendorName}
+          isReassigning={!!selectedProductForVendor.vendorName}
         />
       )}
     </div>

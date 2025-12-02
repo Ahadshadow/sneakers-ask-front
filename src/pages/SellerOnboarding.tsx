@@ -65,6 +65,9 @@ export default function SellerOnboarding() {
     whatsappCountryCode: "+31",
     whatsappNumber: "",
     
+    // Discord Info
+    discordName: "",
+    
     // Tax Info
     tinNumber: "",
     vatNumber: "",
@@ -163,6 +166,11 @@ export default function SellerOnboarding() {
           ? `${formData.whatsappCountryCode}${formData.whatsappNumber}` 
           : ""
       };
+
+      // Add optional fields if provided
+      if (formData.discordName.trim()) {
+        registrationData.discord_name = formData.discordName;
+      }
 
       // Add bank details if provided
       if (formData.accountHolder.trim()) {
@@ -482,6 +490,19 @@ export default function SellerOnboarding() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">WhatsApp number only</p>
+              </div>
+
+              {/* Discord Name Field */}
+              <div className="space-y-2">
+                <Label htmlFor="discordName">Discord Name</Label>
+                <Input
+                  id="discordName"
+                  value={formData.discordName}
+                  onChange={(e) => handleInputChange("discordName", e.target.value)}
+                  placeholder="Enter Discord username or number"
+                  className="transition-all duration-200 focus:scale-[1.02]"
+                />
+                <p className="text-xs text-muted-foreground">Discord username or number for communication</p>
               </div>
 
               {/* Preferred Shipment Option */}

@@ -68,6 +68,9 @@ export default function EditSeller() {
     whatsappCountryCode: "+31",
     whatsappNumber: "",
     
+    // Discord Info
+    discordName: "",
+    
     // Tax Info
     tinNumber: "",
     vatNumber: "",
@@ -117,7 +120,8 @@ export default function EditSeller() {
         preferredShipmentCode: sellerData.shipment_method_code || "",
         status: sellerData.status || "pending",
         whatsappCountryCode: whatsappData.countryCode,
-        whatsappNumber: whatsappData.number
+        whatsappNumber: whatsappData.number,
+        discordName: sellerData.discord_name || ""
       });
       console.log('Form data set with WhatsApp:', whatsappData);
       setIsLoading(false);
@@ -158,7 +162,8 @@ export default function EditSeller() {
             preferredShipmentCode: seller.shipment_method_code || "",
             status: seller.status || "pending",
             whatsappCountryCode: whatsappData.countryCode,
-            whatsappNumber: whatsappData.number
+            whatsappNumber: whatsappData.number,
+            discordName: seller.discord_name ?? ""
           });
           console.log('Form data set with WhatsApp from API:', whatsappData);
         } catch (error) {
@@ -237,6 +242,11 @@ export default function EditSeller() {
           ? `${formData.whatsappCountryCode}${formData.whatsappNumber}` 
           : ""
       };
+
+      // Only add optional fields if they are provided
+      if (formData.discordName.trim()) {
+        apiData.discord_name = formData.discordName;
+      }
 
       // Only add bank details if they are provided
       if (formData.accountHolder.trim()) {
@@ -575,6 +585,19 @@ export default function EditSeller() {
                    </div>
                    <p className="text-xs text-muted-foreground">WhatsApp number only</p>
                  </div>
+
+                {/* Discord Name Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="discordName">Discord Name</Label>
+                  <Input
+                    id="discordName"
+                    value={formData.discordName}
+                    onChange={(e) => handleInputChange("discordName", e.target.value)}
+                    placeholder="Enter Discord username or number"
+                    className="transition-all duration-200 focus:scale-[1.02]"
+                  />
+                  <p className="text-xs text-muted-foreground">Discord username or number for communication</p>
+                </div>
 
               {/* Preferred Shipment Option */}
               <div className="space-y-2">

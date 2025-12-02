@@ -78,6 +78,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
     preferredShipmentCode: "",
     whatsappCountryCode: "+31",
     whatsappNumber: "",
+    discordName: "",
   });
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -122,6 +123,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
       preferredShipmentCode: "",
       whatsappCountryCode: "+31",
       whatsappNumber: "",
+      discordName: "",
     });
     setIbanError(false);
     setWhatsappCountryOpen(false);
@@ -151,6 +153,11 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
           ? `${formData.whatsappCountryCode}${formData.whatsappNumber}` 
           : "",
       };
+
+      // Add optional fields if provided
+      if (formData.discordName.trim()) {
+        apiData.discord_name = formData.discordName;
+      }
 
       // Add optional bank details
       if (formData.accountHolder.trim()) {
@@ -371,6 +378,17 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">WhatsApp number only</p>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="quick-discordName">Discord Name</Label>
+                  <Input
+                    id="quick-discordName"
+                    value={formData.discordName}
+                    onChange={(e) => handleInputChange("discordName", e.target.value)}
+                    placeholder="Enter Discord username or number"
+                  />
+                  <p className="text-xs text-muted-foreground">Discord username or number for communication</p>
                 </div>
 
                 <div className="space-y-2">
