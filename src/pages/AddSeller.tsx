@@ -51,7 +51,6 @@ export default function AddSeller() {
   
   const [formData, setFormData] = useState({
     // Basic Info
-    storeName: "",
     ownerName: "",
     email: "",
     contactPerson: "",
@@ -132,7 +131,6 @@ export default function AddSeller() {
       
       // Prepare API data
       const apiData: any = {
-        store_name: formData.storeName,
         owner_name: formData.ownerName,
         email: formData.email,
         contact_person: formData.contactPerson,
@@ -151,10 +149,8 @@ export default function AddSeller() {
           : ""
       };
 
-      // Only add optional fields if they are provided
-      if (formData.discordName.trim()) {
-        apiData.discord_name = formData.discordName;
-      }
+      // Add required discord name
+      apiData.discord_name = formData.discordName;
 
       // Only add bank details if they are provided
       if (formData.accountHolder.trim()) {
@@ -178,7 +174,7 @@ export default function AddSeller() {
       
       toast({
         title: "Seller Added Successfully",
-        description: `${formData.storeName || formData.ownerName} has been added to your seller network.`,
+        description: `${formData.ownerName} has been added to your seller network.`,
       });
       
       navigate("/sellers");
@@ -249,17 +245,6 @@ export default function AddSeller() {
             <CardContent className="space-y-6">
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="storeName">Store Name *</Label>
-                  <Input
-                    id="storeName"
-                    value={formData.storeName}
-                    onChange={(e) => handleInputChange("storeName", e.target.value)}
-                    placeholder="Enter store name"
-                    required
-                    className="transition-all duration-200 focus:scale-[1.02]"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="ownerName">Owner Name *</Label>
                   <Input
@@ -480,12 +465,13 @@ export default function AddSeller() {
 
                 {/* Discord Name Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="discordName">Discord Name</Label>
+                  <Label htmlFor="discordName">Discord Name *</Label>
                   <Input
                     id="discordName"
                     value={formData.discordName}
                     onChange={(e) => handleInputChange("discordName", e.target.value)}
                     placeholder="Enter Discord username or number"
+                    required
                     className="transition-all duration-200 focus:scale-[1.02]"
                   />
                   <p className="text-xs text-muted-foreground">Discord username or number for communication</p>

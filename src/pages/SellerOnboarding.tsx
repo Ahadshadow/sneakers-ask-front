@@ -53,7 +53,6 @@ export default function SellerOnboarding() {
   
   const [formData, setFormData] = useState({
     // Basic Info
-    storeName: "",
     ownerName: "",
     contactPerson: "",
     website: "",
@@ -151,7 +150,6 @@ export default function SellerOnboarding() {
     try {
       const registrationData: any = {
         token,
-        store_name: formData.storeName,
         owner_name: formData.ownerName,
         contact_person: formData.contactPerson,
         website: formData.website,
@@ -167,10 +165,8 @@ export default function SellerOnboarding() {
           : ""
       };
 
-      // Add optional fields if provided
-      if (formData.discordName.trim()) {
-        registrationData.discord_name = formData.discordName;
-      }
+      // Add required discord name
+      registrationData.discord_name = formData.discordName;
 
       // Add bank details if provided
       if (formData.accountHolder.trim()) {
@@ -283,17 +279,6 @@ export default function SellerOnboarding() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="storeName">Store Name *</Label>
-                  <Input
-                    id="storeName"
-                    value={formData.storeName}
-                    onChange={(e) => handleInputChange("storeName", e.target.value)}
-                    placeholder="Enter store name"
-                    required
-                    className="transition-all duration-200 focus:scale-[1.02]"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="ownerName">Owner Name *</Label>
                   <Input
@@ -494,12 +479,13 @@ export default function SellerOnboarding() {
 
               {/* Discord Name Field */}
               <div className="space-y-2">
-                <Label htmlFor="discordName">Discord Name</Label>
+                <Label htmlFor="discordName">Discord Name *</Label>
                 <Input
                   id="discordName"
                   value={formData.discordName}
                   onChange={(e) => handleInputChange("discordName", e.target.value)}
                   placeholder="Enter Discord username or number"
+                  required
                   className="transition-all duration-200 focus:scale-[1.02]"
                 />
                 <p className="text-xs text-muted-foreground">Discord username or number for communication</p>

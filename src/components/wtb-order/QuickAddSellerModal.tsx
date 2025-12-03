@@ -60,7 +60,6 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
   });
 
   const [formData, setFormData] = useState({
-    storeName: "",
     ownerName: "",
     email: "",
     contactPerson: "",
@@ -105,7 +104,6 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
 
   const resetForm = () => {
     setFormData({
-      storeName: "",
       ownerName: "",
       email: "",
       contactPerson: "",
@@ -135,7 +133,6 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
 
     try {
       const apiData: any = {
-        store_name: formData.storeName,
         owner_name: formData.ownerName,
         email: formData.email,
         contact_person: formData.contactPerson,
@@ -154,10 +151,8 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
           : "",
       };
 
-      // Add optional fields if provided
-      if (formData.discordName.trim()) {
-        apiData.discord_name = formData.discordName;
-      }
+      // Add required discord name
+      apiData.discord_name = formData.discordName;
 
       // Add optional bank details
       if (formData.accountHolder.trim()) {
@@ -176,7 +171,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
       await sellersApi.createSeller(apiData);
 
       toast.success(
-        `Seller ${formData.storeName || formData.ownerName} created successfully!`
+        `Seller ${formData.ownerName} created successfully!`
       );
 
       resetForm();
@@ -238,21 +233,6 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="quick-storeName">
-                    Store Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="quick-storeName"
-                    value={formData.storeName}
-                    onChange={(e) =>
-                      handleInputChange("storeName", e.target.value)
-                    }
-                    placeholder="Enter store name"
-                    required
-                  />
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="quick-ownerName">
                     Owner Name <span className="text-red-500">*</span>
@@ -381,12 +361,15 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="quick-discordName">Discord Name</Label>
+                  <Label htmlFor="quick-discordName">
+                    Discord Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="quick-discordName"
                     value={formData.discordName}
                     onChange={(e) => handleInputChange("discordName", e.target.value)}
                     placeholder="Enter Discord username or number"
+                    required
                   />
                   <p className="text-xs text-muted-foreground">Discord username or number for communication</p>
                 </div>
