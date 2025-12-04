@@ -1,15 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -34,15 +28,11 @@ import {
   Clock,
   Euro,
   Search,
-  CalendarIcon,
-  Filter,
   Loader2,
   MessageCircle,
   X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { sellersApi, SellerPayout } from "@/lib/api/sellers";
 
 export function PayoutManagement() {
@@ -50,9 +40,6 @@ export function PayoutManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<Date>();
-  const [dateTo, setDateTo] = useState<Date>();
-  const [pendingFilter, setPendingFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [selectedPayout, setSelectedPayout] = useState<SellerPayout | null>(
@@ -72,10 +59,10 @@ export function PayoutManagement() {
     };
   }, [searchTerm]);
 
-  // Reset to page 1 when debounced search term changes
+  // Reset to page 1 when debounced search term or status filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, statusFilter]);
 
   // Fetch seller payouts from API
   const {
@@ -84,8 +71,13 @@ export function PayoutManagement() {
     error: payoutsError,
     refetch: refetchPayouts,
   } = useQuery({
-    queryKey: ["seller-payouts", currentPage, itemsPerPage, debouncedSearchTerm],
-    queryFn: () => sellersApi.getSellerPayouts(currentPage, itemsPerPage, debouncedSearchTerm || undefined),
+    queryKey: ["seller-payouts", currentPage, itemsPerPage, debouncedSearchTerm, statusFilter],
+    queryFn: () => sellersApi.getSellerPayouts(
+      currentPage, 
+      itemsPerPage, 
+      debouncedSearchTerm || undefined,
+      statusFilter !== "all" ? statusFilter : undefined
+    ),
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
     refetchOnMount: true, // Always refetch when component mounts
@@ -241,78 +233,14 @@ export function PayoutManagement() {
     }
   };
 
-  const filteredPayouts = useMemo(() => {
-    return payouts.filter((payout) => {
-      // Search filter
-      const matchesSearch =
-        payout.seller_store.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payout.owner_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payout.seller_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payout.item_name.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // Status filter
-      const matchesStatus =
-        statusFilter === "all" || payout.status === statusFilter;
-
-      // Date filter
-      const payoutDate = new Date(payout.payment_date);
-      const matchesDateFrom = !dateFrom || payoutDate >= dateFrom;
-      const matchesDateTo = !dateTo || payoutDate <= dateTo;
-
-      // Pending/Unpaid filter based on 5 days after payment date
-      const matchesPendingFilter = (() => {
-        if (pendingFilter === "all") return true;
-
-        if (pendingFilter === "overdue") {
-          // Show pending payments where it's been more than 5 days since payment date
-          if (payout.status !== "pending") return false;
-
-          const currentDate = new Date();
-          const paymentDate = new Date(payout.payment_date);
-          const daysSincePayment = Math.floor(
-            (currentDate.getTime() - paymentDate.getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-
-          return daysSincePayment >= 5;
-        }
-
-        if (pendingFilter === "upcoming") {
-          // Show pending payments where it's been less than 5 days since payment date
-          if (payout.status !== "pending") return false;
-
-          const currentDate = new Date();
-          const paymentDate = new Date(payout.payment_date);
-          const daysSincePayment = Math.floor(
-            (currentDate.getTime() - paymentDate.getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-
-          return daysSincePayment < 5;
-        }
-
-        return true;
-      })();
-
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesDateFrom &&
-        matchesDateTo &&
-        matchesPendingFilter
-      );
-    });
-  }, [payouts, searchTerm, statusFilter, dateFrom, dateTo, pendingFilter]);
-
-  // Use API pagination instead of client-side pagination
+  // Use API pagination - display whatever comes from API
   const totalPages = payoutsResponse?.data?.pagination?.last_page || 1;
-  const paginatedPayouts = filteredPayouts; // API already handles pagination
-
-  const pendingPayouts = payouts.filter((p) => p.status === "pending");
-  const totalPendingAmount = pendingPayouts.reduce(
-    (sum, p) => sum + parseFloat(p.seller_payout_amount),
-    0
-  );
+  const totalItems = payoutsResponse?.data?.pagination?.total || 0;
+  const currentPageFromApi = payoutsResponse?.data?.pagination?.current_page || currentPage;
+  
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   // Show error state only if there's an error
   if (payoutsError) {
@@ -370,22 +298,6 @@ export function PayoutManagement() {
                 </select>
               </div>
 
-              {/* Payments Filter */}
-              <div className="w-40">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Payments
-                </label>
-                <select
-                  value={pendingFilter}
-                  onChange={(e) => setPendingFilter(e.target.value)}
-                  className="w-full h-10 px-3 border border-gray-300 rounded-md bg-white text-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="all">All Payments</option>
-                  <option value="overdue">Overdue (5+ days)</option>
-                  <option value="upcoming">Upcoming (&lt;5 days)</option>
-                </select>
-              </div>
-
               {/* Clear Button */}
               <div>
                 <Button
@@ -394,9 +306,6 @@ export function PayoutManagement() {
                   onClick={() => {
                     setSearchTerm("");
                     setStatusFilter("all");
-                    setDateFrom(undefined);
-                    setDateTo(undefined);
-                    setPendingFilter("all");
                     setCurrentPage(1);
                   }}
                   className="text-gray-500 hover:text-gray-700 h-10 px-4"
@@ -417,9 +326,9 @@ export function PayoutManagement() {
             Loading payouts...
           </div>
         ) : (
-          `Showing ${filteredPayouts.length} of ${
+          `Showing ${payouts.length} of ${
             payoutsResponse?.data?.pagination?.total || 0
-          } sellers`
+          } payouts`
         )}
       </div>
 
@@ -494,7 +403,7 @@ export function PayoutManagement() {
                     </TableCell>
                   </TableRow>
                 ))
-              : paginatedPayouts.map((payout, index) => (
+              : payouts.map((payout, index) => (
                   <TableRow
                     key={payout.id}
                     className="border-b border-gray-200 hover:bg-transparent"
