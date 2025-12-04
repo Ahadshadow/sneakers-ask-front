@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Search, Filter, Loader2, AlertCircle, WifiOff } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Package, Search, Filter, Loader2, AlertCircle, WifiOff, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 import { ProductsTable } from "./ProductsTable";
 import { PaginationControls } from "@/components/dashboard/PaginationControls";
@@ -24,6 +28,8 @@ export function ProductsOverview() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [saleChannelFilter, setSaleChannelFilter] = useState<string>("all");
   const [vendorFilter, setVendorFilter] = useState<string>(vendorFromUrl || "all");
+  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+  const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [cart, setCart] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -60,6 +66,11 @@ export function ProductsOverview() {
     };
   }, [searchTerm]);
 
+  // Reset page when date range changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [fromDate, toDate]);
+
   // Fetch order items from API
   const {
     data: orderItemsResponse,
@@ -67,18 +78,24 @@ export function ProductsOverview() {
     error: orderItemsError,
     refetch: refetchOrderItems,
   } = useQuery({
-    queryKey: ['order-items', currentPage, debouncedSearchTerm, saleChannelFilter, vendorFilter],
+    queryKey: ['order-items', currentPage, debouncedSearchTerm, saleChannelFilter, vendorFilter, fromDate, toDate],
     queryFn: async () => {
       // If a vendor is specified, we pass it through the status param as requested
       const statusParam = vendorFilter !== "all"
         ? vendorFilter
         : (saleChannelFilter !== "all" ? saleChannelFilter : undefined);
 
+      // Format dates as YYYY-MM-DD
+      const fromDateStr = fromDate ? format(fromDate, 'yyyy-MM-dd') : undefined;
+      const toDateStr = toDate ? format(toDate, 'yyyy-MM-dd') : undefined;
+
       return await productsApi.getOrderItems(
         currentPage,
         10,
         debouncedSearchTerm || undefined,
-        statusParam
+        statusParam,
+        fromDateStr,
+        toDateStr
       );
     },
     staleTime: 0, // Always fetch fresh data
@@ -261,39 +278,116 @@ export function ProductsOverview() {
       {/* Search Bar */}
       <Card className="bg-gradient-card border-border shadow-soft">
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <Label htmlFor="search" className="text-sm font-medium mb-2 block">
-                Search Products
-              </Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search by product name, SKU, or seller..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1">
+                <Label htmlFor="search" className="text-sm font-medium mb-2 block">
+                  Search Products
+                </Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Search by product name, SKU, or seller..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
+
+              {/* Clear Search */}
+              {searchTerm && (
+                <div className="flex items-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchTerm("");
+                    }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {/* Clear Search */}
-            {searchTerm && (
-              <div className="flex items-end">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSearchTerm("");
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Clear
-                </Button>
+            {/* Date Range Filter */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 sm:flex-initial">
+                <Label className="text-sm font-medium mb-2 block">From Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[180px] justify-start text-left font-normal",
+                        !fromDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {fromDate ? format(fromDate, "MMM dd, yyyy") : "Select from date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={fromDate}
+                      onSelect={setFromDate}
+                      initialFocus
+                      className="p-3"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-            )}
+
+              <div className="flex-1 sm:flex-initial">
+                <Label className="text-sm font-medium mb-2 block">To Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[180px] justify-start text-left font-normal",
+                        !toDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {toDate ? format(toDate, "MMM dd, yyyy") : "Select to date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={toDate}
+                      onSelect={setToDate}
+                      initialFocus
+                      className="p-3"
+                      disabled={(date) => fromDate ? date < fromDate : false}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Clear Date Range */}
+              {(fromDate || toDate) && (
+                <div className="flex items-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setFromDate(undefined);
+                      setToDate(undefined);
+                    }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Clear Dates
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -309,7 +403,7 @@ export function ProductsOverview() {
             </span>
           )}
         </span>
-        {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all") && (
+        {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all" || fromDate || toDate) && (
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filters active</span>
@@ -325,12 +419,12 @@ export function ProductsOverview() {
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
               <h3 className="text-lg font-semibold text-foreground">No Products Found</h3>
               <p className="text-sm text-muted-foreground">
-                {searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all"
+                {searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all" || fromDate || toDate
                   ? "No products match your current filters."
                   : "No products available at the moment."
                 }
               </p>
-              {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all") && (
+              {(searchTerm || saleChannelFilter !== "all" || vendorFilter !== "all" || fromDate || toDate) && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -338,6 +432,8 @@ export function ProductsOverview() {
                     setSearchTerm("");
                     setSaleChannelFilter("all");
                     setVendorFilter("all");
+                    setFromDate(undefined);
+                    setToDate(undefined);
                   }}
                 >
                   Clear Filters

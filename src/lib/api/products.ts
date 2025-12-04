@@ -273,7 +273,9 @@ export const productsApi = {
     page: number = 1, 
     perPage: number = 10, 
     search?: string, 
-    status?: string
+    status?: string,
+    fromDate?: string,
+    toDate?: string
   ): Promise<OrderItemsResponse> {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -286,6 +288,14 @@ export const productsApi = {
     
     if (status) {
       params.append('status', status);
+    }
+    
+    if (fromDate) {
+      params.append('from', fromDate);
+    }
+    
+    if (toDate) {
+      params.append('to', toDate);
     }
     
     return apiRequest<OrderItemsResponse>(`/order-items?${params.toString()}`);
