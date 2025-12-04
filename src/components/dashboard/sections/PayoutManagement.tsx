@@ -48,6 +48,7 @@ import { sellersApi, SellerPayout } from "@/lib/api/sellers";
 export function PayoutManagement() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
@@ -60,6 +61,22 @@ export function PayoutManagement() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms debounce delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchTerm]);
+
+  // Reset to page 1 when debounced search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
+
   // Fetch seller payouts from API
   const {
     data: payoutsResponse,
@@ -67,8 +84,8 @@ export function PayoutManagement() {
     error: payoutsError,
     refetch: refetchPayouts,
   } = useQuery({
-    queryKey: ["seller-payouts", currentPage, itemsPerPage],
-    queryFn: () => sellersApi.getSellerPayouts(currentPage, itemsPerPage),
+    queryKey: ["seller-payouts", currentPage, itemsPerPage, debouncedSearchTerm],
+    queryFn: () => sellersApi.getSellerPayouts(currentPage, itemsPerPage, debouncedSearchTerm || undefined),
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
     refetchOnMount: true, // Always refetch when component mounts

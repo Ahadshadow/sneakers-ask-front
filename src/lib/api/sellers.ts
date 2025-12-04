@@ -452,8 +452,14 @@ export const sellersApi = {
   },
 
   // Get seller payouts with pagination
-  async getSellerPayouts(page: number = 1, perPage: number = 15): Promise<SellerPayoutsResponse> {
-    return apiRequest<SellerPayoutsResponse>(`/seller-payouts?page=${page}&per_page=${perPage}`);
+  async getSellerPayouts(page: number = 1, perPage: number = 15, search?: string): Promise<SellerPayoutsResponse> {
+    const queryParams = new URLSearchParams();
+    queryParams.append("page", page.toString());
+    queryParams.append("per_page", perPage.toString());
+    if (search && search.trim().length > 0) {
+      queryParams.append("search", search.trim());
+    }
+    return apiRequest<SellerPayoutsResponse>(`/seller-payouts?${queryParams.toString()}`);
   },
 
   // Get single seller payout by ID
