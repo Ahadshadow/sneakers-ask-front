@@ -353,10 +353,12 @@ export function SellerInvitations() {
                       <TableCell>
                         {invitation.seller ? (
                           <div>
-                            <p className="font-medium">{invitation.seller.store_name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {invitation.seller.owner_name}
-                            </p>
+                            <p className="font-medium">{invitation.seller.owner_name}</p>
+                            {invitation.seller.store_name && (
+                              <p className="text-sm text-muted-foreground">
+                                {invitation.seller.store_name}
+                              </p>
+                            )}
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>

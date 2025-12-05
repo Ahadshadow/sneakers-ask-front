@@ -229,6 +229,9 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                 
                 // Products menu with submenu
                 if (item.hasSubmenu && item.id === "products") {
+                  // Check if any child category is selected
+                  const hasActiveChild = currentStatus || currentVendor;
+                  
                   return (
                     <Collapsible
                       key={item.id}
@@ -241,9 +244,11 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                           <SidebarMenuButton
                             tooltip={isCollapsed ? item.label : undefined}
                             className={cn(
-                              "group transition-all duration-200 hover:bg-muted rounded-lg relative",
+                              "group transition-all duration-200 rounded-lg relative",
                               isCollapsed ? "h-10 w-10 mx-auto my-2 flex items-center justify-center" : "h-11 mx-1 my-0.5",
-                              isActive && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+                              (hasActiveChild || isActive)
+                                ? "!bg-black !text-white shadow-lg hover:!bg-black hover:!text-white [&:hover]:!text-white [&:hover_*]:!text-white [&_*]:!text-white [&:hover_svg]:!text-white [&:hover_span]:!text-white" 
+                                : "hover:bg-muted"
                             )}
                             onClick={(e) => {
                               e.preventDefault();
@@ -253,9 +258,9 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                               }
                             }}
                           >
-                            <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5")} />
+                            <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5", (hasActiveChild || isActive) && "!text-white")} />
                             {!isCollapsed && (
-                              <span className="font-medium text-sm">{item.label}</span>
+                              <span className={cn("font-medium text-sm", (hasActiveChild || isActive) && "!text-white")}>{item.label}</span>
                             )}
                             {isActive && isCollapsed && (
                               <div className="absolute -right-0.5 top-1/2 transform -translate-y-1/2 h-2 w-1 rounded-l-full bg-primary" />
@@ -294,7 +299,10 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                                         }
                                       }}
                                       isActive={isStatusActive}
-                                      className="cursor-pointer"
+                                      className={cn(
+                                        "cursor-pointer transition-all duration-200",
+                                        isStatusActive && "!bg-black dark:!bg-black !text-white !font-semibold shadow-lg hover:!bg-black dark:hover:!bg-black hover:!text-white [&:hover]:!text-white [&:hover_*]:!text-white data-[active=true]:!bg-black data-[active=true]:dark:!bg-black data-[active=true]:!text-white"
+                                      )}
                                     >
                                       <Circle className={cn("h-2 w-2 fill-current mr-2", filter.color)} />
                                       <span>{filter.label}</span>
@@ -314,7 +322,10 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                                         navigate(`/products?vendor=${encodeURIComponent(vendor.name)}`);
                                       }}
                                       isActive={isVendorActive}
-                                      className="cursor-pointer"
+                                      className={cn(
+                                        "cursor-pointer transition-all duration-200",
+                                        isVendorActive && "!bg-black dark:!bg-black !text-white !font-semibold shadow-lg hover:!bg-black dark:hover:!bg-black hover:!text-white [&:hover]:!text-white [&:hover_*]:!text-white data-[active=true]:!bg-black data-[active=true]:dark:!bg-black data-[active=true]:!text-white"
+                                      )}
                                     >
                                       <Circle className="h-2 w-2 fill-current mr-2 text-gray-500" />
                                       <span>{vendor.name}</span>
@@ -337,9 +348,11 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                       asChild
                       tooltip={isCollapsed ? item.label : undefined}
                       className={cn(
-                        "group transition-all duration-200 hover:bg-muted rounded-lg relative",
+                        "group transition-all duration-200 rounded-lg relative",
                         isCollapsed ? "h-10 w-10 mx-auto my-2 flex items-center justify-center" : "h-11 mx-1 my-0.5",
-                        isActive && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+                        isActive 
+                          ? "!bg-black !text-white shadow-lg hover:!bg-black hover:!text-white [&:hover]:!text-white [&:hover_*]:!text-white [&_*]:!text-white [&:hover_svg]:!text-white [&:hover_span]:!text-white"
+                          : "hover:bg-muted"
                       )}
                     >
                       <button
@@ -354,9 +367,9 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                         }}
                         className={cn("flex items-center w-full h-full transition-all duration-200", isCollapsed ? "justify-center" : "gap-3 px-3")}
                       >
-                        <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5")} />
+                        <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5", isActive && "!text-white")} />
                         {!isCollapsed && (
-                          <span className="font-medium text-sm">{item.label}</span>
+                          <span className={cn("font-medium text-sm", isActive && "!text-white")}>{item.label}</span>
                         )}
                         {isActive && !isCollapsed && (
                           <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-foreground/80" />

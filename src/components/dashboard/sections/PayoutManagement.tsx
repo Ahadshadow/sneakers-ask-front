@@ -146,7 +146,7 @@ export function PayoutManagement() {
 
       toast({
         title: "Revolut Payment Initiated",
-        description: `Payment of EUR${amount} to ${seller.seller_store} has been initiated via Revolut.`,
+        description: `Payment of EUR${amount} to ${seller.owner_name} has been initiated via Revolut.`,
       });
     } catch (error: any) {
       toast({
@@ -421,7 +421,7 @@ export function PayoutManagement() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold text-gray-900">
-                            {payout.seller_store}
+                            {payout.owner_name}
                           </h3>
                           <button
                             onClick={() =>
@@ -570,7 +570,7 @@ export function PayoutManagement() {
                         Seller:
                       </span>
                       <span className="text-sm font-bold text-gray-900">
-                        {selectedPayout.seller_store}
+                        {selectedPayout.owner_name}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -607,7 +607,7 @@ export function PayoutManagement() {
                       </span>
                       <span className="text-sm text-gray-900">
                         {selectedPayout.account_holder ||
-                          `${selectedPayout.seller_store} Ltd`}
+                          `${selectedPayout.owner_name} Ltd`}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">

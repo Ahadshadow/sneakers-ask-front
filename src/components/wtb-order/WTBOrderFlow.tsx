@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Package, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { SellerSelection } from "./SellerSelection";
@@ -66,7 +67,7 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
   
   const [selectedSeller, setSelectedSeller] = useState("");
   const [payoutPrice, setPayoutPrice] = useState("");
-  const [vatTreatment, setVatTreatment] = useState("regular");
+  const [vatTreatment, setVatTreatment] = useState("margin");
   const [vatRefundIncluded, setVatRefundIncluded] = useState(false);
   const [selectedShipping, setSelectedShipping] = useState("sendcloud");
   const [paymentTiming, setPaymentTiming] = useState("after-delivery");
@@ -432,10 +433,13 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
 
           {/* Product Details - Last */}
           <Card className="bg-muted/20 border border-border">
-            <CardHeader>
-              <CardTitle className="text-xl">Product Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="product-details">
+                <AccordionTrigger className="px-6 py-4">
+                  <CardTitle className="text-xl">Product Details</CardTitle>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="px-6 pb-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Basic Product Info */}
                 <div className="space-y-3">
@@ -493,8 +497,10 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
                 </div>
               )}
 
-             
-            </CardContent>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </Card>
 
           {/* Action Buttons - At the end */}

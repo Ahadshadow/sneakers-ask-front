@@ -22,8 +22,8 @@ interface PricingSectionProps {
 }
 
 const vatOptions = [
-  { id: "regular", name: "Regular VAT", description: "Standard VAT treatment" },
-  { id: "margin", name: "Margin Scheme", description: "For second-hand goods" }
+  { id: "margin", name: "Margin Scheme", description: "For second-hand goods" },
+  { id: "regular", name: "Regular VAT", description: "Standard VAT treatment" }
 ];
 
 export function PricingSection({ 

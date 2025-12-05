@@ -204,7 +204,7 @@ export function ProductsOverview() {
 
   // Get unique values for filter dropdowns
   const availableSellers = useMemo(() => {
-    return Array.from(new Set(apiOrderItems.map(product => product.seller?.store_name || '--'))).sort();
+    return Array.from(new Set(apiOrderItems.map(product => product.seller?.owner_name || '--'))).sort();
   }, [apiOrderItems]);
 
   // Get unique vendor names for filter
@@ -240,7 +240,7 @@ export function ProductsOverview() {
       const matchesSearch = debouncedSearchTerm === "" || 
         product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        (product.seller?.store_name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+        (product.seller?.owner_name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase());
 
       // Sale channel filter
       const matchesSaleChannel = saleChannelFilter === "all" || product.status === saleChannelFilter;

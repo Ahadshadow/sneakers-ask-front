@@ -474,7 +474,7 @@ export function ProductsTable({
                           </div>
                         ) : (
                           <span className="text-sm text-foreground flex-1">
-                            {product.seller?.store_name || "--"}
+                            {product.seller?.owner_name || "--"}
                           </span>
                         )}
                         {/* Show WhatsApp button for consignment items with phone, or regular seller */}

@@ -81,13 +81,13 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
   const isVatRefundEligible = selectedSellerData?.vatRegistered && selectedSellerData?.vatNumber;
 
 
-  // Set default VAT treatment to "regular" for all products
+  // Set default VAT treatment to "margin" for all products
   useEffect(() => {
     if (selectedSeller) {
       const defaultVatTreatments: {[key: string]: string} = {};
       products.forEach(product => {
         if (!vatTreatments[product.id]) {
-          defaultVatTreatments[product.id] = 'regular';
+          defaultVatTreatments[product.id] = 'margin';
         }
       });
       
@@ -688,17 +688,6 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                             <div className="flex gap-2">
                               <button
                                 type="button"
-                                onClick={() => handleVatChange(product.id, 'regular')}
-                                className={`flex-1 px-4 py-3 text-sm rounded-lg border transition-all duration-200 ${
-                                  vatTreatments[product.id] === 'regular'
-                                    ? 'border-primary bg-primary text-white shadow-md'
-                                    : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-primary/50 hover:bg-primary/5'
-                                }`}
-                              >
-                                Regular VAT
-                              </button>
-                              <button
-                                type="button"
                                 onClick={() => handleVatChange(product.id, 'margin')}
                                 className={`flex-1 px-4 py-3 text-sm rounded-lg border transition-all duration-200 ${
                                   vatTreatments[product.id] === 'margin'
@@ -707,6 +696,17 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
                                 }`}
                               >
                                 Margin Scheme
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleVatChange(product.id, 'regular')}
+                                className={`flex-1 px-4 py-3 text-sm rounded-lg border transition-all duration-200 ${
+                                  vatTreatments[product.id] === 'regular'
+                                    ? 'border-primary bg-primary text-white shadow-md'
+                                    : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-primary/50 hover:bg-primary/5'
+                                }`}
+                              >
+                                Regular VAT
                               </button>
                             </div>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
