@@ -126,6 +126,24 @@ export function SendCloudModal({
     }
   }, [isOpen, defaultShipmentMethodCode, shippingMethods, selectedShippingMethodId]);
 
+  // Auto-select default shipment method (UPS Standard 0-70kg, id: 5606) for consignment, vendors, and stock (not fear of god)
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!shippingMethods || shippingMethods.length === 0) return;
+    if (selectedShippingMethodId) return; // Don't override user selection or seller preference
+    if (defaultShipmentMethodCode) return; // Don't override if seller has a preference
+
+    // Default shipment method: UPS Standard 0-70kg (id: 5606)
+    const defaultMethod = shippingMethods.find(
+      (method) => method.id === 5606 || method.name === "UPS Standard 0-70kg"
+    );
+    
+    if (defaultMethod) {
+      console.log('Auto-selecting default shipment method:', defaultMethod);
+      setSelectedShippingMethodId(defaultMethod.id.toString());
+    }
+  }, [isOpen, shippingMethods, selectedShippingMethodId, defaultShipmentMethodCode]);
+
   const handleCreateLabel = async () => {
 
     if (!selectedSenderId || !selectedShippingMethodId) {

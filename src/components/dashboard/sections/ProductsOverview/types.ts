@@ -168,6 +168,7 @@ export interface Product {
     id: number;
     tracking_number: string;
     carrier: string;
+    current_tracking_status: string;
     label_url: string;
     sendcloud_label_url: string;
     status: string;

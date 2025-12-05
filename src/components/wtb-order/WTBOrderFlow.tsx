@@ -69,7 +69,7 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
   const [vatTreatment, setVatTreatment] = useState("regular");
   const [vatRefundIncluded, setVatRefundIncluded] = useState(false);
   const [selectedShipping, setSelectedShipping] = useState("sendcloud");
-  const [paymentTiming, setPaymentTiming] = useState("");
+  const [paymentTiming, setPaymentTiming] = useState("after-delivery");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
@@ -359,7 +359,78 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
       <div className="container mx-auto px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           
-          {/* Product Info */}
+          {/* Seller Selection - First */}
+          <SellerSelection
+            selectedSeller={selectedSeller}
+            onSellerChange={handleSellerChange}
+            availableSellers={availableSellers}
+            isLoading={isLoadingSellers}
+            error={sellersError}
+          />
+
+          {selectedSeller && (
+            <>
+              {/* Pricing and VAT Section - Second */}
+              <PricingSection
+                selectedSeller={selectedSeller}
+                vatTreatment={vatTreatment}
+                payoutPrice={payoutPrice}
+                vatRefundIncluded={vatRefundIncluded}
+                onVatChange={handleVatChange}
+                onPayoutPriceChange={setPayoutPrice}
+                onVatRefundIncludedChange={handleVatRefundIncludedChange}
+                product={product}
+                availableSellers={availableSellers}
+              />
+
+              {/* Payment and Shipping Section - Third */}
+              <ShippingSection
+                paymentTiming={paymentTiming}
+                onPaymentTimingChange={setPaymentTiming}
+                selectedShipping={selectedShipping}
+                onShippingChange={setSelectedShipping}
+                uploadedFile={uploadedFile}
+                onFileUpload={handleFileUpload}
+                isUploadingFile={isUploadingFile}
+                customerCountryCode={product.customerAddress?.country_code}
+                orderItem={product}
+                onSendCloudLabelCreated={handleSendCloudLabelCreated}
+                sellerShipmentMethodCode={availableSellers.find(s => s.name === selectedSeller)?.shipmentMethodCode}
+              />
+
+              {/* Tracking Data Display */}
+              {trackingData && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardHeader>
+                    <CardTitle className="text-green-800 flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Tracking Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-green-700">Shipment Method</Label>
+                        <p className="text-sm text-green-600 font-mono">{trackingData.shipment_method}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-green-700">Tracking Number</Label>
+                        <p className="text-sm text-green-600 font-mono">{trackingData.tracking_consignment_number}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-green-700">Raw Data</Label>
+                      <p className="text-xs text-green-600 bg-green-100 p-2 rounded font-mono break-all">
+                        {trackingData.raw_data}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+
+          {/* Product Details - Last */}
           <Card className="bg-muted/20 border border-border">
             <CardHeader>
               <CardTitle className="text-xl">Product Details</CardTitle>
@@ -426,91 +497,20 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
             </CardContent>
           </Card>
 
-          {/* Seller Selection */}
-          <SellerSelection
-            selectedSeller={selectedSeller}
-            onSellerChange={handleSellerChange}
-            availableSellers={availableSellers}
-            isLoading={isLoadingSellers}
-            error={sellersError}
-          />
-
+          {/* Action Buttons - At the end */}
           {selectedSeller && (
-            <>
-              {/* Pricing Section */}
-              <PricingSection
-                selectedSeller={selectedSeller}
-                vatTreatment={vatTreatment}
-                payoutPrice={payoutPrice}
-                vatRefundIncluded={vatRefundIncluded}
-                onVatChange={handleVatChange}
-                onPayoutPriceChange={setPayoutPrice}
-                onVatRefundIncludedChange={handleVatRefundIncludedChange}
-                product={product}
-                availableSellers={availableSellers}
-              />
-
-              {/* Shipping Section */}
-              <ShippingSection
-                paymentTiming={paymentTiming}
-                onPaymentTimingChange={setPaymentTiming}
-                selectedShipping={selectedShipping}
-                onShippingChange={setSelectedShipping}
-                uploadedFile={uploadedFile}
-                onFileUpload={handleFileUpload}
-                isUploadingFile={isUploadingFile}
-                customerCountryCode={product.customerAddress?.country_code}
-                orderItem={product}
-                onSendCloudLabelCreated={handleSendCloudLabelCreated}
-                sellerShipmentMethodCode={availableSellers.find(s => s.name === selectedSeller)?.shipmentMethodCode}
-              />
-
-              {/* Tracking Data Display */}
-              {trackingData && (
-                <Card className="bg-green-50 border-green-200">
-                  <CardHeader>
-                    <CardTitle className="text-green-800 flex items-center gap-2">
-                      <Package className="h-5 w-5" />
-                      Tracking Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm font-medium text-green-700">Shipment Method</Label>
-                        <p className="text-sm text-green-600 font-mono">{trackingData.shipment_method}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-green-700">Tracking Number</Label>
-                        <p className="text-sm text-green-600 font-mono">{trackingData.tracking_consignment_number}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-green-700">Raw Data</Label>
-                      <p className="text-xs text-green-600 bg-green-100 p-2 rounded font-mono break-all">
-                        {trackingData.raw_data}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-
-
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-4">
-                <Button variant="outline" onClick={() => navigate(-1)} className="flex-1">
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handlePurchase}
-                  disabled={!canSubmit}
-                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  Confirm Purchase
-                </Button>
-              </div>
-            </>
+            <div className="flex gap-4 pt-4">
+              <Button variant="outline" onClick={() => navigate(-1)} className="flex-1">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handlePurchase}
+                disabled={!canSubmit}
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                Confirm Purchase
+              </Button>
+            </div>
           )}
         </div>
       </div>

@@ -247,6 +247,29 @@ class SendCloudAPI {
   /**
    * Fetch shipment labels for an order item
    */
+  /**
+   * Get available tracking statuses from API
+   */
+  async getTrackingStatuses(): Promise<string[]> {
+    const response = await fetch(`${config.api.baseUrl}/sendcloud/tracking-statuses`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch tracking statuses: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    if (data.success && Array.isArray(data.data)) {
+      return data.data;
+    }
+    return [];
+  }
+
   async getOrderItemShipmentLabels(orderItemId: number) {
     try {
       const response = await fetch(`${config.api.baseUrl}/order-items/${orderItemId}/shipment-labels`, {

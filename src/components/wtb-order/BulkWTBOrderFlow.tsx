@@ -112,6 +112,25 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
     }
   }, [products, selectedSeller]);
 
+  // Set payment timing default to "after-delivery" for all products
+  useEffect(() => {
+    if (selectedSeller) {
+      const paymentTimings: {[key: string]: string} = {};
+      products.forEach(product => {
+        if (!paymentTiming[product.id]) {
+          paymentTimings[product.id] = 'after-delivery';
+        }
+      });
+      
+      if (Object.keys(paymentTimings).length > 0) {
+        setPaymentTiming(prev => ({
+          ...prev,
+          ...paymentTimings
+        }));
+      }
+    }
+  }, [products, selectedSeller]);
+
   const calculateRegularVatPayout = (productId: string, sellerName: string) => {
     // Don't auto-fill payout price, let user enter manually
     // This function is kept for future use but doesn't auto-calculate

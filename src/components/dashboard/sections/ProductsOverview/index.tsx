@@ -17,6 +17,7 @@ import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { Product } from "./types";
 import { useToast } from "@/hooks/use-toast";
 import { productsApi } from "@/lib/api";
+import { sendcloudApi } from "@/lib/api/sendcloud";
 import { OrderItem } from "./types";
 
 export function ProductsOverview() {
@@ -28,6 +29,7 @@ export function ProductsOverview() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [saleChannelFilter, setSaleChannelFilter] = useState<string>("all");
   const [vendorFilter, setVendorFilter] = useState<string>(vendorFromUrl || "all");
+  const [trackingStatusFilter, setTrackingStatusFilter] = useState<string>("all");
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [cart, setCart] = useState<Product[]>([]);
@@ -66,10 +68,10 @@ export function ProductsOverview() {
     };
   }, [searchTerm]);
 
-  // Reset page when date range changes
+  // Reset page when date range or tracking status changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, trackingStatusFilter]);
 
   // Fetch order items from API
   const {
@@ -78,7 +80,7 @@ export function ProductsOverview() {
     error: orderItemsError,
     refetch: refetchOrderItems,
   } = useQuery({
-    queryKey: ['order-items', currentPage, debouncedSearchTerm, saleChannelFilter, vendorFilter, fromDate, toDate],
+    queryKey: ['order-items', currentPage, debouncedSearchTerm, saleChannelFilter, vendorFilter, fromDate, toDate, trackingStatusFilter],
     queryFn: async () => {
       // If a vendor is specified, we pass it through the status param as requested
       const statusParam = vendorFilter !== "all"
@@ -89,18 +91,41 @@ export function ProductsOverview() {
       const fromDateStr = fromDate ? format(fromDate, 'yyyy-MM-dd') : undefined;
       const toDateStr = toDate ? format(toDate, 'yyyy-MM-dd') : undefined;
 
+      // Get tracking status filter
+      const trackingStatusParam = trackingStatusFilter !== "all" ? trackingStatusFilter : undefined;
+
       return await productsApi.getOrderItems(
         currentPage,
         10,
         debouncedSearchTerm || undefined,
         statusParam,
         fromDateStr,
-        toDateStr
+        toDateStr,
+        trackingStatusParam
       );
     },
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
   });
+
+  // Fetch tracking statuses from API
+  const {
+    data: trackingStatuses,
+    isLoading: isLoadingTrackingStatuses,
+  } = useQuery({
+    queryKey: ['tracking-statuses'],
+    queryFn: () => sendcloudApi.getTrackingStatuses(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+  });
+
+  // Use tracking statuses from API, sorted by length
+  const uniqueTrackingStatuses = useMemo(() => {
+    if (trackingStatuses && Array.isArray(trackingStatuses)) {
+      return [...trackingStatuses].sort((a, b) => a.length - b.length);
+    }
+    return [];
+  }, [trackingStatuses]);
 
   // Convert API order items to UI products
   const apiOrderItems = useMemo(() => {
@@ -314,79 +339,138 @@ export function ProductsOverview() {
               )}
             </div>
 
-            {/* Date Range Filter */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 sm:flex-initial">
-                <Label className="text-sm font-medium mb-2 block">From Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full sm:w-[180px] justify-start text-left font-normal",
-                        !fromDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {fromDate ? format(fromDate, "MMM dd, yyyy") : "Select from date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={fromDate}
-                      onSelect={setFromDate}
-                      initialFocus
-                      className="p-3"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex-1 sm:flex-initial">
-                <Label className="text-sm font-medium mb-2 block">To Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full sm:w-[180px] justify-start text-left font-normal",
-                        !toDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {toDate ? format(toDate, "MMM dd, yyyy") : "Select to date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={toDate}
-                      onSelect={setToDate}
-                      initialFocus
-                      className="p-3"
-                      disabled={(date) => fromDate ? date < fromDate : false}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Clear Date Range */}
-              {(fromDate || toDate) && (
-                <div className="flex items-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setFromDate(undefined);
-                      setToDate(undefined);
-                    }}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Clear Dates
-                  </Button>
+            {/* Date Range Filter and Tracking Status Filter */}
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Left side: Date Range Filter */}
+              <div className="flex-1 flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 sm:flex-initial">
+                  <Label className="text-sm font-medium mb-2 block">From Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full sm:w-[180px] justify-start text-left font-normal",
+                          !fromDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {fromDate ? format(fromDate, "MMM dd, yyyy") : "Select from date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={fromDate}
+                        onSelect={setFromDate}
+                        initialFocus
+                        className="p-3"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-              )}
+
+                <div className="flex-1 sm:flex-initial">
+                  <Label className="text-sm font-medium mb-2 block">To Date</Label>
+                  <div className="space-y-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full sm:w-[180px] justify-start text-left font-normal",
+                            !toDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {toDate ? format(toDate, "MMM dd, yyyy") : "Select to date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={toDate}
+                          onSelect={setToDate}
+                          initialFocus
+                          className="p-3"
+                          disabled={(date) => fromDate ? date < fromDate : false}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {/* Clear Date Range - Under To Date */}
+                    {(fromDate || toDate) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setFromDate(undefined);
+                          setToDate(undefined);
+                        }}
+                        className="text-muted-foreground hover:text-foreground h-7 w-full sm:w-[180px]"
+                      >
+                        Clear Dates
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right side: Tracking Status Filter */}
+              <div className="flex-1 lg:flex-initial space-y-2 min-w-0">
+                <Label className="text-sm font-medium">Tracking Status</Label>
+                {isLoadingTrackingStatuses ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading tracking statuses...
+                  </div>
+                ) : uniqueTrackingStatuses.length > 0 ? (
+                  <>
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400 max-w-full">
+                      <button
+                        onClick={() => setTrackingStatusFilter("all")}
+                        className={cn(
+                          "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex-shrink-0",
+                          trackingStatusFilter === "all"
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        )}
+                      >
+                        All
+                      </button>
+                      {uniqueTrackingStatuses.map((status) => {
+                        return (
+                          <button
+                            key={status}
+                            onClick={() => setTrackingStatusFilter(status)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex-shrink-0",
+                              trackingStatusFilter === status
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            )}
+                          >
+                            {status}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {trackingStatusFilter !== "all" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setTrackingStatusFilter("all")}
+                        className="text-muted-foreground hover:text-foreground h-7"
+                      >
+                        Clear Tracking Status
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    No tracking statuses available
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>

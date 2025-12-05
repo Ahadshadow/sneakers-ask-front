@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -146,9 +147,14 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { user, logout, isLoggingOut } = useAuth();
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [productsMenuOpen, setProductsMenuOpen] = useState(true);
+
+  // Get current filters from URL
+  const currentStatus = searchParams.get("status");
+  const currentVendor = searchParams.get("vendor");
 
   // Fetch all vendors for dynamic sidebar filters
   const { data: vendorsResponse } = useQuery({
@@ -271,37 +277,51 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                         {!isCollapsed && (
                           <CollapsibleContent>
                             <SidebarMenuSub>
-                              {salesChannelFilters.map((filter) => (
-                                <SidebarMenuSubItem key={filter.id}>
-                                  <SidebarMenuSubButton
-                                    onClick={() => {
-                                      if (filter.id === "all") {
-                                        navigate("/products");
-                                      } else {
-                                        navigate(`/products?status=${filter.id}`);
-                                      }
-                                    }}
-                                    className="cursor-pointer"
-                                  >
-                                    <Circle className={cn("h-2 w-2 fill-current mr-2", filter.color)} />
-                                    <span>{filter.label}</span>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
+                              {salesChannelFilters.map((filter) => {
+                                // Check if this status filter is active
+                                const isStatusActive = filter.id === "all" 
+                                  ? !currentStatus && !currentVendor
+                                  : currentStatus === filter.id && !currentVendor;
+                                
+                                return (
+                                  <SidebarMenuSubItem key={filter.id}>
+                                    <SidebarMenuSubButton
+                                      onClick={() => {
+                                        if (filter.id === "all") {
+                                          navigate("/products");
+                                        } else {
+                                          navigate(`/products?status=${filter.id}`);
+                                        }
+                                      }}
+                                      isActive={isStatusActive}
+                                      className="cursor-pointer"
+                                    >
+                                      <Circle className={cn("h-2 w-2 fill-current mr-2", filter.color)} />
+                                      <span>{filter.label}</span>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                );
+                              })}
                               {/* Vendor quick filters - dynamically loaded from API */}
-                              {vendors.map((vendor) => (
-                                <SidebarMenuSubItem key={`vendor-${vendor.id}`}>
-                                  <SidebarMenuSubButton
-                                    onClick={() => {
-                                      navigate(`/products?vendor=${encodeURIComponent(vendor.name)}`);
-                                    }}
-                                    className="cursor-pointer"
-                                  >
-                                    <Circle className="h-2 w-2 fill-current mr-2 text-gray-500" />
-                                    <span>{vendor.name}</span>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
+                              {vendors.map((vendor) => {
+                                // Check if this vendor filter is active
+                                const isVendorActive = currentVendor === vendor.name;
+                                
+                                return (
+                                  <SidebarMenuSubItem key={`vendor-${vendor.id}`}>
+                                    <SidebarMenuSubButton
+                                      onClick={() => {
+                                        navigate(`/products?vendor=${encodeURIComponent(vendor.name)}`);
+                                      }}
+                                      isActive={isVendorActive}
+                                      className="cursor-pointer"
+                                    >
+                                      <Circle className="h-2 w-2 fill-current mr-2 text-gray-500" />
+                                      <span>{vendor.name}</span>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                );
+                              })}
                             </SidebarMenuSub>
                           </CollapsibleContent>
                         )}

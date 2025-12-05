@@ -1,6 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   ShoppingCart,
   Plus,
   Loader2,
@@ -155,6 +161,12 @@ export function ProductsTable({
       return products.slice(startIndex, endIndex);
     }
   }, [products, currentPage, itemsPerPage, externalCurrentPage]);
+  // Helper function to truncate text to 10 characters
+  const truncateText = (text: string, maxLength: number = 18): string => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  };
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "open":
@@ -363,12 +375,13 @@ export function ProductsTable({
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
                     Sale Channel
                   </TableHead>
-                  <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
+                  {/* HIDDEN_VENDOR_COLUMNS - Uncomment to show Vendor Price and Vendor Order ID columns */}
+                  {/* <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
                     Vendor Price
                   </TableHead>
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
                     Vendor Order ID
-                  </TableHead>
+                  </TableHead> */}
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4 min-w-[180px]">
                     Tracking Status
                   </TableHead>
@@ -532,36 +545,51 @@ export function ProductsTable({
                         {product.status.replace("_", " ")}
                       </Badge>
                     </TableCell>
-                    {/* Vendor Price Column */}
-                    <TableCell className="py-3">
+                    {/* HIDDEN_VENDOR_COLUMNS - Uncomment to show Vendor Price and Vendor Order ID columns */}
+                    {/* <TableCell className="py-3">
                       <span className="text-sm text-foreground">
                         {product.vendorPrice != null 
                           ? `${product.currency || "EUR"} ${product.vendorPrice.toFixed(2)}` 
                           : "-"}
                       </span>
                     </TableCell>
-                    {/* Vendor Order ID Column */}
                     <TableCell className="py-3">
                       <span className="text-sm text-foreground">
                         {product.vendorOrderId || "-"}
                       </span>
-                    </TableCell>
+                    </TableCell> */}
                     {/* Tracking Status Column */}
                     <TableCell className="py-3 min-w-[180px]">
-                      {product.shipmentLabel && product.shipmentLabel.status ? (
-                        <div className="flex items-center">
-                          <Badge
-                            variant="outline"
-                            className={`font-medium border whitespace-nowrap ${getTrackingStatusColor(
-                              product.shipmentLabel.status
-                            )}`}
-                          >
-                            {getTrackingStatusLabel(
-                              formatTrackingStatus(product.shipmentLabel.status),
-                              product.shipmentLabel?.shipping_destination
-                            )}
-                          </Badge>
-                        </div>
+                      {product.shipmentLabel && product.shipmentLabel.current_tracking_status ? (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-block cursor-help">
+                                <Badge
+                                  variant="outline"
+                                  className={`font-medium border whitespace-nowrap ${getTrackingStatusColor(
+                                    product.shipmentLabel.current_tracking_status
+                                  )}`}
+                                >
+                                  {truncateText(
+                                    getTrackingStatusLabel(
+                                      formatTrackingStatus(product.shipmentLabel.current_tracking_status),
+                                      product.shipmentLabel?.shipping_destination
+                                    )
+                                  )}
+                                </Badge>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {getTrackingStatusLabel(
+                                  formatTrackingStatus(product.shipmentLabel.current_tracking_status),
+                                  product.shipmentLabel?.shipping_destination
+                                )}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
                       )}
