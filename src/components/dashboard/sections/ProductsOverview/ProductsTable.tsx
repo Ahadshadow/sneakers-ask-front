@@ -855,6 +855,22 @@ export function ProductsTable({
                               ) : null}
                             </>
                           )}
+
+                          {/* Unlock WTB Button - For stock and consignment items without vendor and without shipment label (excluding Fear of God products) */}
+                          {(product.status === "stock" || product.status === "consignment") && 
+                           !product.vendorName && 
+                           !product.hasShipmentLabel &&
+                           !product.name.toLowerCase().includes("fear of god") && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleWTBClick(product)}
+                              className="h-8 px-3 gap-1 text-xs bg-yellow-800 hover:bg-yellow-900 text-white"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              Unlock WTB
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     )}

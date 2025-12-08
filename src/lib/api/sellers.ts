@@ -15,6 +15,7 @@ export interface ActiveSeller {
   shipment_method_code?: string | null;
   store_name?: string | null;
   contact_person?: string | null;
+  discord_name?: string | null;
 }
 
 // Seller interfaces based on your API response

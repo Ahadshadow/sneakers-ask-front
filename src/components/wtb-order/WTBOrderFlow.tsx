@@ -113,7 +113,8 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
       tinNumber: seller.tin_number,
       shipmentMethodCode: seller.shipment_method_code,
       storeName: seller.store_name || undefined,
-      contactName: seller.contact_person || undefined
+      contactName: seller.contact_person || undefined,
+      discordName: seller.discord_name || undefined
     };
   }) || [];
 
@@ -314,7 +315,7 @@ export function WTBOrderFlow({ product }: WTBOrderFlowProps) {
       toast.dismiss();
       
       if (response.success) {
-        toast.success(`WTB order created successfully! Order ID: ${response.data.order_id}`);
+        toast.success(`WTB order created successfully!`);
         navigate(-1);
       } else {
         toast.error(response.message || "Failed to create WTB order");

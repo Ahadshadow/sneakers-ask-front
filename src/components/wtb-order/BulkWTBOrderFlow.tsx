@@ -72,7 +72,8 @@ export function BulkWTBOrderFlow({ products }: BulkWTBOrderFlowProps) {
       tinNumber: seller.tin_number,
       shipmentMethodCode: seller.shipment_method_code,
       storeName: seller.store_name || undefined,
-      contactName: seller.contact_person || undefined
+      contactName: seller.contact_person || undefined,
+      discordName: seller.discord_name || undefined
     };
   }) || [];
 

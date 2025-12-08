@@ -20,6 +20,7 @@ interface SellerSelectionProps {
     status?: string;
     storeName?: string;
     contactName?: string;
+    discordName?: string;
   }>;
   isLoading?: boolean;
   error?: any;
@@ -45,27 +46,82 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
 
   const seller = availableSellers.find(s => s.name === selectedSeller);
   
-  // Filter sellers based on search term (contact name, store name, seller name)
+  // Filter sellers based on search term - only search in owner name, discord name, and email
+  // Only show sellers where the search term matches exactly at the start of the field or at the start of a word
   const filteredSellers = useMemo(() => {
+    // Create a unique key for each seller (prefer ID, fallback to name+email combination)
+    const getSellerKey = (seller: typeof availableSellers[0]): string => {
+      if (seller.id) return `id:${seller.id}`;
+      // Use name and email combination to identify unique sellers
+      return `name:${seller.name || ''}:email:${seller.email || ''}`;
+    };
+
     if (!searchValue.trim()) {
-      return availableSellers;
+      // Deduplicate sellers before returning
+      const seen = new Set<string>();
+      return availableSellers.filter(seller => {
+        const key = getSellerKey(seller);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     }
 
     const searchLower = searchValue.toLowerCase().trim();
+    const seen = new Set<string>();
+    
     return availableSellers.filter(seller => {
-      // Search in seller name (owner_name)
-      const nameMatch = seller.name?.toLowerCase().includes(searchLower);
+      // Deduplicate: skip if we've already seen this seller
+      const key = getSellerKey(seller);
+      if (seen.has(key)) return false;
+      // Helper function to check if search term matches owner name or discord name
+      const matchesNameField = (fieldValue: string | undefined): boolean => {
+        if (!fieldValue) return false;
+        const fieldLower = fieldValue.toLowerCase();
+        
+        // Check if search term starts the entire field
+        if (fieldLower.startsWith(searchLower)) return true;
+        
+        // Check if search term starts any word in the field (word boundary matching)
+        const fieldWords = fieldLower.split(/\s+/);
+        return fieldWords.some(word => word.startsWith(searchLower));
+      };
       
-      // Search in store name
-      const storeNameMatch = seller.storeName?.toLowerCase().includes(searchLower);
+      // Helper function to check if search term matches email
+      const matchesEmail = (email: string | undefined): boolean => {
+        if (!email) return false;
+        const emailLower = email.toLowerCase();
+        
+        // For email, check if search term is at the start of the email (before @)
+        const emailParts = emailLower.split('@');
+        if (emailParts.length > 0) {
+          const emailPrefix = emailParts[0];
+          // Check if search term starts the email prefix
+          if (emailPrefix.startsWith(searchLower)) return true;
+          // Check if search term starts any word in the email prefix (if it has dots or underscores)
+          const emailWords = emailPrefix.split(/[._-]/);
+          return emailWords.some(word => word.startsWith(searchLower));
+        }
+        return false;
+      };
       
-      // Search in contact name
-      const contactNameMatch = seller.contactName?.toLowerCase().includes(searchLower);
+      // Search only in owner name (name)
+      const nameMatch = matchesNameField(seller.name);
       
-      // Search in email (bonus)
-      const emailMatch = seller.email?.toLowerCase().includes(searchLower);
+      // Search in discord name
+      const discordNameMatch = matchesNameField(seller.discordName);
+      
+      // Search in email (with special handling)
+      const emailMatch = matchesEmail(seller.email);
 
-      return nameMatch || storeNameMatch || contactNameMatch || emailMatch;
+      const matches = nameMatch || discordNameMatch || emailMatch;
+      
+      // If it matches, add to seen set
+      if (matches) {
+        seen.add(key);
+      }
+      
+      return matches;
     });
   }, [availableSellers, searchValue]);
   
@@ -119,7 +175,7 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
           <PopoverContent className="w-full p-0">
             <Command shouldFilter={false}>
               <CommandInput 
-                placeholder="Search by name, store, or contact..." 
+                placeholder="Search by owner name, discord name, or email..." 
                 value={searchValue}
                 onValueChange={setSearchValue}
               />
@@ -137,10 +193,10 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
                       <CommandEmpty>No seller found.</CommandEmpty>
                     ) : (
                       <CommandGroup>
-                        {filteredSellers.map((seller) => (
+                        {filteredSellers.map((seller, index) => (
                           <CommandItem
-                            key={seller.name}
-                            value={`${seller.name} ${seller.storeName || ''} ${seller.contactName || ''} ${seller.email || ''}`}
+                            key={seller.id ? `seller-${seller.id}` : `seller-${seller.name}-${seller.email}-${index}`}
+                            value={seller.name}
                             onSelect={() => handleSellerSelect(seller.name)}
                           >
                             <Check
@@ -152,8 +208,7 @@ export function SellerSelection({ selectedSeller, onSellerChange, availableSelle
                             <div className="flex flex-col">
                               <span className="font-medium">{seller.name}</span>
                               <span className="text-xs text-muted-foreground">
-                                {seller.storeName && <span>{seller.storeName} • </span>}
-                                {seller.contactName && <span>{seller.contactName} • </span>}
+                                {seller.discordName && <span>{seller.discordName} • </span>}
                                 {seller.email}
                               </span>
                             </div>

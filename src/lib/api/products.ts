@@ -92,11 +92,17 @@ export interface OrderItem {
   vendor_price?: number | null;
 }
 
+export interface TrackingStatusOption {
+  status: string;
+  count: number;
+}
+
 export interface OrderItemsResponse {
   success: boolean;
   message: string;
   data: {
     order_items: OrderItem[];
+    tracking_status_options?: TrackingStatusOption[];
     pagination: {
       current_page: number;
       last_page: number;
