@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/auth";
+import { ProtectedRoute, AdminRoute, SellerRoute } from "@/components/auth";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Payouts from "./pages/Payouts";
@@ -19,6 +19,7 @@ import EditSeller from "./pages/EditSeller";
 import WTBOrder from "./pages/WTBOrder";
 import BulkWTBOrder from "./pages/BulkWTBOrder";
 import Profile from "./pages/Profile";
+import SellerProfile from "./pages/SellerProfile";
 import SignIn from "./pages/SignIn";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -56,76 +57,130 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/seller/onboarding" element={<SellerOnboarding />} />
             
-            {/* Protected routes */}
+            {/* Admin routes - only accessible to admin users */}
             <Route path="/" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <Index />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/products" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <Products />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/payouts" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <Payouts />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/users" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <Users />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/roles" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <Roles />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/sellers" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <Sellers />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/vendors" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <Vendors />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/add-employee" element={
-              <ProtectedRoute requiredRoles={['admin', 'manager']}>
-                <AddEmployee />
-              </ProtectedRoute>
+              <AdminRoute>
+                <ProtectedRoute requiredRoles={['admin', 'manager']}>
+                  <AddEmployee />
+                </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/edit-employee/:id" element={
-              <ProtectedRoute requiredRoles={['admin', 'manager']}>
-                <EditEmployee />
-              </ProtectedRoute>
+              <AdminRoute>
+                <ProtectedRoute requiredRoles={['admin', 'manager']}>
+                  <EditEmployee />
+                </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/add-seller" element={
-              <ProtectedRoute requiredRoles={['admin', 'manager']}>
-                <AddSeller />
-              </ProtectedRoute>
+              <AdminRoute>
+                <ProtectedRoute requiredRoles={['admin', 'manager']}>
+                  <AddSeller />
+                </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/edit-seller/:id" element={
-              <ProtectedRoute requiredRoles={['admin', 'manager']}>
-                <EditSeller />
-              </ProtectedRoute>
+              <AdminRoute>
+                <ProtectedRoute requiredRoles={['admin', 'manager']}>
+                  <EditSeller />
+                </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/wtb-order" element={
-              <ProtectedRoute requiredRoles={['admin', 'manager', 'employee']}>
-                <WTBOrder />
-              </ProtectedRoute>
+              <AdminRoute>
+                <ProtectedRoute requiredRoles={['admin', 'manager', 'employee']}>
+                  <WTBOrder />
+                </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/bulk-wtb-order" element={
-              <ProtectedRoute requiredRoles={['admin', 'manager', 'employee']}>
-                <BulkWTBOrder />
-              </ProtectedRoute>
+              <AdminRoute>
+                <ProtectedRoute requiredRoles={['admin', 'manager', 'employee']}>
+                  <BulkWTBOrder />
+                </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/profile" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <Profile />
-              </ProtectedRoute>
+              </AdminRoute>
+            } />
+            
+            {/* Seller routes with /seller/ prefix - only accessible to seller users */}
+            <Route path="/seller" element={
+              <SellerRoute>
+                <Index />
+              </SellerRoute>
+            } />
+            <Route path="/seller/wtb-requests" element={
+              <SellerRoute>
+                <Index />
+              </SellerRoute>
+            } />
+            <Route path="/seller/my-offers" element={
+              <SellerRoute>
+                <Index />
+              </SellerRoute>
+            } />
+            <Route path="/seller/my-sales" element={
+              <SellerRoute>
+                <Index />
+              </SellerRoute>
+            } />
+            <Route path="/seller/my-shipments" element={
+              <SellerRoute>
+                <Index />
+              </SellerRoute>
+            } />
+            <Route path="/seller/history" element={
+              <SellerRoute>
+                <Index />
+              </SellerRoute>
+            } />
+            <Route path="/seller/payout" element={
+              <SellerRoute>
+                <Index />
+              </SellerRoute>
+            } />
+            <Route path="/seller/profile" element={
+              <SellerRoute>
+                <SellerProfile />
+              </SellerRoute>
             } />
             
             {/* Catch-all route */}

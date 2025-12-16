@@ -19,7 +19,11 @@ import {
   Mail,
   ChevronDown,
   Circle,
-  Building2
+  Building2,
+  ShoppingCart,
+  History,
+  Wallet,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -49,13 +53,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InviteSellerModal } from "./InviteSellerModal";
+import { isSeller } from "@/lib/utils/auth";
 
 interface AppSidebarProps {
   currentSection: string;
   onSectionChange: (section: string) => void;
 }
 
-const navigationItems = [
+const adminNavigationItems = [
   {
     id: "dashboard",
     label: "Dashboard",
@@ -98,6 +103,51 @@ const navigationItems = [
     label: "Vendors",
     icon: Building2,
     path: "/vendors",
+  },
+];
+
+const bulkSellerNavigationItems = [
+  // {
+  //   id: "wtb-requests",
+  //   label: "WTB Requests",
+  //   icon: ShoppingCart,
+  //   path: "/seller/wtb-requests",
+  // },
+  // {
+  //   id: "my-offers",
+  //   label: "My Offers",
+  //   icon: Package,
+  //   path: "/seller/my-offers",
+  // },
+  // {
+  //   id: "my-sales",
+  //   label: "My Sales",
+  //   icon: CreditCard,
+  //   path: "/seller/my-sales",
+  // },
+  // {
+  //   id: "my-shipments",
+  //   label: "My Shipments",
+  //   icon: Store,
+  //   path: "/seller/my-shipments",
+  // },
+  {
+    id: "history",
+    label: "History",
+    icon: History,
+    path: "/seller/history",
+  },
+  {
+    id: "payout",
+    label: "Payout",
+    icon: Wallet,
+    path: "/seller/payout",
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    icon: User,
+    path: "/seller/profile",
   },
 ];
 
@@ -151,6 +201,13 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const { user, logout, isLoggingOut } = useAuth();
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [productsMenuOpen, setProductsMenuOpen] = useState(true);
+  
+  // Determine which navigation items to show based on user role
+  const navigationItems = isSeller(user) 
+    ? bulkSellerNavigationItems 
+    : adminNavigationItems;
+  
+  const isOnProfilePage = location.pathname === "/profile" || location.pathname === "/seller/profile";
 
   // Get current filters from URL
   const currentStatus = searchParams.get("status");
@@ -181,8 +238,12 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
   const handleLogout = async () => {
     try {
       await logout();
+      // Redirect to login page after logout
+      navigate('/signin', { replace: true });
     } catch (error) {
       console.error('Logout failed:', error);
+      // Even if logout fails, redirect to login
+      navigate('/signin', { replace: true });
     }
   };
 
@@ -200,7 +261,9 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                 className="h-8 w-auto"
               />
               <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Admin Dashboard</span>
+                <span className="text-xs text-muted-foreground">
+                  {isSeller(user) ? "Seller Dashboard" : "Admin Dashboard"}
+                </span>
               </div>
             </>
           )}
@@ -225,10 +288,55 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
             <SidebarMenu>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = currentSection === item.id || (item.path && location.pathname === item.path);
+                const isActive = currentSection === item.id || ('path' in item && item.path && location.pathname === item.path);
                 
-                // Products menu with submenu
-                if (item.hasSubmenu && item.id === "products") {
+                // Seller navigation items (simpler, no submenu)
+                if (isSeller(user)) {
+                  const sellerItem = item as typeof bulkSellerNavigationItems[0];
+                  const isSellerActive = location.pathname === sellerItem.path || 
+                    (sellerItem.path === "/seller/wtb-requests" && location.pathname === "/seller");
+                  
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={isCollapsed ? item.label : undefined}
+                        className={cn(
+                          "group transition-all duration-200 rounded-lg relative",
+                          isCollapsed ? "h-10 w-10 mx-auto my-2 flex items-center justify-center" : "h-11 mx-1 my-0.5",
+                          isSellerActive
+                            ? "!bg-black !text-white shadow-lg hover:!bg-black hover:!text-white [&:hover]:!text-white [&:hover_*]:!text-white [&_*]:!text-white [&:hover_svg]:!text-white [&:hover_span]:!text-white" 
+                            : "hover:bg-muted"
+                        )}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (sellerItem.path) {
+                              navigate(sellerItem.path);
+                            }
+                          }}
+                          className={cn("flex items-center w-full h-full transition-all duration-200", isCollapsed ? "justify-center" : "gap-3 px-3")}
+                        >
+                          <Icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-5 w-5", isSellerActive && "!text-white")} />
+                          {!isCollapsed && (
+                            <span className={cn("font-medium text-sm", isSellerActive && "!text-white")}>{item.label}</span>
+                          )}
+                          {isSellerActive && !isCollapsed && (
+                            <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-foreground/80" />
+                          )}
+                          {isSellerActive && isCollapsed && (
+                            <div className="absolute -right-0.5 top-1/2 transform -translate-y-1/2 h-2 w-1 rounded-l-full bg-primary" />
+                          )}
+                        </button>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                }
+                
+                // Products menu with submenu (admin only)
+                if ('hasSubmenu' in item && item.hasSubmenu && item.id === "products") {
                   // Check if any child category is selected
                   const hasActiveChild = currentStatus || currentVendor;
                   
@@ -253,7 +361,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              if (item.path) {
+                              if ('path' in item && item.path) {
                                 navigate(item.path);
                               }
                             }}
@@ -359,7 +467,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          if (item.path) {
+                          if ('path' in item && item.path) {
                             navigate(item.path);
                           } else {
                             onSectionChange(item.id);
@@ -386,7 +494,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {!isCollapsed && (
+        {!isCollapsed && !isSeller(user) && (
           <SidebarGroup className="mt-4">
             <SidebarGroupLabel className="text-muted-foreground uppercase text-xs font-semibold tracking-wider px-4 py-2">
               Quick Actions
@@ -455,7 +563,7 @@ export function AppSidebar({ currentSection, onSectionChange }: AppSidebarProps)
               >
                 <DropdownMenuItem 
                   className="hover:bg-muted cursor-pointer"
-                  onClick={() => navigate('/profile')}
+                  onClick={() => navigate(isSeller(user) ? '/seller/profile' : '/profile')}
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Profile Settings

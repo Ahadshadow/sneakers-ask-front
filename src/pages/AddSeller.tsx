@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Store, Mail, Phone, Globe, Building, Truck, Loader2 } from "lucide-react";
+import { ArrowLeft, Store, Mail, Phone, Globe, Building, Truck, Loader2, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +35,7 @@ export default function AddSeller() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ibanError, setIbanError] = useState(false);
   const [whatsappCountryOpen, setWhatsappCountryOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   // Fetch shipping options for NL to NL (default)
   const { data: shippingOptions, isLoading: isLoadingShipping } = useQuery({
@@ -53,6 +54,7 @@ export default function AddSeller() {
     // Basic Info
     ownerName: "",
     email: "",
+    password: "",
     contactPerson: "",
     website: "",
     businessType: "",
@@ -133,6 +135,7 @@ export default function AddSeller() {
       const apiData: any = {
         owner_name: formData.ownerName,
         email: formData.email,
+        password: formData.password,
         contact_person: formData.contactPerson,
         website: formData.website,
         tin_number: formData.tinNumber,
@@ -280,6 +283,30 @@ export default function AddSeller() {
                       required
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      placeholder="Enter password"
+                      className="pl-10 pr-10 transition-all duration-200 focus:scale-[1.02]"
+                      required
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="website">Website</Label>

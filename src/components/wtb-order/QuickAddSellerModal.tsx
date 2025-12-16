@@ -21,7 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Loader2, Mail, Globe, UserPlus, Phone, Check, ChevronsUpDown, Truck } from "lucide-react";
+import { Loader2, Mail, Globe, UserPlus, Phone, Check, ChevronsUpDown, Truck, Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { sellersApi } from "@/lib/api/sellers";
 import { sendcloudApi } from "@/lib/api/sendcloud";
@@ -44,6 +44,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ibanError, setIbanError] = useState(false);
   const [whatsappCountryOpen, setWhatsappCountryOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Fetch shipping options for NL to NL (default)
   const { data: shippingOptions, isLoading: isLoadingShipping } = useQuery({
@@ -62,6 +63,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
   const [formData, setFormData] = useState({
     ownerName: "",
     email: "",
+    password: "",
     contactPerson: "",
     website: "",
     businessType: "",
@@ -106,6 +108,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
     setFormData({
       ownerName: "",
       email: "",
+      password: "",
       contactPerson: "",
       website: "",
       businessType: "",
@@ -135,6 +138,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
       const apiData: any = {
         owner_name: formData.ownerName,
         email: formData.email,
+        password: formData.password,
         contact_person: formData.contactPerson,
         website: formData.website,
         tin_number: formData.tinNumber,
@@ -264,6 +268,33 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
                       required
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick-password">
+                    Password <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="quick-password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      placeholder="Enter password"
+                      className="pl-10 pr-10"
+                      required
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
                 </div>
 
                 <div className="space-y-2">

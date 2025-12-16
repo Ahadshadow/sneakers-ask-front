@@ -20,7 +20,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Package, Truck, User, Mail, Award, CheckCircle, Home, Warehouse, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { sendcloudApi } from "@/lib/api/sendcloud";
-import { consignmentApi, type ConsignerInfo } from "@/lib/api/consignment";
+import { consignmentApi, type ConsignerInfo, type MatchedConsignmentItem } from "@/lib/api/consignment";
 
 interface ConsignmentSendCloudModalProps {
   customerCountryCode: string;
@@ -42,6 +42,7 @@ export function ConsignmentSendCloudModal({
   const [isVerifying, setIsVerifying] = useState(false);
   const [consignerInfo, setConsignerInfo] = useState<ConsignerInfo | null>(null);
   const [consignorId, setConsignorId] = useState<number | null>(null);
+  const [matchedItem, setMatchedItem] = useState<MatchedConsignmentItem | null>(null);
   const [verificationComplete, setVerificationComplete] = useState(false);
   const [shippingDestination, setShippingDestination] = useState<string>("consumer"); // "consumer" or "warehouse"
 
@@ -120,9 +121,10 @@ export function ConsignmentSendCloudModal({
 
         if (response.success && response.matched_items && response.matched_items.length > 0) {
           // Successfully found consigner - use the consigner object
-          const matchedItem = response.matched_items[0];
-          setConsignerInfo(matchedItem.consigner);
-          setConsignorId(matchedItem.consignor_id);
+          const matchedItemData = response.matched_items[0];
+          setMatchedItem(matchedItemData);
+          setConsignerInfo(matchedItemData.consigner);
+          setConsignorId(matchedItemData.consignor_id);
           setVerificationComplete(true);
           toast.success("Consigner verified successfully!");
         } else {
@@ -170,6 +172,7 @@ export function ConsignmentSendCloudModal({
       setVerificationComplete(false);
       setConsignerInfo(null);
       setConsignorId(null);
+      setMatchedItem(null);
       setSelectedSenderId("");
       setSelectedShippingMethodId("");
       setIsVerifying(false);
@@ -276,6 +279,8 @@ export function ConsignmentSendCloudModal({
         consigner_name: consignerInfo?.name || "",
         consigner_email: consignerInfo?.email || "",
         consigner_phone: consignerInfo?.phoneNumber || "",
+        // Include all matched item details from verify consignment
+        matched_item_details: matchedItem ? matchedItem : null,
         to_address: toAddress,
         from_address: fromAddress,
         shipping_method_id: selectedShippingMethod.id,
@@ -315,8 +320,6 @@ export function ConsignmentSendCloudModal({
       };
 
 
-      
-
       const labelData = await sendcloudApi.createShipmentLabel(shipmentData);
 
       onLabelCreated(labelData);
@@ -329,6 +332,7 @@ export function ConsignmentSendCloudModal({
       setVerificationComplete(false);
       setConsignerInfo(null);
       setConsignorId(null);
+      setMatchedItem(null);
     } catch (error) {
       console.error("Error creating SendCloud label:", error);
       toast.error(

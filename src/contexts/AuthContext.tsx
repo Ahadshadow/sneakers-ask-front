@@ -34,11 +34,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const queryClient = useQueryClient();
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check if user is authenticated based on token presence
-  const isAuthenticated = !!tokenManager.getToken();
-
   // Get user from localStorage first
   const [localUser, setLocalUser] = useState<User | null>(null);
+  
+  // Track authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!tokenManager.getToken());
 
   // No need for getCurrentUser query since we store user data in localStorage
   const isUserLoading = false;
@@ -70,6 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         data.data.expires_at
       );
       setLocalUser(data.data.user);
+      setIsAuthenticated(true);
       toast({
         title: "Welcome back!",
         description: `Logged in as ${data.data.user.full_name}`,
@@ -108,6 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Clear tokens, user data and cache
     tokenManager.clearTokens();
     setLocalUser(null);
+    setIsAuthenticated(false);
     queryClient.clear();
     
     // Clear refresh timer
@@ -146,8 +148,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (tokenManager.isTokenExpired(token)) {
           // Token expired, clear tokens
           handleLogout();
+        } else {
+          setIsAuthenticated(true);
         }
         // No need for refresh timer since we want simple login/logout
+      } else {
+        setIsAuthenticated(false);
       }
       
       setIsInitialized(true);

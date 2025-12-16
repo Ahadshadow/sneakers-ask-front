@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { isSeller } from "@/lib/utils/auth";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   currentSection: string;
@@ -41,10 +43,37 @@ const sectionInfo = {
     title: "Profile Settings",
     description: "Manage your account settings and preferences"
   },
+  // Seller sections
+  "wtb-requests": {
+    title: "WTB Requests",
+    description: "View and respond to Want to Buy requests"
+  },
+  "my-offers": {
+    title: "My Offers",
+    description: "Manage your submitted offers"
+  },
+  "my-sales": {
+    title: "My Sales",
+    description: "Track your sales and transactions"
+  },
+  "my-shipments": {
+    title: "My Shipments",
+    description: "Monitor shipment status and tracking"
+  },
+  "history": {
+    title: "History",
+    description: "View your transaction history"
+  },
+  "payout": {
+    title: "Payout",
+    description: "View payout information and history"
+  },
 };
 
 export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProps) {
   const { user, logout, isLoggingOut } = useAuth();
+  const navigate = useNavigate();
+  const userIsSeller = isSeller(user);
   
   // Get user initials for avatar
   const getUserInitials = (name: string | undefined | null) => {
@@ -62,11 +91,28 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
   const handleLogout = async () => {
     try {
       await logout();
+      navigate('/signin', { replace: true });
     } catch (error) {
       console.error('Logout failed:', error);
+      navigate('/signin', { replace: true });
     }
   };
-  const currentInfo = sectionInfo[currentSection as keyof typeof sectionInfo] || sectionInfo.dashboard;
+  
+  // Get section from URL if it's a seller route
+  const getSectionFromPath = () => {
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/seller/')) {
+        const section = pathname.replace('/seller/', '');
+        if (section === '' || section === 'seller') return 'wtb-requests';
+        return section;
+      }
+    }
+    return currentSection;
+  };
+  
+  const activeSection = getSectionFromPath();
+  const currentInfo = sectionInfo[activeSection as keyof typeof sectionInfo] || sectionInfo.dashboard;
   
   return (
     <header className="sticky top-0 z-50 h-16 bg-gradient-to-r from-background via-background to-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
@@ -79,9 +125,8 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
         </div>
 
         <div className="flex items-center gap-4 flex-shrink-0">
-
           {/* Notifications */}
-           <DropdownMenu>
+           {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
                <Button variant="ghost" size="sm" className="relative hover:bg-muted transition-all duration-200 h-9 w-9 p-0 rounded-lg shadow-sm">
                  <Bell className="h-5 w-5" />
@@ -131,7 +176,7 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
                 </Button>
               </div>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           {/* User Menu */}
            <DropdownMenu>
@@ -155,7 +200,7 @@ export function OptimizedDashboardHeader({ currentSection }: DashboardHeaderProp
               </div>
               <DropdownMenuItem 
                 className="hover:bg-muted cursor-pointer"
-                onClick={() => window.location.href = '/profile'}
+                onClick={() => navigate(userIsSeller ? '/seller/profile' : '/profile')}
               >
                 <User className="h-4 w-4 mr-2" />
                 Profile Settings

@@ -97,6 +97,7 @@ export interface CreateSellerRequest {
   store_name: string;
   owner_name: string;
   email: string;
+  password: string;
   seller_type: "private" | "b2b";
   status: "active" | "pending" | "suspended";
   products_count?: number;
@@ -139,6 +140,7 @@ export interface CompleteRegistrationRequest {
   token: string;
   store_name: string;
   owner_name: string;
+  password: string;
   contact_person?: string;
   website?: string;
   tin_number?: string;
@@ -154,6 +156,88 @@ export interface CompleteRegistrationRequest {
   bank_name?: string;
   shipment_method_code?: string;
   discord_name?: string;
+}
+
+// Seller Profile interfaces
+export interface SellerProfile {
+  id: number;
+  store_name: string;
+  owner_name: string;
+  email: string;
+  whatsapp_number?: string;
+  discord_name?: string;
+  contact_person?: string;
+  website?: string;
+  tin_number?: string;
+  country?: string;
+  business_description?: string;
+  seller_type: "private" | "b2b";
+  status: "active" | "pending" | "suspended";
+  products_count: number;
+  total_sales: string;
+  rating: number;
+  join_date: string;
+  vat_number?: string;
+  vat_rate: number;
+  vat_registered: boolean;
+  account_holder: string;
+  iban: string;
+  bank_name: string;
+  shipment_method_code?: string;
+  created_at: string;
+  updated_at: string;
+  vat_settings: {
+    vatNumber?: string;
+    vatRate: number;
+    vatRegistered: boolean;
+  };
+  bank_details: {
+    accountHolder: string;
+    iban: string;
+    bankName: string;
+  };
+}
+
+export interface SellerProfileResponse {
+  success: boolean;
+  data: SellerProfile;
+}
+
+export interface UpdateSellerProfileRequest {
+  store_name?: string;
+  owner_name?: string;
+  email?: string;
+  whatsapp_number?: string;
+  discord_name?: string;
+  contact_person?: string;
+  website?: string;
+  tin_number?: string;
+  country?: string;
+  business_description?: string;
+  vat_number?: string;
+  vat_rate?: number;
+  vat_registered?: boolean;
+  account_holder?: string;
+  iban?: string;
+  bank_name?: string;
+  shipment_method_code?: string;
+}
+
+export interface UpdateSellerProfileResponse {
+  success: boolean;
+  message: string;
+  data: SellerProfile;
+}
+
+export interface UpdatePasswordRequest {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export interface UpdatePasswordResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface ApiError {
@@ -261,6 +345,62 @@ export interface ResendInvitationResponse {
     email: string;
     status: string;
     expires_at: string;
+  };
+}
+
+// Seller History interfaces
+export interface SellerHistoryItem {
+  shipped_date: string;
+  product: string;
+  size: string;
+  carrier: string;
+  tracking_number: string;
+  status: string;
+  amount: string;
+}
+
+export interface SellerHistorySummary {
+  total_shipped_items: number;
+  total_items: number;
+  total_earnings: string;
+}
+
+export interface SellerHistoryResponse {
+  success: boolean;
+  data: {
+    summary: SellerHistorySummary;
+    history: SellerHistoryItem[];
+  };
+}
+
+// Seller Payouts (for seller dashboard) interfaces
+export interface SellerPayoutItem {
+  id: number;
+  payout_id: string;
+  shopify_order_number: string;
+  item_name: string;
+  seller_payout_amount: string;
+  seller_payout_amount_with_vat: string;
+  status: "pending" | "paid" | "completed" | "failed" | "cancelled" | "processing";
+  payment_date: string | null;
+  created_at: string | null;
+  created_by: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+}
+
+export interface SellerPayoutsSummary {
+  total_earnings: string;
+  current_month_earnings: string;
+}
+
+export interface SellerPayoutsDashboardResponse {
+  success: boolean;
+  data: {
+    summary: SellerPayoutsSummary;
+    payouts: SellerPayoutItem[];
   };
 }
 
@@ -513,5 +653,36 @@ export const sellersApi = {
       method: 'POST',
       body: JSON.stringify(registrationData),
     });
+  },
+
+  // Get seller profile (authenticated seller only)
+  async getSellerProfile(): Promise<SellerProfileResponse> {
+    return apiRequest<SellerProfileResponse>('/seller/profile');
+  },
+
+  // Update seller profile (authenticated seller only)
+  async updateSellerProfile(profileData: UpdateSellerProfileRequest): Promise<UpdateSellerProfileResponse> {
+    return apiRequest<UpdateSellerProfileResponse>('/seller/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  },
+
+  // Update seller password (authenticated seller only)
+  async updateSellerPassword(passwordData: UpdatePasswordRequest): Promise<UpdatePasswordResponse> {
+    return apiRequest<UpdatePasswordResponse>('/seller/password', {
+      method: 'PUT',
+      body: JSON.stringify(passwordData),
+    });
+  },
+
+  // Get seller history (authenticated seller only)
+  async getSellerHistory(): Promise<SellerHistoryResponse> {
+    return apiRequest<SellerHistoryResponse>('/seller/history');
+  },
+
+  // Get seller payouts for dashboard (authenticated seller only)
+  async getSellerPayoutsDashboard(): Promise<SellerPayoutsDashboardResponse> {
+    return apiRequest<SellerPayoutsDashboardResponse>('/seller/payouts');
   },
 };

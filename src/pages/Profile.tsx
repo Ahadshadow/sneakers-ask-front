@@ -2,14 +2,10 @@ import { useState } from "react";
 import { 
   User, 
   Mail, 
-  MapPin, 
-  Calendar, 
   Shield, 
-  Bell, 
   Lock, 
   Eye,
   EyeOff,
-  Camera,
   Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,24 +14,27 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { OptimizedDashboardHeader } from "@/components/dashboard/OptimizedDashboardHeader";
+import { useAuth } from "@/contexts/AuthContext";
+import { authApi } from "@/lib/api/auth";
 
 export default function Profile() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentSection, setCurrentSection] = useState("profile");
   
+  // Admin profile data
   const [profileData, setProfileData] = useState({
-    firstName: "Admin",
-    lastName: "User",
-    email: "admin@sneakerask.com",
+    firstName: user?.name?.split(' ')[0] || "Admin",
+    lastName: user?.name?.split(' ').slice(1).join(' ') || "User",
+    email: user?.email || "admin@sneakerask.com",
     role: "Administrator",
     joinDate: "January 2024",
     currentPassword: "",
@@ -50,20 +49,33 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     setIsSaving(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been saved successfully.",
-    });
-    
-    setIsSaving(false);
-    setIsEditing(false);
+    try {
+      // Admin profile update (if needed in future)
+      // For now, just show success message
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      toast({
+        title: "Profile Updated",
+        description: "Your profile information has been saved successfully.",
+      });
+      
+      setIsEditing(false);
+    } catch (error: any) {
+      console.error("Failed to update profile:", error);
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to update profile. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleChangePassword = async () => {
-    if (profileData.newPassword !== profileData.confirmPassword) {
+    const { currentPassword, newPassword, confirmPassword } = profileData;
+
+    if (newPassword !== confirmPassword) {
       toast({
         title: "Password Mismatch",
         description: "New password and confirmation password don't match.",
@@ -72,21 +84,56 @@ export default function Profile() {
       return;
     }
 
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all password fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
     
-    toast({
-      title: "Password Changed",
-      description: "Your password has been updated successfully.",
-    });
-    
-    setProfileData(prev => ({
-      ...prev,
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: ""
-    }));
-    setIsSaving(false);
+    try {
+      // Admin password update
+      await authApi.changePassword({
+        currentPassword,
+        newPassword
+      });
+      
+      toast({
+        title: "Password Changed",
+        description: "Your password has been updated successfully.",
+      });
+      
+      setProfileData(prev => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      }));
+    } catch (error: any) {
+      console.error("Failed to update password:", error);
+      
+      // Handle validation errors
+      if (error.errors) {
+        const errorMessages = Object.values(error.errors).flat().join(", ");
+        toast({
+          title: "Validation Error",
+          description: errorMessages || "Please check your input and try again.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error?.message || "Failed to update password. Please check your current password and try again.",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -109,12 +156,13 @@ export default function Profile() {
                   <div className="flex items-center gap-4">
                     <Avatar className="h-16 w-16">
                       <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
-                        {profileData.firstName[0]}{profileData.lastName[0]}
+                        {profileData.firstName?.[0] || "U"}
+                        {profileData.lastName?.[0] || ""}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <h2 className="text-2xl font-bold text-foreground">
-                        {profileData.firstName} {profileData.lastName}
+                        {`${profileData.firstName} ${profileData.lastName}`}
                       </h2>
                       <Badge variant="secondary">
                         <Shield className="h-3 w-3 mr-1" />
@@ -127,17 +175,17 @@ export default function Profile() {
 
               {/* Tabs Content */}
               <Tabs defaultValue="general" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl">
-                <TabsTrigger value="general" className="rounded-lg transition-all duration-300">
-                  General
-                </TabsTrigger>
-                <TabsTrigger value="security" className="rounded-lg transition-all duration-300">
-                  Security
-                </TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-xl">
+                  <TabsTrigger value="general" className="rounded-lg transition-all duration-300">
+                    General
+                  </TabsTrigger>
+                  <TabsTrigger value="security" className="rounded-lg transition-all duration-300">
+                    Security
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* General Settings */}
-                <TabsContent value="general">
+                <TabsContent value="general" className="space-y-6">
                   <Card className="shadow-xl border-0 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -296,6 +344,7 @@ export default function Profile() {
                   </Card>
                 </TabsContent>
               </Tabs>
+
             </div>
           </main>
         </div>
