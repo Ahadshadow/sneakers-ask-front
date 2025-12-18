@@ -188,6 +188,7 @@ export function ProductsOverview() {
           vendorName: orderItem.vendor_name || null,
           vendorOrderId: orderItem.vendor_order_id || null,
           vendorPrice: orderItem.vendor_price || null,
+          buyPrice: orderItem.payout_price || null,
         };
       });
     }

@@ -111,6 +111,7 @@ export interface OrderItem {
   vendor_name?: string | null;
   vendor_order_id?: string | null;
   vendor_price?: number | null;
+  payout_price?: number | null;
 }
 
 // UI Product interface (for existing design compatibility)
@@ -185,6 +186,8 @@ export interface Product {
   vendorName?: string | null;
   vendorOrderId?: string | null;
   vendorPrice?: number | null;
+  payoutPrice?: number | null;
+  buyPrice?: number | null;
 }
 
 export interface WTBPurchase {

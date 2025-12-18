@@ -14,6 +14,7 @@ import {
   Truck,
   Eye,
   Package,
+  Download,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
@@ -275,6 +276,23 @@ export function ProductsTable({
     }
   };
 
+  const handleDownloadLabel = (product: Product) => {
+    if (product.shipmentLabel?.label_url) {
+      // Open the label URL in a new tab to download
+      window.open(product.shipmentLabel.label_url, "_blank");
+      toast({
+        title: "Downloading Label",
+        description: "Opening shipment label for download...",
+      });
+    } else {
+      toast({
+        title: "Label Not Available",
+        description: "Shipment label URL is not available.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Format tracking status based on shipping destination
   const getTrackingStatusLabel = (status: string, shippingDestination?: string) => {
     // If destination is not consumer (i.e., warehouse), rename some statuses
@@ -375,6 +393,9 @@ export function ProductsTable({
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
                     Sale Channel
                   </TableHead>
+                  <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
+                    Buy Price
+                  </TableHead>
                   {/* HIDDEN_VENDOR_COLUMNS - Uncomment to show Vendor Price and Vendor Order ID columns */}
                   {/* <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
                     Vendor Price
@@ -382,9 +403,9 @@ export function ProductsTable({
                   <TableHead className="font-bold text-gray-400 text-sm py-4 px-4">
                     Vendor Order ID
                   </TableHead> */}
-                  <TableHead className="font-bold text-gray-400 text-sm py-4 px-4 min-w-[180px]">
+                  {/* <TableHead className="font-bold text-gray-400 text-sm py-4 px-4 min-w-[180px]">
                     Tracking Status
-                  </TableHead>
+                  </TableHead> */}
                   {showActions && (
                     <TableHead className="font-bold text-gray-400 text-sm py-4 px-4 text-right">
                       Actions
@@ -545,6 +566,15 @@ export function ProductsTable({
                         {product.status.replace("_", " ")}
                       </Badge>
                     </TableCell>
+
+                    {/* Buy Price Column */}
+                    <TableCell className="py-3">
+                      <span className="text-sm text-foreground">
+                        {product.buyPrice != null 
+                          ? `${product.currency || "EUR"} ${product.buyPrice.toFixed(2)}` 
+                          : "-"}
+                      </span>
+                    </TableCell>
                     {/* HIDDEN_VENDOR_COLUMNS - Uncomment to show Vendor Price and Vendor Order ID columns */}
                     {/* <TableCell className="py-3">
                       <span className="text-sm text-foreground">
@@ -559,7 +589,7 @@ export function ProductsTable({
                       </span>
                     </TableCell> */}
                     {/* Tracking Status Column */}
-                    <TableCell className="py-3 min-w-[180px]">
+                    {/* <TableCell className="py-3 min-w-[180px]">
                       {product.shipmentLabel && product.shipmentLabel.current_tracking_status ? (
                         <TooltipProvider delayDuration={200}>
                           <Tooltip>
@@ -593,7 +623,7 @@ export function ProductsTable({
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
                       )}
-                    </TableCell>
+                    </TableCell> */}
 
                     {/* Actions Column */}
                     {showActions && (
@@ -646,21 +676,33 @@ export function ProductsTable({
                           )}
 
                            {product.hasShipmentLabel ? (
-                             // View existing label
-                             <ViewShipmentLabelModal
-                               orderItemId={parseInt(product.id)}
-                               productName={product.name}
-                               orderNumber={product.orderNumber || ""}
-                             >
-                               <Button
-                                 variant="default"
-                                 size="sm"
-                                 className="h-8 px-3 gap-1 text-xs bg-green-600 hover:bg-green-700"
+                             <>
+                               {/* View existing label */}
+                               <ViewShipmentLabelModal
+                                 orderItemId={parseInt(product.id)}
+                                 productName={product.name}
+                                 orderNumber={product.orderNumber || ""}
                                >
-                                 <Eye className="h-3.5 w-3.5" />
-                                 View Label
+                                 <Button
+                                   variant="default"
+                                   size="sm"
+                                   className="h-8 px-3 gap-1 text-xs bg-green-600 hover:bg-green-700"
+                                 >
+                                   <Eye className="h-3.5 w-3.5" />
+                                   View Label
+                                 </Button>
+                               </ViewShipmentLabelModal>
+                               {/* Download shipment label button */}
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => handleDownloadLabel(product)}
+                                 className="h-8 px-2 gap-1 text-xs"
+                                 title="Download Shipment Label"
+                               >
+                                 <Download className="h-3.5 w-3.5" />
                                </Button>
-                             </ViewShipmentLabelModal>
+                             </>
                            ) : null}
 
                           {/* Consignment Orders - Use ConsignmentSendCloudModal */}

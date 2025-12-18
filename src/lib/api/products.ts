@@ -90,6 +90,7 @@ export interface OrderItem {
   vendor_name?: string | null;
   vendor_order_id?: string | null;
   vendor_price?: number | null;
+  payout_price?: number | null;
 }
 
 export interface TrackingStatusOption {
