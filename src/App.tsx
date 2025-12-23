@@ -8,6 +8,7 @@ import { ProtectedRoute, AdminRoute, SellerRoute } from "@/components/auth";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Payouts from "./pages/Payouts";
+import Exports from "./pages/Exports";
 import Users from "./pages/Users";
 import Roles from "./pages/Roles";
 import Sellers from "./pages/Sellers";
@@ -71,6 +72,11 @@ const App = () => (
             <Route path="/payouts" element={
               <AdminRoute>
                 <Payouts />
+              </AdminRoute>
+            } />
+            <Route path="/exports" element={
+              <AdminRoute>
+                <Exports />
               </AdminRoute>
             } />
             <Route path="/users" element={

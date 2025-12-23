@@ -23,7 +23,8 @@ import {
   ShoppingCart,
   History,
   Wallet,
-  User
+  User,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -79,6 +80,12 @@ const adminNavigationItems = [
     label: "Payouts", 
     icon: CreditCard,
     path: "/payouts",
+  },
+  {
+    id: "exports",
+    label: "Exports",
+    icon: FileText,
+    path: "/exports",
   },
   {
     id: "users",

@@ -8,3 +8,4 @@ export * from './wtb-orders';
 export * from './sendcloud';
 export * from './consignment';
 export * from './vendors';
+export * from './exports';
