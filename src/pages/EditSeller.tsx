@@ -206,7 +206,6 @@ export default function EditSeller() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
     // Check if user is authenticated
     if (!isAuthenticated) {
@@ -215,9 +214,20 @@ export default function EditSeller() {
         description: "Please log in to update seller.",
         variant: "destructive"
       });
-      setIsSubmitting(false);
       return;
     }
+
+    // Validate required fields
+    if (!formData.whatsappNumber || formData.whatsappNumber.trim() === "") {
+      toast({
+        title: "Validation Error",
+        description: "WhatsApp number is required.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
     
     try {
       // Prepare API data
@@ -503,7 +513,7 @@ export default function EditSeller() {
                 
                 {/* WhatsApp Number Field */}
                 <div className="space-y-2">
-                   <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                   <Label htmlFor="whatsappNumber">WhatsApp Number *</Label>
                    <div className="flex gap-2">
                      <div className="w-40">
                        <Popover open={whatsappCountryOpen} onOpenChange={setWhatsappCountryOpen}>
@@ -561,6 +571,7 @@ export default function EditSeller() {
                            value={formData.whatsappNumber}
                            onChange={(e) => handleWhatsAppNumberChange(e.target.value)}
                            placeholder="1234567890"
+                           required
                            className="pl-10 transition-all duration-200 focus:scale-[1.02]"
                          />
                        </div>

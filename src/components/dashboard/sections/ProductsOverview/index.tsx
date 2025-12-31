@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ export function ProductsOverview() {
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [cart, setCart] = useState<Product[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
 
@@ -42,7 +42,6 @@ export function ProductsOverview() {
   useEffect(() => {
     if (statusFromUrl) {
       setSaleChannelFilter(statusFromUrl);
-      setCurrentPage(1); // Reset to first page when filter changes
     } else {
       setSaleChannelFilter("all");
     }
@@ -52,7 +51,6 @@ export function ProductsOverview() {
   useEffect(() => {
     if (vendorFromUrl) {
       setVendorFilter(vendorFromUrl);
-      setCurrentPage(1);
     } else {
       setVendorFilter("all");
     }
@@ -62,7 +60,6 @@ export function ProductsOverview() {
   useEffect(() => {
     if (trackingStatusFromUrl) {
       setTrackingStatusFilter(trackingStatusFromUrl);
-      setCurrentPage(1);
     } else {
       setTrackingStatusFilter("all");
     }
@@ -79,20 +76,18 @@ export function ProductsOverview() {
     };
   }, [searchTerm]);
 
-  // Reset page when date range or tracking status changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [fromDate, toDate, trackingStatusFilter]);
-
-  // Fetch order items from API
+  // Fetch order items from API with infinite scroll
   const {
     data: orderItemsResponse,
     isLoading: isLoadingOrderItems,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
     error: orderItemsError,
     refetch: refetchOrderItems,
-  } = useQuery({
-    queryKey: ['order-items', currentPage, debouncedSearchTerm, saleChannelFilter, vendorFilter, fromDate, toDate, trackingStatusFilter],
-    queryFn: async () => {
+  } = useInfiniteQuery({
+    queryKey: ['order-items', debouncedSearchTerm, saleChannelFilter, vendorFilter, fromDate, toDate, trackingStatusFilter],
+    queryFn: async ({ pageParam = 1 }) => {
       // If a vendor is specified, we pass it through the status param as requested
       const statusParam = vendorFilter !== "all"
         ? vendorFilter
@@ -106,7 +101,7 @@ export function ProductsOverview() {
       const trackingStatusParam = trackingStatusFilter !== "all" ? trackingStatusFilter : undefined;
 
       return await productsApi.getOrderItems(
-        currentPage,
+        pageParam,
         10,
         debouncedSearchTerm || undefined,
         statusParam,
@@ -115,14 +110,49 @@ export function ProductsOverview() {
         trackingStatusParam
       );
     },
+    getNextPageParam: (lastPage) => {
+      const currentPage = lastPage?.data?.pagination?.current_page || 1;
+      const lastPageNum = lastPage?.data?.pagination?.last_page || 1;
+      return currentPage < lastPageNum ? currentPage + 1 : undefined;
+    },
+    initialPageParam: 1,
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
   });
 
-  // Convert API order items to UI products
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Convert API order items to UI products - accumulate all pages
   const apiOrderItems = useMemo(() => {
-    if (orderItemsResponse?.data?.order_items) {
-      return orderItemsResponse.data.order_items.map((orderItem: OrderItem) => {
+    if (!orderItemsResponse?.pages) return [];
+    
+    // Flatten all pages into a single array
+    const allOrderItems = orderItemsResponse.pages.flatMap(
+      (page) => page?.data?.order_items || []
+    );
+
+    return allOrderItems.map((orderItem: OrderItem) => {
         // Parse customer details if available (can be string or object)
         const customerDetails = orderItem.customer_details
           ? (typeof orderItem.customer_details === 'string' 
@@ -188,17 +218,18 @@ export function ProductsOverview() {
           vendorName: orderItem.vendor_name || null,
           vendorOrderId: orderItem.vendor_order_id || null,
           vendorPrice: orderItem.vendor_price || null,
-          buyPrice: orderItem.payout_price || null,
+          buyPrice: (orderItem.vendor_name || orderItem.vendor_order_id) 
+            ? (orderItem.vendor_price || null)
+            : (orderItem.payout_price || null),
         };
       });
-    }
-    return [];
   }, [orderItemsResponse]);
 
-  // Get tracking status options from API response with counts
+  // Get tracking status options from API response with counts (from first page)
   const trackingStatusOptions = useMemo(() => {
-    if (orderItemsResponse?.data?.tracking_status_options && Array.isArray(orderItemsResponse.data.tracking_status_options)) {
-      return orderItemsResponse.data.tracking_status_options;
+    const firstPage = orderItemsResponse?.pages?.[0];
+    if (firstPage?.data?.tracking_status_options && Array.isArray(firstPage.data.tracking_status_options)) {
+      return firstPage.data.tracking_status_options;
     }
     return [];
   }, [orderItemsResponse]);
@@ -223,7 +254,6 @@ export function ProductsOverview() {
   // Handle tracking status change and update URL
   const handleTrackingStatusChange = (status: string) => {
     setTrackingStatusFilter(status);
-    setCurrentPage(1);
     
     // Update URL
     const newSearchParams = new URLSearchParams(searchParams);
@@ -517,7 +547,7 @@ export function ProductsOverview() {
       {/* Results Summary */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          Showing {filteredProducts.length} of {orderItemsResponse?.data?.pagination?.total || 0} products
+          Showing {filteredProducts.length} of {orderItemsResponse?.pages?.[0]?.data?.pagination?.total || 0} products
           {isLoading && (
             <span className="ml-2 flex items-center gap-1">
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -568,18 +598,33 @@ export function ProductsOverview() {
 
       {/* Main Content */}
       {!isLoading && filteredProducts.length > 0 && (
-        <ProductsTable
-          products={filteredProducts}
-          onAddToCart={handleAddToCart}
-          isLoading={isLoading}
-          currentPage={currentPage}
-          totalPages={orderItemsResponse?.data?.pagination?.last_page || 1}
-          onPageChange={setCurrentPage}
-          totalItems={orderItemsResponse?.data?.pagination?.total || 0}
-          itemsPerPage={orderItemsResponse?.data?.pagination?.per_page || 10}
-          onRefetch={refetchOrderItems}
-          showVendorColumns={true}
-        />
+        <>
+          <ProductsTable
+            products={filteredProducts}
+            onAddToCart={handleAddToCart}
+            isLoading={isLoading}
+            onRefetch={refetchOrderItems}
+            showVendorColumns={true}
+          />
+          {/* Infinite scroll trigger */}
+          {hasNextPage && (
+            <div ref={loadMoreRef} className="h-20 flex items-center justify-center py-4">
+              {isFetchingNextPage && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading more products...
+                </div>
+              )}
+            </div>
+          )}
+          {!hasNextPage && filteredProducts.length > 0 && (
+            <div className="h-10 flex items-center justify-center py-4">
+              <p className="text-sm text-muted-foreground">
+                All products loaded
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Loading State */}

@@ -132,6 +132,13 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate required fields
+    if (!formData.whatsappNumber || formData.whatsappNumber.trim() === "") {
+      toast.error("WhatsApp number is required.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -324,7 +331,9 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="quick-whatsappNumber">WhatsApp Number</Label>
+                  <Label htmlFor="quick-whatsappNumber">
+                    WhatsApp Number <span className="text-red-500">*</span>
+                  </Label>
                   <div className="flex gap-2">
                     <div className="w-40">
                       <Popover open={whatsappCountryOpen} onOpenChange={setWhatsappCountryOpen}>
@@ -383,6 +392,7 @@ export function QuickAddSellerModal({ onSellerCreated, children }: QuickAddSelle
                           value={formData.whatsappNumber}
                           onChange={(e) => handleWhatsAppNumberChange(e.target.value)}
                           placeholder="1234567890"
+                          required
                           className="pl-10"
                         />
                       </div>

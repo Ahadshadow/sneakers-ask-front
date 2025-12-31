@@ -164,6 +164,16 @@ export default function SellerProfile() {
   };
 
   const handleSaveProfile = async () => {
+    // Validate required fields
+    if (!sellerData.whatsappNumber || sellerData.whatsappNumber.trim() === "") {
+      toast({
+        title: "Validation Error",
+        description: "WhatsApp number is required.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
     
     try {
@@ -448,7 +458,7 @@ export default function SellerProfile() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                          <Label htmlFor="whatsappNumber">WhatsApp Number *</Label>
                           <div className="flex gap-2">
                             <div className="w-40">
                               <Popover open={whatsappCountryOpen} onOpenChange={setWhatsappCountryOpen}>
@@ -508,6 +518,7 @@ export default function SellerProfile() {
                                   onChange={(e) => handleWhatsAppNumberChange(e.target.value)}
                                   disabled={!isEditing || isLoading}
                                   placeholder="1234567890"
+                                  required
                                   className="pl-10 h-11 transition-all duration-200 disabled:opacity-60"
                                 />
                               </div>

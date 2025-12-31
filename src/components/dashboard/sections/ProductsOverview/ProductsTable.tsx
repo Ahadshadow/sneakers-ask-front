@@ -31,7 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationControls } from "@/components/dashboard/PaginationControls";
 import { Product } from "./types";
 import { toast } from "@/components/ui/use-toast";
 import { config } from "@/lib/config";
@@ -111,11 +110,6 @@ const formatDateTwoLine = (dateString: string | undefined): string => {
 interface ProductsTableProps {
   products: Product[];
   onAddToCart?: (product: Product) => void;
-  currentPage?: number;
-  totalPages?: number;
-  onPageChange?: (page: number) => void;
-  totalItems?: number;
-  itemsPerPage?: number;
   isLoading?: boolean;
   showActions?: boolean;
   onRefetch?: () => void;
@@ -125,11 +119,6 @@ interface ProductsTableProps {
 export function ProductsTable({
   products,
   onAddToCart,
-  currentPage: externalCurrentPage,
-  totalPages: externalTotalPages,
-  onPageChange: externalOnPageChange,
-  totalItems: externalTotalItems,
-  itemsPerPage: externalItemsPerPage,
   isLoading = false,
   showActions = true,
   onRefetch,
@@ -142,26 +131,8 @@ export function ProductsTable({
   const [vendorAssignmentModalOpen, setVendorAssignmentModalOpen] = useState(false);
   const [selectedProductForVendor, setSelectedProductForVendor] = useState<Product | null>(null);
 
-  // Use external pagination if provided, otherwise use local pagination
-  const currentPage = externalCurrentPage || 1;
-  const totalPages = externalTotalPages || Math.ceil(products.length / 10);
-  const onPageChange = externalOnPageChange || (() => {});
-  const totalItems = externalTotalItems || products.length;
-  const itemsPerPage = externalItemsPerPage || 10;
-
-  // If external pagination is provided, show all products (API already paginated)
-  // Otherwise, use local pagination
-  const paginatedProducts = useMemo(() => {
-    if (externalCurrentPage !== undefined) {
-      // API pagination - show all products as they're already paginated
-      return products;
-    } else {
-      // Local pagination - slice products
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      return products.slice(startIndex, endIndex);
-    }
-  }, [products, currentPage, itemsPerPage, externalCurrentPage]);
+  // Show all products (infinite scroll handles pagination)
+  const paginatedProducts = products;
   // Helper function to truncate text to 10 characters
   const truncateText = (text: string, maxLength: number = 18): string => {
     if (text.length <= maxLength) return text;
@@ -921,17 +892,6 @@ export function ProductsTable({
                 })}
               </TableBody>
             </Table>
-          </div>
-
-          {/* Pagination */}
-          <div className="mt-6 pt-4 border-t border-border">
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-              totalItems={totalItems}
-              itemsPerPage={itemsPerPage}
-            />
           </div>
         </>
       )}
